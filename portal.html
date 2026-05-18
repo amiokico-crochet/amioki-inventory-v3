@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#FFB6D9">
+<title>Amioki Portal ✿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pink-50:#FFF5FA;--pink-100:#FFE5F0;--pink-200:#FFCCE0;--pink-300:#FFB6D9;
+  --pink-400:#FF8DC0;--pink-500:#FF6BAB;--pink-600:#E91E63;--pink-700:#C2185B;
+  --cream:#FFF9F5;--lavender:#E5D4F5;--mint:#C8F0DC;--peach:#FFD9C0;--lemon:#FFF2A8;
+  --ink:#4A2540;--mid:#8B5A75;--soft:#B894A8;
+  --shadow:0 4px 20px rgba(255,107,171,.12);--shadow-lg:0 8px 40px rgba(255,107,171,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,var(--cream),var(--pink-50) 50%,var(--pink-100));color:var(--ink);min-height:100vh;font-size:15px;overflow-x:hidden}
+h1,h2,h3{font-family:'Comfortaa',sans-serif;font-weight:700}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit;font-size:15px}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px;z-index:1;position:relative}
+.login-card{background:white;border-radius:32px;padding:40px 28px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);border:3px solid var(--pink-100);position:relative}
+.login-card::before{content:"🧶";position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:48px;height:48px;background:var(--pink-300);border-radius:50%;display:grid;place-items:center;font-size:22px;box-shadow:0 4px 14px rgba(255,141,192,.4)}
+.login-title{text-align:center;font-size:26px;color:var(--pink-600);margin-bottom:4px}
+.login-sub{text-align:center;color:var(--mid);font-size:13px;margin-bottom:24px}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.role-btn{background:var(--pink-50);border:2px solid var(--pink-100);border-radius:16px;padding:14px 8px;font-size:13px;font-weight:600;color:var(--ink);transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.role-btn:hover{background:var(--pink-100);transform:translateY(-2px)}
+.role-btn.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;border-color:var(--pink-400);box-shadow:0 4px 12px rgba(255,141,192,.35)}
+.role-btn .emoji{font-size:20px}
+.pw-input{width:100%;padding:13px 16px;border:2px solid var(--pink-100);border-radius:14px;background:var(--pink-50);color:var(--ink);margin-bottom:12px;transition:all .2s}
+.pw-input:focus{outline:none;border-color:var(--pink-400);background:white}
+.pw-submit{width:100%;padding:13px;background:linear-gradient(135deg,var(--pink-400),var(--pink-500));color:white;border-radius:14px;font-size:15px;font-weight:700;transition:all .2s;box-shadow:0 4px 14px rgba(255,107,171,.3)}
+.pw-submit:hover{transform:translateY(-2px)}
+.pw-submit:disabled{opacity:.6;cursor:wait;transform:none}
+.error-msg{background:#FFE5E5;color:#C2185B;padding:10px 14px;border-radius:12px;font-size:13px;text-align:center;margin-bottom:10px;border:1px solid #FFB6D9}
+
+/* APP */
+.app{display:none;min-height:100vh;padding-bottom:80px}
+.app.active{display:block}
+.topbar{background:white;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--pink-100);position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(255,107,171,.08)}
+.brand{font-family:'Comfortaa',sans-serif;font-size:18px;font-weight:700;color:var(--pink-600);display:flex;align-items:center;gap:6px}
+.brand .dot{width:8px;height:8px;background:var(--mint);border-radius:50%}
+.role-badge{background:var(--pink-100);color:var(--pink-700);padding:5px 12px;border-radius:14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.logout-btn{color:var(--mid);font-size:11px;padding:2px 6px;border-radius:6px}
+.logout-btn:hover{background:var(--pink-100);color:var(--pink-600)}
+.content{padding:16px 14px;max-width:640px;margin:0 auto}
+
+/* TABS */
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:white;padding:5px;border-radius:16px;border:2px solid var(--pink-100);box-shadow:var(--shadow);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:max-content;padding:10px 12px;border-radius:12px;font-size:13px;font-weight:600;color:var(--mid);white-space:nowrap;transition:all .2s}
+.tab.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;box-shadow:0 2px 8px rgba(255,141,192,.3)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* CARDS */
+.card{background:white;border-radius:20px;padding:18px;box-shadow:var(--shadow);border:2px solid var(--pink-100);margin-bottom:14px}
+.card-title{font-size:15px;color:var(--pink-600);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+/* CONTRACT PROGRESS */
+.contract-header{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));border-radius:20px;padding:20px;color:white;margin-bottom:14px;text-align:center}
+.contract-header h2{font-size:20px;margin-bottom:4px}
+.contract-header .sub{font-size:13px;opacity:.85}
+.due-badge{display:inline-block;background:rgba(255,255,255,.25);padding:6px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-top:8px}
+.progress-item{margin-bottom:12px}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.progress-name{font-size:14px;font-weight:600;color:var(--ink)}
+.progress-count{font-size:12px;color:var(--mid)}
+.progress-bar-bg{background:var(--pink-100);border-radius:8px;height:10px;overflow:hidden}
+.progress-bar-fill{background:linear-gradient(90deg,var(--pink-300),var(--pink-400));height:100%;border-radius:8px;transition:width .4s ease}
+.progress-bar-fill.done{background:linear-gradient(90deg,#6BCF7F,#4AA860)}
+.color-note{font-size:11px;color:var(--soft);margin-top:3px;font-style:italic}
+
+/* FORM FIELDS */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11.5px;font-weight:600;color:var(--mid);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--pink-400);background:white}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* BATCH ITEMS */
+.batch-item-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--pink-100)}
+.batch-item-row:last-child{border-bottom:none}
+.batch-item-name{flex:1;font-size:14px;font-weight:600;color:var(--ink)}
+.batch-item-meta{font-size:11px;color:var(--soft)}
+.qty-input{width:70px;padding:8px 10px;border:2px solid var(--pink-100);border-radius:10px;background:white;text-align:center;font-weight:700}
+.add-item-row{display:flex;gap:8px;margin-top:10px}
+.add-item-row input{flex:1;padding:10px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50)}
+.add-item-row input:focus{outline:none;border-color:var(--pink-400);background:white}
+.add-btn{padding:10px 16px;background:var(--pink-100);color:var(--pink-700);border-radius:12px;font-weight:600;font-size:13px}
+.add-btn:hover{background:var(--pink-200)}
+.remove-btn{width:28px;height:28px;background:#FFE5E5;color:#C24040;border-radius:8px;font-size:16px;display:grid;place-items:center;flex-shrink:0}
+
+/* QC CHECKLIST */
+.qc-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--pink-100)}
+.qc-item:last-of-type{border-bottom:none}
+.qc-check{width:28px;height:28px;border:2px solid var(--pink-200);border-radius:8px;flex-shrink:0;cursor:pointer;display:grid;place-items:center;font-size:16px;transition:all .2s;background:white;margin-top:2px}
+.qc-check.checked{background:var(--pink-400);border-color:var(--pink-400);color:white}
+.qc-label strong{color:var(--pink-600);font-size:14px}
+.qc-label p{font-size:12.5px;color:var(--mid);margin-top:2px;line-height:1.4}
+
+/* SIGNATURE PAD */
+.sig-wrap{border:2px solid var(--pink-100);border-radius:14px;overflow:hidden;background:white;margin-bottom:10px}
+.sig-canvas{width:100%;display:block;cursor:crosshair;touch-action:none}
+.sig-actions{display:flex;gap:8px;margin-top:6px}
+.sig-clear{padding:8px 14px;background:var(--pink-50);color:var(--mid);border:1px solid var(--pink-100);border-radius:10px;font-size:12px;font-weight:600}
+
+/* BATCH HISTORY */
+.batch-card{background:white;border-radius:16px;padding:14px;border:2px solid var(--pink-100);box-shadow:var(--shadow);margin-bottom:10px}
+.batch-status{display:inline-block;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.batch-status.pending{background:#FFF2A8;color:#8B6914}
+.batch-status.approved{background:var(--mint);color:#2E6B47}
+.batch-status.partial{background:var(--peach);color:#8B4914}
+.batch-status.rejected{background:#FFE5E5;color:#C24040}
+.batch-status.qc_submitted{background:var(--lavender);color:#6B4A8B}
+
+/* BUTTONS */
+.btn{padding:13px;border-radius:14px;font-weight:700;font-size:14px;transition:all .2s;cursor:pointer;border:none;width:100%}
+.btn-primary{background:linear-gradient(135deg,var(--pink-400),var(--pink-500));color:white;box-shadow:0 4px 14px rgba(255,107,171,.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,107,171,.4)}
+.btn-primary:disabled{opacity:.6;cursor:wait;transform:none}
+.btn-ghost{background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100)}
+.btn-ghost:hover{background:var(--pink-100)}
+.pay-estimate{background:linear-gradient(135deg,var(--lavender),var(--pink-100));border-radius:14px;padding:14px 16px;text-align:center;margin:14px 0}
+.pay-estimate .amount{font-family:'Comfortaa',sans-serif;font-size:28px;font-weight:700;color:var(--pink-600)}
+.pay-estimate .label{font-size:12px;color:var(--mid);margin-top:2px}
+
+/* LOADING/EMPTY */
+.loading,.empty{text-align:center;padding:40px 20px;color:var(--mid);font-size:13px}
+.loading::before{content:"✿";display:block;font-size:28px;color:var(--pink-300);margin-bottom:10px;animation:spin 2s linear infinite}
+.empty::before{content:"🌸";display:block;font-size:28px;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:white;padding:12px 22px;border-radius:14px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;transition:all .3s;z-index:200;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.error{background:#C24040}.toast.success{background:#4A9B6A}
+
+@media(min-width:600px){.modal-back{align-items:center}.modal{border-radius:28px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <h1 class="login-title">Amioki Portal</h1>
+    <p class="login-sub">✿ Crocheter Dashboard ✿</p>
+    <div class="role-grid">
+      <button class="role-btn" data-role="ashley"><span class="emoji">🧵</span>Ashley</button>
+      <button class="role-btn" data-role="liz"><span class="emoji">🪡</span>Liz</button>
+      <button class="role-btn" data-role="sydni"><span class="emoji">🌷</span>Sydni</button>
+      <button class="role-btn" data-role="ami"><span class="emoji">🌸</span>Ami</button>
+    </div>
+    <div id="loginError" class="error-msg" style="display:none"></div>
+    <input type="password" id="pwInput" class="pw-input" placeholder="✿ Enter your password" autocomplete="current-password">
+    <button id="pwSubmit" class="pw-submit">Enter Portal ✿</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="app">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>Amioki Portal</div>
+    <div class="role-badge">
+      <span id="roleLabel">—</span>
+      <button class="logout-btn" id="logoutBtn">logout</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="tabs">
+      <button class="tab active" data-tab="contract">📋 Contract</button>
+      <button class="tab" data-tab="log">📦 Log Batch</button>
+      <button class="tab" data-tab="qc">✅ Quality Check</button>
+      <button class="tab" data-tab="history">📅 History</button>
+    </div>
+
+    <!-- CONTRACT TAB -->
+    <div class="tab-panel active" id="panel-contract">
+      <div id="contractContent"><div class="loading">Loading contract...</div></div>
+    </div>
+
+    <!-- LOG BATCH TAB -->
+    <div class="tab-panel" id="panel-log">
+      <div class="card">
+        <div class="card-title">📦 Log Items You're Bringing</div>
+        <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Log everything you're bringing to our meeting. Contract items will automatically track against your contract progress.</p>
+
+        <div id="batchItems"></div>
+
+        <!-- Add from contract -->
+        <div id="contractItemPicker" style="display:none;margin-bottom:12px">
+          <div class="field">
+            <label>Add Contract Item</label>
+            <select id="contractItemSelect">
+              <option value="">— pick a contract item —</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Add non-contract item -->
+        <div class="add-item-row">
+          <input type="text" id="newItemName" placeholder="Item name (non-contract)">
+          <button class="add-btn" id="addNonContractBtn">+ Add</button>
+        </div>
+
+        <div id="batchNotes" style="margin-top:12px">
+          <div class="field">
+            <label>Notes for this batch</label>
+            <textarea id="batchNotesInput" rows="2" style="width:100%;padding:10px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50);resize:vertical" placeholder="Any notes about this batch..."></textarea>
+          </div>
+        </div>
+
+        <div class="pay-estimate" id="payEstimate" style="display:none">
+          <div class="amount" id="payAmount">$0.00</div>
+          <div class="label">Estimated pay for this batch ✿</div>
+        </div>
+
+        <button class="btn btn-primary" id="submitBatchBtn" style="margin-top:6px">Submit Batch ✿</button>
+      </div>
+    </div>
+
+    <!-- QC TAB -->
+    <div class="tab-panel" id="panel-qc">
+      <div class="card">
+        <div class="card-title">✅ Quality Control Checklist</div>
+
+        <div id="qcBatchPicker" style="margin-bottom:14px">
+          <div class="field">
+            <label>Which batch is this for?</label>
+            <select id="qcBatchSelect">
+              <option value="">— select a batch —</option>
+            </select>
+          </div>
+        </div>
+
+        <p style="font-size:13px;color:var(--mid);margin-bottom:16px">
+          Review all plushies in this batch against each standard below. Check each box to confirm your items meet that standard.
+        </p>
+
+        <div id="qcChecklist">
+          <!-- 9 QC items -->
+          <div class="qc-item" data-key="fluff_stuff">
+            <div class="qc-check" role="checkbox">☐</div>
+            <div class="qc-label"><strong>Fluff &amp; Stuff</strong><p>Stuffing is firm and evenly distributed — no lumps or air pockets.</p></div>
+          </div>
+          <div class="qc-item" data-key="perfectly_puffed">
+            <div class="qc-check" role="checkbox">☐</div>
+            <div class="qc-label"><strong>Perfectly Puffed</strong><p>Dimensions are within the ±0.30 inch margin (or as specified in your contract).</p></div>
+          </div>
+          <div class="qc-item" data-key="shape_of_cuteness">
+            <div class="qc-check" role="checkbox">☐</div>
+            <div class="qc-label"><strong>Shape of Cuteness</strong><p>Shape matches the intended design — no distortions or asymmetry.</p></div>
+          </div>
+          <div class="qc-item" data-key="smooth_as_butter">
+            <div class="qc-check" role="checkbox">☐</div>
+            <div class="qc-label"><strong>Smooth as Butter</strong><p>Clean, smooth finish — no visible knots, loose ends, mistakes, or holes.</p></div>
+          </div>
+          <div class="qc-item" data-key="hug_friendly">
+            <div class="qc-check" role="checkbox">☐</div>
+            <div class="qc-label"><strong>Hug-Friendly</strong><p>Stitches are consistently tight — not too loose, not too tight.</p></div>
+          </div>
+          <div class="qc-item" data-key="snuggle_safe">
+            <div class="qc-check" role="checkbox">☐</div>
+            <div class="qc-label"><strong>Snuggle Safe</strong><p>All small parts (eyes, buttons, etc.) are securely fastened.</p></div>
+          </div>
+          <div class="qc-item" data-key="color_pop">
+            <div class="qc-check" role="checkbox">☐</div>
+            <div class="qc-label"><strong>Color Pop</strong><p>Colors are consistent — no noticeable fading, mismatched tones, or inconsistencies.</p></div>
+          </div>
+          <div class="qc-item" data-key="durability_darling">
+            <div class="qc-check" role="checkbox">☐</div>
+            <div class="qc-label"><strong>Durability Darling</strong><p>Plushie withstands light pulling without unraveling or deformation.</p></div>
+          </div>
+          <div class="qc-item" data-key="kawaii_harmony">
+            <div class="qc-check" role="checkbox">☐</div>
+            <div class="qc-label"><strong>Kawaii Harmony</strong><p>Overall design aligns with the kawaii aesthetic — cute, balanced, visually appealing.</p></div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px">
+          <div class="field">
+            <label>Your Name</label>
+            <input type="text" id="qcName" placeholder="Sign your name">
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" id="qcDate">
+          </div>
+          <div class="field">
+            <label>Signature</label>
+            <div class="sig-wrap">
+              <canvas id="sigCanvas" class="sig-canvas" height="120"></canvas>
+            </div>
+            <div class="sig-actions">
+              <button class="sig-clear" id="sigClear">Clear Signature</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="submitQCBtn" style="margin-top:6px">Submit Quality Check ✿</button>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="tab-panel" id="panel-history">
+      <div id="historyList"><div class="loading">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API_URL = "https://amioki-inventory-api.amioki-co.workers.dev";
+
+const $ = id => document.getElementById(id);
+let token = null, selectedRole = null, myContract = null;
+let batchItems = []; // { item_name, qty, is_contract, contract_item_id, piece_rate, color_notes }
+let pieceRates = [];
+
+// Session restore
+const saved = localStorage.getItem("amioki_portal_session");
+if (saved) {
+  try {
+    const s = JSON.parse(saved);
+    if (s.token && s.role) {
+      token = s.token; selectedRole = s.role;
+      $("roleLabel").textContent = s.label || s.role;
+      showApp();
+    }
+  } catch (e) {}
+}
+
+// Login
+document.querySelectorAll(".role-btn").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".role-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active"); selectedRole = b.dataset.role; $("pwInput").focus();
+  });
+});
+$("pwInput").addEventListener("keydown", e => { if (e.key === "Enter") attemptLogin(); });
+$("pwSubmit").addEventListener("click", attemptLogin);
+
+async function attemptLogin() {
+  $("loginError").style.display = "none";
+  if (!selectedRole) return showErr("Pick your name first ✿");
+  const pass = $("pwInput").value;
+  if (!pass) return showErr("Password required");
+  const btn = $("pwSubmit"); btn.disabled = true; btn.textContent = "Checking...";
+  try {
+    const r = await fetch(`${API_URL}?action=login&who=${encodeURIComponent(selectedRole)}&pass=${encodeURIComponent(pass)}`);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || "Login failed");
+    token = d.token;
+    localStorage.setItem("amioki_portal_session", JSON.stringify({ token, role: d.role, label: d.label }));
+    $("roleLabel").textContent = d.label;
+    $("pwInput").value = "";
+    showApp();
+  } catch (err) { showErr(err.message); }
+  finally { btn.disabled = false; btn.textContent = "Enter Portal ✿"; }
+}
+function showErr(msg) { $("loginError").textContent = "✗ " + msg; $("loginError").style.display = "block"; }
+
+function showApp() {
+  $("loginScreen").style.display = "none";
+  $("app").classList.add("active");
+  loadContract();
+  loadPieceRates();
+  // Set today's date on QC form
+  $("qcDate").value = new Date().toISOString().split("T")[0];
+}
+
+$("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("amioki_portal_session");
+  token = null; selectedRole = null;
+  $("app").classList.remove("active");
+  $("loginScreen").style.display = "grid";
+  document.querySelectorAll(".role-btn").forEach(b => b.classList.remove("active"));
+});
+
+// Tabs
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    $("panel-" + t.dataset.tab).classList.add("active");
+    if (t.dataset.tab === "history") loadHistory();
+    if (t.dataset.tab === "qc") loadQCBatchPicker();
+  });
+});
+
+// ── CONTRACT TAB ──
+async function loadContract() {
+  const container = $("contractContent");
+  const r = await api("getContracts");
+  if (!r.ok || !r.contract) {
+    container.innerHTML = `<div class="empty">No active contract ✿<br><span style="font-size:11px">Ami will upload your contract when it's ready.</span></div>`;
+    return;
+  }
+  myContract = r.contract;
+  const c = myContract;
+  const daysLeft = c.due_date ? Math.ceil((new Date(c.due_date) - new Date()) / 86400000) : null;
+  const totalDelivered = c.items.reduce((s, i) => s + i.qty_delivered, 0);
+  const totalNeeded = c.items.reduce((s, i) => s + i.qty_needed, 0);
+
+  container.innerHTML = `
+    <div class="contract-header">
+      <h2>🌸 Active Contract</h2>
+      <div class="sub">Total: ${totalDelivered} / ${totalNeeded} items delivered</div>
+      ${c.due_date ? `<div class="due-badge">Due: ${c.due_date}${daysLeft !== null ? ` · ${daysLeft > 0 ? daysLeft + " days left" : "Due today!"}` : ""}</div>` : ""}
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Progress by Item</div>
+      ${c.items.map(i => {
+        const pct = i.qty_needed > 0 ? Math.min(100, Math.round((i.qty_delivered / i.qty_needed) * 100)) : 100;
+        const done = i.qty_delivered >= i.qty_needed;
+        return `<div class="progress-item">
+          <div class="progress-top">
+            <div class="progress-name">${esc(i.item_name)}</div>
+            <div class="progress-count">${i.qty_delivered} / ${i.qty_needed} <span style="color:var(--pink-500);font-weight:700">(${pct}%)</span></div>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill ${done ? "done" : ""}" style="width:${pct}%"></div>
+          </div>
+          ${i.color_notes ? `<div class="color-note">🎨 ${esc(i.color_notes)}</div>` : ""}
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="card">
+      <div class="card-title">💰 Contract Value</div>
+      <div style="text-align:center">
+        <div style="font-family:'Comfortaa',sans-serif;font-size:28px;font-weight:700;color:var(--pink-600)">$${c.total_value.toFixed(2)}</div>
+        <div style="font-size:12px;color:var(--mid);margin-top:4px">Total contract value · ${c.total_items} items @ $${c.hourly_rate}/hr</div>
+      </div>
+    </div>`;
+
+  // Populate contract item picker in Log tab
+  populateContractPicker(c.items);
+}
+
+function populateContractPicker(items) {
+  const picker = $("contractItemPicker");
+  const sel = $("contractItemSelect");
+  if (!items || !items.length) return;
+  picker.style.display = "block";
+  sel.innerHTML = '<option value="">— pick a contract item —</option>' +
+    items.filter(i => i.qty_delivered < i.qty_needed).map(i =>
+      `<option value="${i.id}" data-name="${esc(i.item_name)}" data-rate="${i.piece_rate}" data-remaining="${i.qty_needed - i.qty_delivered}">
+        ${esc(i.item_name)} (${i.qty_needed - i.qty_delivered} remaining)
+      </option>`
+    ).join("");
+
+  sel.addEventListener("change", () => {
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt.value) return;
+    const itemId = Number(opt.value);
+    const itemName = opt.dataset.name;
+    const rate = Number(opt.dataset.rate) || 0;
+    const remaining = Number(opt.dataset.remaining) || 0;
+    if (batchItems.find(b => b.contract_item_id === itemId)) {
+      toast("Already added", "error"); sel.value = ""; return;
+    }
+    batchItems.push({ item_name: itemName, qty: 1, is_contract: true, contract_item_id: itemId, piece_rate: rate, color_notes: "", remaining });
+    renderBatchItems();
+    sel.value = "";
+  });
+}
+
+async function loadPieceRates() {
+  const r = await api("getPieceRates", { crocheter: $("roleLabel").textContent });
+  if (r.ok) pieceRates = r.rates || [];
+}
+
+// ── LOG BATCH TAB ──
+$("addNonContractBtn").addEventListener("click", () => {
+  const name = $("newItemName").value.trim();
+  if (!name) return toast("Enter an item name", "error");
+  // Find piece rate
+  const rate = pieceRates.find(r => r.item_name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(r.item_name.toLowerCase().split(" ")[0]));
+  batchItems.push({ item_name: name, qty: 1, is_contract: false, contract_item_id: null, piece_rate: rate?.total_rate || 0, color_notes: "" });
+  renderBatchItems();
+  $("newItemName").value = "";
+});
+
+function renderBatchItems() {
+  const container = $("batchItems");
+  if (!batchItems.length) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--soft);font-size:13px">No items added yet ✿</div>';
+    $("payEstimate").style.display = "none";
+    return;
+  }
+
+  container.innerHTML = batchItems.map((item, idx) => `
+    <div class="batch-item-row">
+      <div style="flex:1">
+        <div class="batch-item-name">${esc(item.item_name)}</div>
+        <div class="batch-item-meta">
+          ${item.is_contract ? "📋 Contract" : "✨ Bonus"} ·
+          ${item.piece_rate ? "$" + item.piece_rate.toFixed(2) + "/ea" : "rate TBD"}
+          ${item.remaining ? ` · ${item.remaining} remaining` : ""}
+        </div>
+        <input type="text" placeholder="Color notes (optional)" value="${esc(item.color_notes)}"
+          style="width:100%;margin-top:6px;padding:6px 10px;border:1px solid var(--pink-100);border-radius:8px;font-size:12px;background:var(--pink-50)"
+          oninput="batchItems[${idx}].color_notes=this.value">
+      </div>
+      <input type="number" class="qty-input" min="1" value="${item.qty}"
+        oninput="batchItems[${idx}].qty=Number(this.value)||1;updatePayEstimate()">
+      <button class="remove-btn" onclick="batchItems.splice(${idx},1);renderBatchItems()">×</button>
+    </div>`).join("");
+
+  updatePayEstimate();
+}
+
+function updatePayEstimate() {
+  const total = batchItems.reduce((s, i) => s + (i.piece_rate * (i.qty || 1)), 0);
+  if (total > 0) {
+    $("payAmount").textContent = "$" + total.toFixed(2);
+    $("payEstimate").style.display = "block";
+  } else {
+    $("payEstimate").style.display = "none";
+  }
+}
+
+$("submitBatchBtn").addEventListener("click", async () => {
+  if (!batchItems.length) return toast("Add some items first ✿", "error");
+  const btn = $("submitBatchBtn"); btn.disabled = true; btn.textContent = "Submitting...";
+  try {
+    const r = await api("logProduction", {
+      items: JSON.stringify(batchItems.map(i => ({
+        item_name: i.item_name, qty: i.qty,
+        is_contract: i.is_contract, contract_item_id: i.contract_item_id,
+        color_notes: i.color_notes
+      }))),
+      notes: $("batchNotesInput").value
+    });
+    if (!r.ok) throw new Error(r.error);
+    toast(`Batch logged! Est. pay: $${r.payEstimated} ✿`, "success");
+    batchItems = [];
+    renderBatchItems();
+    $("batchNotesInput").value = "";
+    await loadContract(); // Refresh progress
+    // Switch to QC tab
+    setTimeout(() => {
+      document.querySelector('[data-tab="qc"]').click();
+      loadQCBatchPicker();
+    }, 1500);
+  } catch (err) { toast(err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = "Submit Batch ✿"; }
+});
+
+// ── QC TAB ──
+const qcState = {};
+document.querySelectorAll(".qc-item").forEach(item => {
+  const key = item.dataset.key;
+  qcState[key] = 0;
+  const box = item.querySelector(".qc-check");
+  box.addEventListener("click", () => {
+    qcState[key] = qcState[key] ? 0 : 1;
+    box.textContent = qcState[key] ? "✓" : "☐";
+    box.classList.toggle("checked", !!qcState[key]);
+  });
+});
+
+async function loadQCBatchPicker() {
+  const r = await api("getMyBatches");
+  if (!r.ok) return;
+  const sel = $("qcBatchSelect");
+  const pending = (r.batches || []).filter(b => !b.qc_submitted);
+  sel.innerHTML = '<option value="">— select a batch —</option>' +
+    pending.map(b => `<option value="${b.id}">Batch #${b.id} — ${b.batch_date} (${b.items?.length || 0} items)</option>`).join("");
+}
+
+// Signature canvas
+const canvas = $("sigCanvas");
+const ctx2d = canvas.getContext("2d");
+let drawing = false;
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width - 4;
+  canvas.height = 120;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const src = e.touches ? e.touches[0] : e;
+  return { x: (src.clientX - rect.left) * (canvas.width / rect.width), y: (src.clientY - rect.top) * (canvas.height / rect.height) };
+}
+canvas.addEventListener("mousedown", e => { drawing = true; const p = getPos(e); ctx2d.beginPath(); ctx2d.moveTo(p.x, p.y); });
+canvas.addEventListener("mousemove", e => { if (!drawing) return; ctx2d.strokeStyle = "#4A2540"; ctx2d.lineWidth = 2; ctx2d.lineCap = "round"; const p = getPos(e); ctx2d.lineTo(p.x, p.y); ctx2d.stroke(); });
+canvas.addEventListener("mouseup", () => drawing = false);
+canvas.addEventListener("touchstart", e => { e.preventDefault(); drawing = true; const p = getPos(e); ctx2d.beginPath(); ctx2d.moveTo(p.x, p.y); }, { passive: false });
+canvas.addEventListener("touchmove", e => { e.preventDefault(); if (!drawing) return; ctx2d.strokeStyle = "#4A2540"; ctx2d.lineWidth = 2.5; ctx2d.lineCap = "round"; const p = getPos(e); ctx2d.lineTo(p.x, p.y); ctx2d.stroke(); }, { passive: false });
+canvas.addEventListener("touchend", () => drawing = false);
+$("sigClear").addEventListener("click", () => { ctx2d.clearRect(0, 0, canvas.width, canvas.height); });
+
+$("submitQCBtn").addEventListener("click", async () => {
+  const logId = $("qcBatchSelect").value;
+  if (!logId) return toast("Select a batch first", "error");
+  const name = $("qcName").value.trim();
+  const date = $("qcDate").value;
+  if (!name) return toast("Please sign your name", "error");
+  if (!date) return toast("Please add a date", "error");
+
+  const allChecked = Object.values(qcState).every(v => v === 1);
+  if (!allChecked) {
+    if (!confirm("Not all quality checks are marked. Submit anyway?")) return;
+  }
+
+  const sigData = canvas.toDataURL("image/png");
+  const btn = $("submitQCBtn"); btn.disabled = true; btn.textContent = "Submitting...";
+
+  try {
+    const r = await api("submitQC", {
+      log_id: logId, name_signed: name, date_signed: date,
+      signature_data: sigData, ...qcState
+    });
+    if (!r.ok) throw new Error(r.error);
+    toast("Quality check submitted ✿", "success");
+    loadQCBatchPicker();
+  } catch (err) { toast(err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = "Submit Quality Check ✿"; }
+});
+
+// ── HISTORY TAB ──
+async function loadHistory() {
+  const r = await api("getMyBatches");
+  const list = $("historyList");
+  if (!r.ok || !r.batches?.length) {
+    list.innerHTML = '<div class="empty">No batches yet ✿</div>'; return;
+  }
+  list.innerHTML = r.batches.map(b => {
+    const totalItems = b.items?.reduce((s, i) => s + i.qty_logged, 0) || 0;
+    const payDisplay = b.pay_approved > 0 ? `$${Number(b.pay_approved).toFixed(2)} approved` : `$${Number(b.pay_estimated).toFixed(2)} est.`;
+    return `<div class="batch-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700;color:var(--ink)">Batch #${b.id}</div>
+        <span class="batch-status ${b.qc_submitted && b.status === 'pending' ? 'qc_submitted' : b.status}">${b.qc_submitted && b.status === 'pending' ? 'QC Submitted' : b.status}</span>
+      </div>
+      <div style="font-size:12px;color:var(--mid);margin-bottom:6px">${b.batch_date} · ${totalItems} items · ${payDisplay}</div>
+      <div style="font-size:13px">
+        ${b.items?.map(i => `<span style="display:inline-block;background:var(--pink-50);padding:2px 8px;border-radius:6px;margin:2px;font-size:12px">${esc(i.item_name)} ×${i.qty_logged}</span>`).join("") || ""}
+      </div>
+      ${b.notes ? `<div style="font-size:12px;color:var(--soft);margin-top:6px;font-style:italic">${esc(b.notes)}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+// Helpers
+async function api(action, params = {}) {
+  const qs = new URLSearchParams({ action, token: token || "", ...params });
+  const r = await fetch(`${API_URL}?${qs}`);
+  return r.json();
+}
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+let toastTimer;
+function toast(msg, kind = "") {
+  const t = $("toast"); t.textContent = msg; t.className = "toast show " + kind;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = "toast " + kind, 2800);
+}
+</script>
+</body>
+</html>
