@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#FFB6D9">
+<title>Amioki Inventory ✿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink-50: #FFF5FA;
+  --pink-100: #FFE5F0;
+  --pink-200: #FFCCE0;
+  --pink-300: #FFB6D9;
+  --pink-400: #FF8DC0;
+  --pink-500: #FF6BAB;
+  --pink-600: #E91E63;
+  --pink-700: #C2185B;
+  --cream: #FFF9F5;
+  --lavender: #E5D4F5;
+  --mint: #C8F0DC;
+  --peach: #FFD9C0;
+  --lemon: #FFF2A8;
+  --ink: #4A2540;
+  --mid: #8B5A75;
+  --soft: #B894A8;
+  --shadow: 0 4px 20px rgba(255, 107, 171, 0.12);
+  --shadow-lg: 0 8px 40px rgba(255, 107, 171, 0.18);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  font-family: 'Quicksand', sans-serif;
+  background: linear-gradient(135deg, var(--cream) 0%, var(--pink-50) 50%, var(--pink-100) 100%);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(255, 182, 217, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(229, 212, 245, 0.18) 0%, transparent 40%);
+}
+h1, h2, h3, h4 { font-family: 'Comfortaa', sans-serif; font-weight: 700; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, select, textarea { font-family: inherit; font-size: 15px; }
+
+/* ═══════════ LOGIN ═══════════ */
+.login-wrap {
+  min-height: 100vh; display: grid; place-items: center;
+  padding: 24px; position: relative; z-index: 1;
+}
+.login-card {
+  background: white; border-radius: 32px; padding: 40px 28px;
+  width: 100%; max-width: 420px; box-shadow: var(--shadow-lg);
+  border: 3px solid var(--pink-100); position: relative;
+}
+.login-card::before {
+  content: "✿"; position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+  width: 48px; height: 48px; background: var(--pink-300); border-radius: 50%;
+  display: grid; place-items: center; color: white; font-size: 24px;
+  box-shadow: 0 4px 14px rgba(255, 141, 192, 0.4);
+}
+.login-title { text-align: center; font-size: 28px; color: var(--pink-600); margin-bottom: 4px; letter-spacing: -0.5px; }
+.login-sub { text-align: center; color: var(--mid); font-size: 14px; margin-bottom: 28px; }
+.role-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+.role-btn {
+  background: var(--pink-50); border: 2px solid var(--pink-100); border-radius: 16px;
+  padding: 14px 8px; font-size: 14px; font-weight: 600; color: var(--ink);
+  transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.role-btn:hover { background: var(--pink-100); transform: translateY(-2px); }
+.role-btn.active {
+  background: linear-gradient(135deg, var(--pink-300), var(--pink-400));
+  color: white; border-color: var(--pink-400);
+  box-shadow: 0 4px 12px rgba(255, 141, 192, 0.35);
+}
+.role-btn .emoji { font-size: 20px; }
+.role-master { grid-column: span 2; background: linear-gradient(135deg, var(--lavender), var(--pink-100)); }
+.role-master.active { background: linear-gradient(135deg, #B894FF, var(--pink-500)); }
+.pw-input {
+  width: 100%; padding: 14px 18px; border: 2px solid var(--pink-100);
+  border-radius: 16px; background: var(--pink-50); color: var(--ink);
+  margin-bottom: 14px; transition: all 0.2s;
+}
+.pw-input:focus { outline: none; border-color: var(--pink-400); background: white; }
+.pw-submit {
+  width: 100%; padding: 14px; background: linear-gradient(135deg, var(--pink-400), var(--pink-500));
+  color: white; border-radius: 16px; font-size: 15px; font-weight: 700;
+  letter-spacing: 0.3px; transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(255, 107, 171, 0.3);
+}
+.pw-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 107, 171, 0.4); }
+.pw-submit:disabled { opacity: 0.6; cursor: wait; transform: none; }
+.error-msg {
+  background: #FFE5E5; color: #C2185B; padding: 12px 16px; border-radius: 12px;
+  font-size: 13px; text-align: center; margin-bottom: 12px; border: 1px solid #FFB6D9;
+}
+.setup-banner {
+  background: var(--lemon); color: #8B6914; padding: 12px 16px; border-radius: 12px;
+  font-size: 13px; margin-bottom: 16px; border: 1px solid #FFE066;
+}
+
+/* ═══════════ APP SHELL ═══════════ */
+.app { display: none; min-height: 100vh; position: relative; z-index: 1; padding-bottom: 80px; }
+.app.active { display: block; }
+.topbar {
+  background: white; padding: 14px 18px; display: flex;
+  justify-content: space-between; align-items: center;
+  border-bottom: 2px solid var(--pink-100);
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 12px rgba(255, 107, 171, 0.08);
+}
+.brand { font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: 19px; color: var(--pink-600); display: flex; align-items: center; gap: 8px; }
+.brand .dot { width: 9px; height: 9px; background: var(--mint); border-radius: 50%; }
+.role-badge {
+  background: var(--pink-100); color: var(--pink-700); padding: 6px 12px;
+  border-radius: 14px; font-size: 12.5px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.logout-btn { color: var(--mid); font-size: 11px; padding: 2px 6px; border-radius: 6px; }
+.logout-btn:hover { background: var(--pink-100); color: var(--pink-600); }
+.content { padding: 16px 14px; max-width: 720px; margin: 0 auto; }
+
+/* ═══════════ TABS ═══════════ */
+.tabs {
+  display: flex; gap: 6px; margin-bottom: 16px;
+  background: white; padding: 6px; border-radius: 16px;
+  border: 2px solid var(--pink-100); box-shadow: var(--shadow);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: 1; min-width: 0; padding: 10px 12px; border-radius: 12px;
+  font-size: 13px; font-weight: 600; color: var(--mid);
+  white-space: nowrap; transition: all 0.2s; position: relative;
+}
+.tab.active { background: linear-gradient(135deg, var(--pink-300), var(--pink-400)); color: white; box-shadow: 0 2px 8px rgba(255, 141, 192, 0.3); }
+.tab .badge {
+  display: inline-block; min-width: 18px; height: 18px;
+  background: var(--pink-600); color: white; font-size: 10px;
+  border-radius: 9px; padding: 0 5px; margin-left: 4px; line-height: 18px;
+}
+.tab.active .badge { background: white; color: var(--pink-600); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ═══════════ STATS ═══════════ */
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+.stat-card {
+  background: white; border-radius: 16px; padding: 14px;
+  box-shadow: var(--shadow); border: 2px solid var(--pink-100);
+  position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ""; position: absolute; top: -20px; right: -20px;
+  width: 56px; height: 56px; border-radius: 50%; opacity: 0.15;
+}
+.stat-card.pink::before { background: var(--pink-400); }
+.stat-card.mint::before { background: var(--mint); }
+.stat-card.peach::before { background: var(--peach); }
+.stat-card.lavender::before { background: var(--lavender); }
+.stat-label { font-size: 10.5px; color: var(--mid); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 2px; }
+.stat-value { font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: 24px; color: var(--ink); }
+.stat-sub { font-size: 10.5px; color: var(--soft); margin-top: 2px; }
+
+/* ═══════════ SEARCH + FILTERS ═══════════ */
+.search-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.search-input {
+  flex: 1; padding: 11px 14px; border: 2px solid var(--pink-100);
+  border-radius: 14px; background: white;
+}
+.search-input:focus { outline: none; border-color: var(--pink-300); }
+.icon-btn {
+  width: 44px; background: white; border: 2px solid var(--pink-100);
+  border-radius: 14px; font-size: 18px; transition: all 0.2s;
+  display: grid; place-items: center;
+}
+.icon-btn:hover { background: var(--pink-50); }
+.icon-btn.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.filter-bar {
+  display: flex; gap: 6px; margin-bottom: 14px;
+  overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  background: white; border: 2px solid var(--pink-100); padding: 7px 13px;
+  border-radius: 12px; font-size: 12.5px; font-weight: 600;
+  color: var(--mid); white-space: nowrap; flex-shrink: 0; transition: all 0.2s;
+}
+.filter-chip.active { background: var(--pink-400); color: white; border-color: var(--pink-400); }
+
+/* ═══════════ ITEM CARDS ═══════════ */
+.items-list { display: flex; flex-direction: column; gap: 9px; }
+.item-card {
+  background: white; border-radius: 16px; padding: 13px 14px;
+  box-shadow: var(--shadow); border: 2px solid var(--pink-100);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  transition: transform 0.15s;
+}
+.item-card:active { transform: scale(0.98); }
+.item-card.ok { border-left: 5px solid #6BCF7F; }
+.item-card.low { border-left: 5px solid #FFC75F; }
+.item-card.out { border-left: 5px solid #FF7676; opacity: 0.92; }
+.item-info { flex: 1; min-width: 0; }
+.item-name { font-weight: 600; color: var(--ink); margin-bottom: 2px; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-meta { display: flex; gap: 7px; font-size: 11px; color: var(--soft); flex-wrap: wrap; }
+.item-meta span { display: inline-flex; align-items: center; gap: 3px; }
+.item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.item-qty { font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: 22px; color: var(--ink); line-height: 1; }
+.item-qty.warn { color: #C67700; }
+.item-qty.danger { color: #C24040; }
+.item-actions { display: flex; gap: 4px; margin-top: 4px; }
+.act-btn {
+  width: 28px; height: 28px; border-radius: 8px; background: var(--pink-50);
+  color: var(--pink-600); border: 1px solid var(--pink-100);
+  font-size: 13px; font-weight: 700; display: grid; place-items: center; padding: 0;
+}
+.act-btn:hover { background: var(--pink-200); }
+.act-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.act-btn.edit { background: var(--lavender); color: #6B4A8B; border-color: #D4BFEB; }
+
+/* ═══════════ EMPTY / LOADING ═══════════ */
+.loading, .empty {
+  text-align: center; padding: 50px 20px; color: var(--mid); font-size: 13px;
+}
+.loading::before { content: "✿"; display: block; font-size: 32px; color: var(--pink-300); margin-bottom: 12px; animation: spin 2s linear infinite; }
+.empty::before { content: "🌸"; display: block; font-size: 32px; margin-bottom: 12px; }
+
+/* ═══════════ FAB (add item) ═══════════ */
+.fab {
+  position: fixed; bottom: 24px; right: 20px; width: 56px; height: 56px;
+  border-radius: 50%; background: linear-gradient(135deg, var(--pink-400), var(--pink-500));
+  color: white; font-size: 28px; display: grid; place-items: center;
+  box-shadow: 0 6px 24px rgba(255, 107, 171, 0.45);
+  z-index: 40; transition: all 0.2s;
+}
+.fab:hover { transform: scale(1.08); }
+.fab:active { transform: scale(0.95); }
+
+/* ═══════════ MODAL ═══════════ */
+.modal-back {
+  position: fixed; inset: 0; background: rgba(74, 37, 64, 0.5);
+  display: none; align-items: flex-end; justify-content: center;
+  z-index: 100; padding: 0; backdrop-filter: blur(4px);
+}
+.modal-back.show { display: flex; }
+.modal {
+  background: white; border-radius: 28px 28px 0 0; padding: 24px 20px;
+  width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 -8px 40px rgba(255, 107, 171, 0.25);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-handle {
+  width: 40px; height: 4px; background: var(--pink-200); border-radius: 2px;
+  margin: -8px auto 16px;
+}
+.modal-title { font-size: 18px; color: var(--pink-600); margin-bottom: 16px; text-align: center; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--mid); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 11px 14px; border: 2px solid var(--pink-100);
+  border-radius: 12px; background: var(--pink-50);
+}
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--pink-400); background: white; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 18px; }
+.btn {
+  flex: 1; padding: 13px; border-radius: 14px; font-weight: 700;
+  font-size: 14px; transition: all 0.2s; cursor: pointer;
+}
+.btn-primary { background: linear-gradient(135deg, var(--pink-400), var(--pink-500)); color: white; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(255, 107, 171, 0.3); }
+.btn-primary:disabled { opacity: 0.6; cursor: wait; }
+.btn-ghost { background: var(--pink-50); color: var(--mid); border: 2px solid var(--pink-100); }
+.btn-ghost:hover { background: var(--pink-100); }
+.btn-danger { background: #FFE5E5; color: #C24040; border: 2px solid #FFB6D9; }
+
+/* ═══════════ SALES + UNMATCHED ═══════════ */
+.sale-row {
+  background: white; border-radius: 12px; padding: 10px 14px;
+  border-left: 4px solid var(--mint);
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 7px; font-size: 13px;
+}
+.sale-row.refund { border-left-color: var(--peach); }
+.sale-row.adjust { border-left-color: var(--lavender); }
+.sale-meta { color: var(--soft); font-size: 10.5px; }
+
+.unmatched-card {
+  background: white; border-radius: 16px; padding: 14px;
+  border: 2px solid var(--peach); margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.unmatched-card .um-name { font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.unmatched-card .um-meta { font-size: 11px; color: var(--soft); margin-bottom: 10px; }
+.unmatched-card .um-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.um-mini-btn {
+  padding: 7px 12px; border-radius: 10px; font-size: 12px; font-weight: 600;
+  background: var(--pink-50); color: var(--pink-700); border: 1px solid var(--pink-200);
+}
+.um-mini-btn.create { background: var(--mint); color: #2E6B47; border-color: #A8DDC0; }
+.um-mini-btn.ignore { background: #F0F0F0; color: var(--mid); border-color: #E0E0E0; }
+
+/* ═══════════ TOAST ═══════════ */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: var(--ink); color: white; padding: 12px 22px; border-radius: 14px;
+  font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg);
+  opacity: 0; transition: all 0.3s; z-index: 200; pointer-events: none; max-width: 90vw; text-align: center;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.error { background: #C24040; }
+.toast.success { background: #4A9B6A; }
+
+@media (min-width: 600px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .modal-back { align-items: center; }
+  .modal { border-radius: 28px; max-height: 80vh; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN ═══════════ -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <h1 class="login-title">Amioki</h1>
+    <p class="login-sub">✿ Inventory Dashboard v3 ✿</p>
+    <div id="setupBanner" class="setup-banner" style="display:none">
+      ⚠️ <strong>Setup:</strong> paste your Cloudflare Worker URL into <code>API_URL</code> in the source.
+    </div>
+    <div class="role-grid">
+      <button class="role-btn" data-role="ashley"><span class="emoji">🧵</span>Ashley</button>
+      <button class="role-btn" data-role="liz"><span class="emoji">🪡</span>Liz</button>
+      <button class="role-btn" data-role="sydni"><span class="emoji">🌷</span>Sydni</button>
+      <button class="role-btn" data-role="ami"><span class="emoji">🌸</span>Ami</button>
+      <button class="role-btn role-master" data-role="master"><span class="emoji">✨</span>Master Dashboard</button>
+    </div>
+    <div id="loginError" class="error-msg" style="display:none"></div>
+    <input type="password" id="pwInput" class="pw-input" placeholder="✿ Enter password" autocomplete="current-password">
+    <button id="pwSubmit" class="pw-submit">Enter ✿</button>
+  </div>
+</div>
+
+<!-- ═══════════ APP ═══════════ -->
+<div id="app" class="app">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>Amioki ✿</div>
+    <div class="role-badge">
+      <span id="roleLabel">—</span>
+      <button class="logout-btn" id="logoutBtn">logout</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="inventory">Inventory</button>
+      <button class="tab" data-tab="sales">Sales</button>
+      <button class="tab" data-tab="unmatched" style="display:none">Unmatched <span class="badge" id="umBadge">0</span></button>
+    </div>
+
+    <!-- INVENTORY TAB -->
+    <div class="tab-panel active" id="panel-inventory">
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="search-row">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search items...">
+        <button class="icon-btn" id="refreshBtn" title="Refresh">↻</button>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-chip active" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="ok">✿ In Stock</button>
+        <button class="filter-chip" data-filter="low">⚠️ Low</button>
+        <button class="filter-chip" data-filter="out">○ Out</button>
+      </div>
+      <div class="items-list" id="itemsList">
+        <div class="loading">Loading inventory...</div>
+      </div>
+    </div>
+
+    <!-- SALES TAB -->
+    <div class="tab-panel" id="panel-sales">
+      <div id="salesList"><div class="loading">Loading sales...</div></div>
+    </div>
+
+    <!-- UNMATCHED TAB -->
+    <div class="tab-panel" id="panel-unmatched">
+      <div id="unmatchedList"><div class="loading">Loading...</div></div>
+    </div>
+  </div>
+
+  <button class="fab" id="fabAdd" style="display:none" title="Add item">+</button>
+</div>
+
+<!-- ═══════════ ITEM MODAL ═══════════ -->
+<div class="modal-back" id="itemModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title" id="modalTitle">Add Item ✿</h2>
+    <input type="hidden" id="fId">
+    <div class="field">
+      <label>Item Name *</label>
+      <input type="text" id="fName" placeholder="e.g. Strawberry Frog">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>On Hand</label>
+        <input type="number" id="fOnHand" min="0" value="0">
+      </div>
+      <div class="field">
+        <label>Min Stock</label>
+        <input type="number" id="fMinStock" min="0" value="0">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Price ($)</label>
+        <input type="number" id="fPrice" min="0" step="0.01" value="0">
+      </div>
+      <div class="field">
+        <label>Cost ($)</label>
+        <input type="number" id="fCost" min="0" step="0.01" value="0">
+      </div>
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <input type="text" id="fCategory" placeholder="e.g. Keychain, Regular, Sticker">
+    </div>
+    <div class="field">
+      <label>Crocheter</label>
+      <select id="fCrocheter">
+        <option value="Amioki">Amioki</option>
+        <option value="Ashley">Ashley</option>
+        <option value="Liz">Liz</option>
+        <option value="Sydni">Sydni</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Square Catalog ID (optional)</label>
+      <input type="text" id="fSquareId" placeholder="Auto-fills when Square sale matches">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-danger" id="btnDelete" style="display:none">Delete</button>
+      <button class="btn btn-ghost" id="btnCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnSave">Save ✿</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ UNMATCHED RESOLVE MODAL ═══════════ -->
+<div class="modal-back" id="resolveModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title">Resolve Sale 🔗</h2>
+    <p style="text-align:center;color:var(--mid);font-size:13px;margin-bottom:14px">
+      Square sold <strong id="rmName"></strong> × <strong id="rmQty"></strong> but no item matched.
+    </p>
+    <div class="field">
+      <label>Link to existing item</label>
+      <select id="rmItemSelect">
+        <option value="">— pick an item —</option>
+      </select>
+    </div>
+    <div class="modal-btns" style="flex-direction:column">
+      <button class="btn btn-primary" id="rmLinkBtn">🔗 Link &amp; Deduct</button>
+      <button class="btn btn-ghost" id="rmCreateBtn">➕ Create as new item</button>
+      <button class="btn btn-ghost" id="rmIgnoreBtn">Skip this one</button>
+    </div>
+    <input type="hidden" id="rmId">
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONFIG — paste your Cloudflare Worker URL here
+// ═══════════════════════════════════════════════════════════
+const API_URL = "PASTE_YOUR_CLOUDFLARE_WORKER_URL_HERE";
+
+// ═══════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+let selectedRole = null, token = null, canEdit = false;
+let allItems = [];
+let currentFilter = "all", currentSearch = "", currentTab = "inventory";
+
+// ───────── Session restore ─────────
+const saved = localStorage.getItem("amioki_v3_session");
+if (saved) {
+  try {
+    const s = JSON.parse(saved);
+    if (s.token && s.role) {
+      token = s.token; selectedRole = s.role; canEdit = !!s.canEdit;
+      $("roleLabel").textContent = s.label || s.role;
+      showApp();
+    }
+  } catch (e) {}
+}
+
+// ───────── Setup banner ─────────
+if (API_URL.startsWith("PASTE_")) $("setupBanner").style.display = "block";
+
+// ───────── Login UI ─────────
+document.querySelectorAll(".role-btn").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".role-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    selectedRole = b.dataset.role;
+    $("pwInput").focus();
+  });
+});
+$("pwInput").addEventListener("keydown", e => { if (e.key === "Enter") attemptLogin(); });
+$("pwSubmit").addEventListener("click", attemptLogin);
+
+async function attemptLogin() {
+  $("loginError").style.display = "none";
+  if (!selectedRole) return showLoginError("Pick a role first ✿");
+  const pass = $("pwInput").value;
+  if (!pass) return showLoginError("Password required");
+  if (API_URL.startsWith("PASTE_")) return showLoginError("API_URL not configured");
+
+  const btn = $("pwSubmit");
+  btn.disabled = true; btn.textContent = "Checking...";
+  try {
+    const r = await fetch(`${API_URL}?action=login&who=${encodeURIComponent(selectedRole)}&pass=${encodeURIComponent(pass)}`);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || "Login failed");
+    token = d.token; canEdit = !!d.canEdit;
+    localStorage.setItem("amioki_v3_session", JSON.stringify({ token, role: d.role, label: d.label, canEdit }));
+    $("roleLabel").textContent = d.label;
+    $("pwInput").value = "";
+    showApp();
+  } catch (err) {
+    showLoginError(err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Enter ✿";
+  }
+}
+function showLoginError(msg) { $("loginError").textContent = "✗ " + msg; $("loginError").style.display = "block"; }
+
+// ───────── App boot ─────────
+function showApp() {
+  $("loginScreen").style.display = "none";
+  $("app").classList.add("active");
+  if (canEdit) { $("fabAdd").style.display = "grid"; document.querySelector('[data-tab="unmatched"]').style.display = ""; }
+  loadAll();
+}
+$("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("amioki_v3_session");
+  token = null; selectedRole = null; canEdit = false;
+  $("app").classList.remove("active");
+  $("loginScreen").style.display = "grid";
+  document.querySelectorAll(".role-btn").forEach(b => b.classList.remove("active"));
+});
+
+// ───────── Tabs ─────────
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    currentTab = t.dataset.tab;
+    $("panel-" + currentTab).classList.add("active");
+    if (currentTab === "sales") loadSales();
+    if (currentTab === "unmatched") loadUnmatched();
+  });
+});
+
+// ───────── Refresh + search ─────────
+$("refreshBtn").addEventListener("click", () => {
+  $("refreshBtn").classList.add("spin");
+  loadAll().finally(() => setTimeout(() => $("refreshBtn").classList.remove("spin"), 500));
+});
+$("searchInput").addEventListener("input", e => { currentSearch = e.target.value.toLowerCase(); renderItems(); });
+document.querySelectorAll(".filter-chip").forEach(c => {
+  c.addEventListener("click", () => {
+    document.querySelectorAll(".filter-chip").forEach(x => x.classList.remove("active"));
+    c.classList.add("active");
+    currentFilter = c.dataset.filter;
+    renderItems();
+  });
+});
+
+// ───────── Data loading ─────────
+async function loadAll() {
+  try {
+    const [inv, stats] = await Promise.all([api("getInventory"), api("getStats")]);
+    if (!inv.ok) throw new Error(inv.error || "Load failed");
+    allItems = inv.items || [];
+    renderStats(stats.stats || {});
+    renderItems();
+    if (canEdit) updateUnmatchedBadge();
+  } catch (err) {
+    if (err.message === "Auth required") { $("logoutBtn").click(); toast("Session expired", "error"); }
+    else toast(err.message, "error");
+  }
+}
+
+async function loadSales() {
+  const r = await api("getSalesLog", { limit: 50 });
+  const list = $("salesList");
+  if (!r.ok) { list.innerHTML = `<div class="empty">${r.error}</div>`; return; }
+  if (!r.sales || r.sales.length === 0) {
+    list.innerHTML = '<div class="empty">No sales yet ✿</div>'; return;
+  }
+  list.innerHTML = r.sales.map(s => {
+    const t = (s.type || "sale").toLowerCase();
+    const date = new Date(s.timestamp);
+    const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
+                    " " + date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    const icon = t === "refund" ? "↩️" : t === "adjust" || t === "manual" ? "✍️" : "🌸";
+    const qtyStr = s.qty > 0 ? `+${s.qty}` : s.qty;
+    return `<div class="sale-row ${t}">
+      <div>
+        <div style="font-weight:600">${esc(s.item_name)} <span style="color:var(--soft)">${qtyStr}</span></div>
+        <div class="sale-meta">${dateStr}${s.crocheter ? " · " + esc(s.crocheter) : ""}${s.note ? " · " + esc(s.note) : ""}</div>
+      </div>
+      <div style="font-size:18px">${icon}</div>
+    </div>`;
+  }).join("");
+}
+
+async function loadUnmatched() {
+  const r = await api("getUnmatched");
+  const list = $("unmatchedList");
+  if (!r.ok) { list.innerHTML = `<div class="empty">${r.error}</div>`; return; }
+  if (!r.unmatched || r.unmatched.length === 0) {
+    list.innerHTML = '<div class="empty">No unmatched sales 🌸<br><span style="font-size:11px">All Square sales linked up nicely.</span></div>';
+    return;
+  }
+  list.innerHTML = r.unmatched.map(u => {
+    const date = new Date(u.timestamp);
+    const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    return `<div class="unmatched-card">
+      <div class="um-name">${esc(u.square_name)} × ${u.qty}</div>
+      <div class="um-meta">${dateStr}${u.square_catalog_id ? " · ID: " + esc(u.square_catalog_id) : ""}</div>
+      <div class="um-actions">
+        <button class="um-mini-btn" data-resolve="link" data-id="${u.id}" data-name="${esc(u.square_name)}" data-qty="${u.qty}">🔗 Link</button>
+        <button class="um-mini-btn create" data-resolve="create" data-id="${u.id}" data-name="${esc(u.square_name)}" data-qty="${u.qty}">➕ Create</button>
+        <button class="um-mini-btn ignore" data-resolve="ignore" data-id="${u.id}">Skip</button>
+      </div>
+    </div>`;
+  }).join("");
+  list.querySelectorAll("[data-resolve]").forEach(btn => {
+    btn.addEventListener("click", () => handleResolve(btn.dataset));
+  });
+}
+
+async function updateUnmatchedBadge() {
+  const r = await api("getUnmatched");
+  if (!r.ok) return;
+  const n = (r.unmatched || []).length;
+  const badge = $("umBadge");
+  badge.textContent = n;
+  badge.style.display = n > 0 ? "" : "none";
+}
+
+// ───────── Render ─────────
+function renderStats(stats) {
+  $("statsGrid").innerHTML = [
+    { l: "On Hand", v: stats.totalOnHand || 0, c: "pink", s: `${stats.totalItems || 0} SKUs` },
+    { l: "In Stock", v: stats.inStock || 0, c: "mint", s: "items ok" },
+    { l: "Low", v: stats.lowStock || 0, c: "peach", s: "need restock" },
+    { l: "Out", v: stats.outOfStock || 0, c: "lavender", s: "zero qty" }
+  ].map(c => `<div class="stat-card ${c.c}"><div class="stat-label">${c.l}</div><div class="stat-value">${c.v}</div><div class="stat-sub">${c.s}</div></div>`).join("");
+}
+
+function renderItems() {
+  const list = $("itemsList");
+  let filtered = allItems.filter(i => {
+    if (currentSearch && !i.name.toLowerCase().includes(currentSearch)) return false;
+    const st = stockStatus(i);
+    if (currentFilter !== "all" && st !== currentFilter) return false;
+    return true;
+  });
+  filtered.sort((a, b) => {
+    const order = { out: 0, low: 1, ok: 2 };
+    const d = order[stockStatus(a)] - order[stockStatus(b)];
+    if (d) return d;
+    return a.name.localeCompare(b.name);
+  });
+  if (filtered.length === 0) { list.innerHTML = '<div class="empty">No items match ✿</div>'; return; }
+
+  list.innerHTML = filtered.map(i => {
+    const st = stockStatus(i);
+    const qc = st === "out" ? "danger" : st === "low" ? "warn" : "";
+    return `<div class="item-card ${st}" data-id="${i.id}">
+      <div class="item-info">
+        <div class="item-name">${esc(i.name)}</div>
+        <div class="item-meta">
+          ${i.category ? `<span>🏷️ ${esc(i.category)}</span>` : ""}
+          ${i.crocheter && selectedRole === "master" ? `<span>👤 ${esc(i.crocheter)}</span>` : ""}
+          ${i.min_stock > 0 ? `<span>min ${i.min_stock}</span>` : ""}
+          ${i.price ? `<span>$${i.price.toFixed(2)}</span>` : ""}
+        </div>
+      </div>
+      <div class="item-right">
+        <div class="item-qty ${qc}">${i.on_hand}</div>
+        <div class="item-actions">
+          <button class="act-btn" data-act="dec" ${i.on_hand <= 0 ? "disabled" : ""}>−</button>
+          <button class="act-btn" data-act="inc">+</button>
+          ${canEdit ? `<button class="act-btn edit" data-act="edit">✎</button>` : ""}
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  list.querySelectorAll(".item-card").forEach(card => {
+    const id = Number(card.dataset.id);
+    const item = allItems.find(x => x.id === id);
+    card.querySelectorAll("[data-act]").forEach(btn => {
+      btn.addEventListener("click", async e => {
+        e.stopPropagation();
+        const act = btn.dataset.act;
+        if (act === "edit") openEditModal(item);
+        else {
+          const delta = act === "inc" ? 1 : -1;
+          btn.disabled = true;
+          const r = await api("adjustStock", { id, delta, note: "from dashboard" });
+          if (r.ok) {
+            item.on_hand = r.newQty;
+            renderItems();
+            const s = await api("getStats"); if (s.ok) renderStats(s.stats);
+          } else { toast(r.error, "error"); btn.disabled = false; }
+        }
+      });
+    });
+  });
+}
+
+function stockStatus(i) {
+  if (i.on_hand <= 0) return "out";
+  if (i.min_stock > 0 && i.on_hand < i.min_stock) return "low";
+  return "ok";
+}
+
+// ───────── Modal: add / edit item ─────────
+$("fabAdd").addEventListener("click", () => openAddModal());
+$("btnCancel").addEventListener("click", closeModal);
+$("itemModal").addEventListener("click", e => { if (e.target.id === "itemModal") closeModal(); });
+$("btnSave").addEventListener("click", saveItem);
+$("btnDelete").addEventListener("click", deleteItem);
+
+function openAddModal() {
+  $("modalTitle").textContent = "Add Item ✿";
+  $("fId").value = "";
+  $("fName").value = ""; $("fOnHand").value = 0; $("fMinStock").value = 0;
+  $("fPrice").value = 0; $("fCost").value = 0; $("fCategory").value = "";
+  $("fSquareId").value = "";
+  $("fCrocheter").value = selectedRole === "ami" ? "Amioki" : "Amioki";
+  $("btnDelete").style.display = "none";
+  $("itemModal").classList.add("show");
+  setTimeout(() => $("fName").focus(), 100);
+}
+
+function openEditModal(item) {
+  $("modalTitle").textContent = "Edit Item ✎";
+  $("fId").value = item.id;
+  $("fName").value = item.name;
+  $("fOnHand").value = item.on_hand;
+  $("fMinStock").value = item.min_stock;
+  $("fPrice").value = item.price;
+  $("fCost").value = item.cost;
+  $("fCategory").value = item.category;
+  $("fSquareId").value = item.square_catalog_id || "";
+  $("fCrocheter").value = item.crocheter;
+  $("btnDelete").style.display = selectedRole === "master" ? "block" : "none";
+  $("itemModal").classList.add("show");
+}
+
+function closeModal() { $("itemModal").classList.remove("show"); }
+
+async function saveItem() {
+  const id = $("fId").value;
+  const params = {
+    name: $("fName").value.trim(),
+    on_hand: $("fOnHand").value,
+    min_stock: $("fMinStock").value,
+    price: $("fPrice").value,
+    cost: $("fCost").value,
+    category: $("fCategory").value.trim(),
+    crocheter: $("fCrocheter").value,
+    square_catalog_id: $("fSquareId").value.trim()
+  };
+  if (!params.name) return toast("Name required", "error");
+  $("btnSave").disabled = true;
+  const r = id
+    ? await api("updateItem", { id, ...params })
+    : await api("addItem", params);
+  $("btnSave").disabled = false;
+  if (r.ok) {
+    toast(id ? "Saved ✿" : "Added ✿", "success");
+    closeModal();
+    loadAll();
+  } else toast(r.error, "error");
+}
+
+async function deleteItem() {
+  const id = $("fId").value;
+  if (!id) return;
+  if (!confirm("Delete this item? Sales history will stay but item disappears from inventory.")) return;
+  const r = await api("deleteItem", { id });
+  if (r.ok) { toast(r.message || "Deleted", "success"); closeModal(); loadAll(); }
+  else toast(r.error, "error");
+}
+
+// ───────── Resolve unmatched ─────────
+async function handleResolve(data) {
+  const id = data.id, kind = data.resolve;
+  if (kind === "ignore") {
+    if (!confirm("Skip this unmatched sale? It won't affect inventory.")) return;
+    const r = await api("resolveUnmatched", { id, choice: "ignore" });
+    if (r.ok) { toast("Skipped", "success"); loadUnmatched(); updateUnmatchedBadge(); }
+    else toast(r.error, "error");
+    return;
+  }
+  if (kind === "create") {
+    if (!confirm(`Create "${data.name}" as a new item? It'll start at -${data.qty} on hand — adjust after.`)) return;
+    const r = await api("resolveUnmatched", { id, choice: "create", crocheter: "Amioki" });
+    if (r.ok) { toast("Created ✿", "success"); loadUnmatched(); updateUnmatchedBadge(); loadAll(); }
+    else toast(r.error, "error");
+    return;
+  }
+  if (kind === "link") {
+    // Populate select
+    const sel = $("rmItemSelect");
+    sel.innerHTML = '<option value="">— pick an item —</option>' +
+      [...allItems].sort((a,b)=>a.name.localeCompare(b.name)).map(i =>
+        `<option value="${i.id}">${esc(i.name)} (${i.crocheter})</option>`
+      ).join("");
+    $("rmName").textContent = data.name;
+    $("rmQty").textContent = data.qty;
+    $("rmId").value = id;
+    $("resolveModal").classList.add("show");
+  }
+}
+$("rmLinkBtn").addEventListener("click", async () => {
+  const id = $("rmId").value;
+  const itemId = $("rmItemSelect").value;
+  if (!itemId) return toast("Pick an item to link to", "error");
+  const r = await api("resolveUnmatched", { id, choice: "link", itemId });
+  if (r.ok) { toast("Linked ✿", "success"); $("resolveModal").classList.remove("show"); loadUnmatched(); updateUnmatchedBadge(); loadAll(); }
+  else toast(r.error, "error");
+});
+$("rmCreateBtn").addEventListener("click", async () => {
+  const id = $("rmId").value;
+  if (!confirm("Create as new item? Goes negative until you correct.")) return;
+  const r = await api("resolveUnmatched", { id, choice: "create", crocheter: "Amioki" });
+  if (r.ok) { toast("Created ✿", "success"); $("resolveModal").classList.remove("show"); loadUnmatched(); updateUnmatchedBadge(); loadAll(); }
+  else toast(r.error, "error");
+});
+$("rmIgnoreBtn").addEventListener("click", async () => {
+  const id = $("rmId").value;
+  const r = await api("resolveUnmatched", { id, choice: "ignore" });
+  if (r.ok) { toast("Skipped", "success"); $("resolveModal").classList.remove("show"); loadUnmatched(); updateUnmatchedBadge(); }
+  else toast(r.error, "error");
+});
+$("resolveModal").addEventListener("click", e => { if (e.target.id === "resolveModal") $("resolveModal").classList.remove("show"); });
+
+// ───────── Helpers ─────────
+async function api(action, params = {}) {
+  const qs = new URLSearchParams({ action, token: token || "", ...params });
+  const r = await fetch(`${API_URL}?${qs}`);
+  return r.json();
+}
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+let toastTimer;
+function toast(msg, kind = "") {
+  const t = $("toast");
+  t.textContent = msg; t.className = "toast show " + kind;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = "toast " + kind, 2600);
+}
+
+// ───────── Auto-refresh every 60s ─────────
+setInterval(() => { if (token && currentTab === "inventory") loadAll(); }, 60000);
+</script>
+</body>
+</html>
