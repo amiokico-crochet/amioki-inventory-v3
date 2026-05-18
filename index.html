@@ -106,7 +106,19 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .act-btn.edit{background:var(--lavender);color:#6B4A8B;border-color:#D4BFEB}
 .act-btn.archive{background:#FFF2A8;color:#8B6914;border-color:#FFE066}
 
-/* LOADING / EMPTY */
+/* GALLERY VIEW */
+.gallery-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.gallery-card{background:white;border-radius:16px;padding:14px 12px;box-shadow:var(--shadow);border:2px solid var(--pink-100);display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;transition:transform .15s;position:relative}
+.gallery-card:active{transform:scale(.97)}
+.gallery-card.ok{border-top:4px solid #6BCF7F}.gallery-card.low{border-top:4px solid #FFC75F}.gallery-card.out{border-top:4px solid #FF7676;opacity:.9}
+.gallery-card .g-name{font-weight:700;font-size:13px;color:var(--ink);line-height:1.3;word-break:break-word}
+.gallery-card .g-cat{font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.5px}
+.gallery-card .g-qty{font-family:'Comfortaa',sans-serif;font-weight:700;font-size:28px;color:var(--ink);line-height:1}
+.gallery-card .g-qty.warn{color:#C67700}.gallery-card .g-qty.danger{color:#C24040}
+.gallery-card .g-actions{display:flex;gap:6px;margin-top:4px}
+.gallery-card .edit-overlay{position:absolute;top:8px;right:8px}
+@media(min-width:480px){.gallery-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:700px){.gallery-grid{grid-template-columns:repeat(4,1fr)}}
 .loading,.empty{text-align:center;padding:50px 20px;color:var(--mid);font-size:13px}
 .loading::before{content:"✿";display:block;font-size:32px;color:var(--pink-300);margin-bottom:12px;animation:spin 2s linear infinite}
 .empty::before{content:"🌸";display:block;font-size:32px;margin-bottom:12px}
@@ -235,6 +247,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <div class="search-row">
         <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search items...">
         <button class="icon-btn" id="refreshBtn">↻</button>
+        <button class="icon-btn" id="viewToggleBtn" title="Toggle view">☰</button>
       </div>
       <div class="filter-bar">
         <button class="filter-chip active" data-filter="all">All</button>
@@ -394,6 +407,7 @@ const API_URL = "https://amioki-inventory-api.amioki-co.workers.dev";
 const $ = id => document.getElementById(id);
 let selectedRole = null, token = null, canEdit = false, isMaster = false;
 let allItems = [], currentFilter = "all", currentSearch = "", currentTab = "inventory";
+let viewMode = localStorage.getItem("amioki_view") || "list"; // "list" | "gallery"
 
 // Session restore
 const saved = localStorage.getItem("amioki_v3_session");
@@ -446,6 +460,7 @@ function showApp() {
   $("app").classList.add("active");
   if (canEdit)   $("fabAdd").style.display = "grid";
   if (isMaster)  document.querySelectorAll(".master-only").forEach(el => el.style.display = "");
+  $("viewToggleBtn").textContent = viewMode === "list" ? "☰" : "⊞";
   loadAll();
   loadProfile();
 }
@@ -475,6 +490,12 @@ document.querySelectorAll(".tab").forEach(t => {
 $("refreshBtn").addEventListener("click", () => {
   $("refreshBtn").classList.add("spin");
   loadAll().finally(() => setTimeout(() => $("refreshBtn").classList.remove("spin"), 500));
+});
+$("viewToggleBtn").addEventListener("click", () => {
+  viewMode = viewMode === "list" ? "gallery" : "list";
+  localStorage.setItem("amioki_view", viewMode);
+  $("viewToggleBtn").textContent = viewMode === "list" ? "☰" : "⊞";
+  renderItems();
 });
 $("searchInput").addEventListener("input", e => { currentSearch = e.target.value.toLowerCase(); renderItems(); });
 document.querySelectorAll(".filter-chip").forEach(c => {
@@ -670,31 +691,52 @@ function renderItems() {
   });
   if (!filtered.length) { list.innerHTML = '<div class="empty">No items match ✿</div>'; return; }
 
-  list.innerHTML = filtered.map(i => {
-    const st = stockStatus(i);
-    const qc = st === "out" ? "danger" : st === "low" ? "warn" : "";
-    return `<div class="item-card ${st}" data-id="${i.id}">
-      <div class="item-info">
-        <div class="item-name">${esc(i.name)}</div>
-        <div class="item-meta">
-          ${i.category ? `<span>🏷️ ${esc(i.category)}</span>` : ""}
-          ${i.crocheter && isMaster ? `<span>👤 ${esc(i.crocheter)}</span>` : ""}
-          ${i.min_stock > 0 ? `<span>min ${i.min_stock}</span>` : ""}
-          ${i.price ? `<span>$${i.price.toFixed(2)}</span>` : ""}
-        </div>
-      </div>
-      <div class="item-right">
-        <div class="item-qty ${qc}">${i.on_hand}</div>
-        <div class="item-actions">
+  if (viewMode === "gallery") {
+    list.className = "gallery-grid";
+    list.innerHTML = filtered.map(i => {
+      const st = stockStatus(i);
+      const qc = st === "out" ? "danger" : st === "low" ? "warn" : "";
+      return `<div class="gallery-card ${st}" data-id="${i.id}">
+        ${canEdit ? `<button class="act-btn edit edit-overlay" data-act="edit" style="width:24px;height:24px;font-size:11px">✎</button>` : ""}
+        <div class="g-cat">${esc(i.category || "—")}</div>
+        <div class="g-name">${esc(i.name)}</div>
+        <div class="g-qty ${qc}">${i.on_hand}</div>
+        ${i.min_stock > 0 ? `<div style="font-size:10px;color:var(--soft)">min ${i.min_stock}</div>` : ""}
+        <div class="g-actions">
           <button class="act-btn" data-act="dec" ${i.on_hand <= 0 ? "disabled" : ""}>−</button>
           <button class="act-btn" data-act="inc">+</button>
-          ${canEdit ? `<button class="act-btn edit" data-act="edit">✎</button>` : ""}
         </div>
-      </div>
-    </div>`;
-  }).join("");
+      </div>`;
+    }).join("");
+  } else {
+    list.className = "items-list";
+    list.innerHTML = filtered.map(i => {
+      const st = stockStatus(i);
+      const qc = st === "out" ? "danger" : st === "low" ? "warn" : "";
+      return `<div class="item-card ${st}" data-id="${i.id}">
+        <div class="item-info">
+          <div class="item-name">${esc(i.name)}</div>
+          <div class="item-meta">
+            ${i.category ? `<span>🏷️ ${esc(i.category)}</span>` : ""}
+            ${i.crocheter && isMaster ? `<span>👤 ${esc(i.crocheter)}</span>` : ""}
+            ${i.min_stock > 0 ? `<span>min ${i.min_stock}</span>` : ""}
+            ${i.price ? `<span>$${i.price.toFixed(2)}</span>` : ""}
+          </div>
+        </div>
+        <div class="item-right">
+          <div class="item-qty ${qc}">${i.on_hand}</div>
+          <div class="item-actions">
+            <button class="act-btn" data-act="dec" ${i.on_hand <= 0 ? "disabled" : ""}>−</button>
+            <button class="act-btn" data-act="inc">+</button>
+            ${canEdit ? `<button class="act-btn edit" data-act="edit">✎</button>` : ""}
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+  }
 
-  list.querySelectorAll(".item-card").forEach(card => {
+  // Bind buttons (same for both views)
+  list.querySelectorAll("[data-id]").forEach(card => {
     const id = Number(card.dataset.id);
     const item = allItems.find(x => x.id === id);
     card.querySelectorAll("[data-act]").forEach(btn => {
