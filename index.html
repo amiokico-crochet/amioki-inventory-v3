@@ -10,334 +10,192 @@
 <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --pink-50: #FFF5FA;
-  --pink-100: #FFE5F0;
-  --pink-200: #FFCCE0;
-  --pink-300: #FFB6D9;
-  --pink-400: #FF8DC0;
-  --pink-500: #FF6BAB;
-  --pink-600: #E91E63;
-  --pink-700: #C2185B;
-  --cream: #FFF9F5;
-  --lavender: #E5D4F5;
-  --mint: #C8F0DC;
-  --peach: #FFD9C0;
-  --lemon: #FFF2A8;
-  --ink: #4A2540;
-  --mid: #8B5A75;
-  --soft: #B894A8;
-  --shadow: 0 4px 20px rgba(255, 107, 171, 0.12);
-  --shadow-lg: 0 8px 40px rgba(255, 107, 171, 0.18);
+  --pink-50:#FFF5FA;--pink-100:#FFE5F0;--pink-200:#FFCCE0;--pink-300:#FFB6D9;
+  --pink-400:#FF8DC0;--pink-500:#FF6BAB;--pink-600:#E91E63;--pink-700:#C2185B;
+  --cream:#FFF9F5;--lavender:#E5D4F5;--mint:#C8F0DC;--peach:#FFD9C0;--lemon:#FFF2A8;
+  --ink:#4A2540;--mid:#8B5A75;--soft:#B894A8;
+  --shadow:0 4px 20px rgba(255,107,171,.12);--shadow-lg:0 8px 40px rgba(255,107,171,.18);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body {
-  font-family: 'Quicksand', sans-serif;
-  background: linear-gradient(135deg, var(--cream) 0%, var(--pink-50) 50%, var(--pink-100) 100%);
-  color: var(--ink);
-  min-height: 100vh;
-  font-size: 15px;
-  line-height: 1.5;
-  overflow-x: hidden;
-}
-body::before {
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    radial-gradient(circle at 10% 20%, rgba(255, 182, 217, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(229, 212, 245, 0.18) 0%, transparent 40%);
-}
-h1, h2, h3, h4 { font-family: 'Comfortaa', sans-serif; font-weight: 700; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; }
-input, select, textarea { font-family: inherit; font-size: 15px; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,var(--cream) 0%,var(--pink-50) 50%,var(--pink-100) 100%);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.5;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(circle at 10% 20%,rgba(255,182,217,.15) 0%,transparent 40%),radial-gradient(circle at 90% 80%,rgba(229,212,245,.18) 0%,transparent 40%)}
+h1,h2,h3,h4{font-family:'Comfortaa',sans-serif;font-weight:700}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit;font-size:15px}
 
-/* ═══════════ LOGIN ═══════════ */
-.login-wrap {
-  min-height: 100vh; display: grid; place-items: center;
-  padding: 24px; position: relative; z-index: 1;
-}
-.login-card {
-  background: white; border-radius: 32px; padding: 40px 28px;
-  width: 100%; max-width: 420px; box-shadow: var(--shadow-lg);
-  border: 3px solid var(--pink-100); position: relative;
-}
-.login-card::before {
-  content: "✿"; position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
-  width: 48px; height: 48px; background: var(--pink-300); border-radius: 50%;
-  display: grid; place-items: center; color: white; font-size: 24px;
-  box-shadow: 0 4px 14px rgba(255, 141, 192, 0.4);
-}
-.login-title { text-align: center; font-size: 28px; color: var(--pink-600); margin-bottom: 4px; letter-spacing: -0.5px; }
-.login-sub { text-align: center; color: var(--mid); font-size: 14px; margin-bottom: 28px; }
-.role-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-.role-btn {
-  background: var(--pink-50); border: 2px solid var(--pink-100); border-radius: 16px;
-  padding: 14px 8px; font-size: 14px; font-weight: 600; color: var(--ink);
-  transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px;
-}
-.role-btn:hover { background: var(--pink-100); transform: translateY(-2px); }
-.role-btn.active {
-  background: linear-gradient(135deg, var(--pink-300), var(--pink-400));
-  color: white; border-color: var(--pink-400);
-  box-shadow: 0 4px 12px rgba(255, 141, 192, 0.35);
-}
-.role-btn .emoji { font-size: 20px; }
-.role-master { grid-column: span 2; background: linear-gradient(135deg, var(--lavender), var(--pink-100)); }
-.role-master.active { background: linear-gradient(135deg, #B894FF, var(--pink-500)); }
-.pw-input {
-  width: 100%; padding: 14px 18px; border: 2px solid var(--pink-100);
-  border-radius: 16px; background: var(--pink-50); color: var(--ink);
-  margin-bottom: 14px; transition: all 0.2s;
-}
-.pw-input:focus { outline: none; border-color: var(--pink-400); background: white; }
-.pw-submit {
-  width: 100%; padding: 14px; background: linear-gradient(135deg, var(--pink-400), var(--pink-500));
-  color: white; border-radius: 16px; font-size: 15px; font-weight: 700;
-  letter-spacing: 0.3px; transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(255, 107, 171, 0.3);
-}
-.pw-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 107, 171, 0.4); }
-.pw-submit:disabled { opacity: 0.6; cursor: wait; transform: none; }
-.error-msg {
-  background: #FFE5E5; color: #C2185B; padding: 12px 16px; border-radius: 12px;
-  font-size: 13px; text-align: center; margin-bottom: 12px; border: 1px solid #FFB6D9;
-}
-.setup-banner {
-  background: var(--lemon); color: #8B6914; padding: 12px 16px; border-radius: 12px;
-  font-size: 13px; margin-bottom: 16px; border: 1px solid #FFE066;
-}
+/* LOGIN */
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px;position:relative;z-index:1}
+.login-card{background:white;border-radius:32px;padding:40px 28px;width:100%;max-width:420px;box-shadow:var(--shadow-lg);border:3px solid var(--pink-100);position:relative}
+.login-card::before{content:"✿";position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:48px;height:48px;background:var(--pink-300);border-radius:50%;display:grid;place-items:center;color:white;font-size:24px;box-shadow:0 4px 14px rgba(255,141,192,.4)}
+.login-title{text-align:center;font-size:28px;color:var(--pink-600);margin-bottom:4px}
+.login-sub{text-align:center;color:var(--mid);font-size:14px;margin-bottom:28px}
+.role-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+.role-btn{background:var(--pink-50);border:2px solid var(--pink-100);border-radius:16px;padding:14px 8px;font-size:14px;font-weight:600;color:var(--ink);transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.role-btn:hover{background:var(--pink-100);transform:translateY(-2px)}
+.role-btn.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;border-color:var(--pink-400);box-shadow:0 4px 12px rgba(255,141,192,.35)}
+.role-btn .emoji{font-size:20px}
+.role-master{grid-column:span 2;background:linear-gradient(135deg,var(--lavender),var(--pink-100))}
+.role-master.active{background:linear-gradient(135deg,#B894FF,var(--pink-500))}
+.pw-input{width:100%;padding:14px 18px;border:2px solid var(--pink-100);border-radius:16px;background:var(--pink-50);color:var(--ink);margin-bottom:14px;transition:all .2s}
+.pw-input:focus{outline:none;border-color:var(--pink-400);background:white}
+.pw-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--pink-400),var(--pink-500));color:white;border-radius:16px;font-size:15px;font-weight:700;transition:all .2s;box-shadow:0 4px 14px rgba(255,107,171,.3)}
+.pw-submit:hover{transform:translateY(-2px)}
+.pw-submit:disabled{opacity:.6;cursor:wait;transform:none}
+.error-msg{background:#FFE5E5;color:#C2185B;padding:12px 16px;border-radius:12px;font-size:13px;text-align:center;margin-bottom:12px;border:1px solid #FFB6D9}
 
-/* ═══════════ APP SHELL ═══════════ */
-.app { display: none; min-height: 100vh; position: relative; z-index: 1; padding-bottom: 80px; }
-.app.active { display: block; }
-.topbar {
-  background: white; padding: 14px 18px; display: flex;
-  justify-content: space-between; align-items: center;
-  border-bottom: 2px solid var(--pink-100);
-  position: sticky; top: 0; z-index: 50;
-  box-shadow: 0 2px 12px rgba(255, 107, 171, 0.08);
-}
-.brand { font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: 19px; color: var(--pink-600); display: flex; align-items: center; gap: 8px; }
-.brand .dot { width: 9px; height: 9px; background: var(--mint); border-radius: 50%; }
-.role-badge {
-  background: var(--pink-100); color: var(--pink-700); padding: 6px 12px;
-  border-radius: 14px; font-size: 12.5px; font-weight: 600;
-  display: flex; align-items: center; gap: 8px;
-}
-.logout-btn { color: var(--mid); font-size: 11px; padding: 2px 6px; border-radius: 6px; }
-.logout-btn:hover { background: var(--pink-100); color: var(--pink-600); }
-.content { padding: 16px 14px; max-width: 720px; margin: 0 auto; }
+/* APP SHELL */
+.app{display:none;min-height:100vh;position:relative;z-index:1;padding-bottom:90px}
+.app.active{display:block}
+.topbar{background:white;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--pink-100);position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(255,107,171,.08)}
+.brand{font-family:'Comfortaa',sans-serif;font-weight:700;font-size:19px;color:var(--pink-600);display:flex;align-items:center;gap:8px}
+.brand .dot{width:9px;height:9px;background:var(--mint);border-radius:50%}
+.role-badge{background:var(--pink-100);color:var(--pink-700);padding:6px 12px;border-radius:14px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px}
+.logout-btn{color:var(--mid);font-size:11px;padding:2px 6px;border-radius:6px}
+.logout-btn:hover{background:var(--pink-100);color:var(--pink-600)}
+.content{padding:16px 14px;max-width:720px;margin:0 auto}
 
-/* ═══════════ TABS ═══════════ */
-.tabs {
-  display: flex; gap: 6px; margin-bottom: 16px;
-  background: white; padding: 6px; border-radius: 16px;
-  border: 2px solid var(--pink-100); box-shadow: var(--shadow);
-  overflow-x: auto; -webkit-overflow-scrolling: touch;
-}
-.tabs::-webkit-scrollbar { display: none; }
-.tab {
-  flex: 1; min-width: 0; padding: 10px 12px; border-radius: 12px;
-  font-size: 13px; font-weight: 600; color: var(--mid);
-  white-space: nowrap; transition: all 0.2s; position: relative;
-}
-.tab.active { background: linear-gradient(135deg, var(--pink-300), var(--pink-400)); color: white; box-shadow: 0 2px 8px rgba(255, 141, 192, 0.3); }
-.tab .badge {
-  display: inline-block; min-width: 18px; height: 18px;
-  background: var(--pink-600); color: white; font-size: 10px;
-  border-radius: 9px; padding: 0 5px; margin-left: 4px; line-height: 18px;
-}
-.tab.active .badge { background: white; color: var(--pink-600); }
+/* TABS */
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:white;padding:6px;border-radius:16px;border:2px solid var(--pink-100);box-shadow:var(--shadow);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:max-content;padding:10px 12px;border-radius:12px;font-size:13px;font-weight:600;color:var(--mid);white-space:nowrap;transition:all .2s}
+.tab.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;box-shadow:0 2px 8px rgba(255,141,192,.3)}
+.tab .badge{display:inline-block;min-width:18px;height:18px;background:var(--pink-600);color:white;font-size:10px;border-radius:9px;padding:0 5px;margin-left:4px;line-height:18px}
+.tab.active .badge{background:white;color:var(--pink-600)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
 
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat-card{background:white;border-radius:16px;padding:14px;box-shadow:var(--shadow);border:2px solid var(--pink-100);position:relative;overflow:hidden}
+.stat-card::before{content:"";position:absolute;top:-20px;right:-20px;width:56px;height:56px;border-radius:50%;opacity:.15}
+.stat-card.pink::before{background:var(--pink-400)}.stat-card.mint::before{background:var(--mint)}
+.stat-card.peach::before{background:var(--peach)}.stat-card.lavender::before{background:var(--lavender)}
+.stat-label{font-size:10.5px;color:var(--mid);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:2px}
+.stat-value{font-family:'Comfortaa',sans-serif;font-weight:700;font-size:24px;color:var(--ink)}
+.stat-sub{font-size:10.5px;color:var(--soft);margin-top:2px}
 
-/* ═══════════ STATS ═══════════ */
-.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
-.stat-card {
-  background: white; border-radius: 16px; padding: 14px;
-  box-shadow: var(--shadow); border: 2px solid var(--pink-100);
-  position: relative; overflow: hidden;
-}
-.stat-card::before {
-  content: ""; position: absolute; top: -20px; right: -20px;
-  width: 56px; height: 56px; border-radius: 50%; opacity: 0.15;
-}
-.stat-card.pink::before { background: var(--pink-400); }
-.stat-card.mint::before { background: var(--mint); }
-.stat-card.peach::before { background: var(--peach); }
-.stat-card.lavender::before { background: var(--lavender); }
-.stat-label { font-size: 10.5px; color: var(--mid); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 2px; }
-.stat-value { font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: 24px; color: var(--ink); }
-.stat-sub { font-size: 10.5px; color: var(--soft); margin-top: 2px; }
+/* SEARCH + FILTERS */
+.search-row{display:flex;gap:8px;margin-bottom:12px}
+.search-input{flex:1;padding:11px 14px;border:2px solid var(--pink-100);border-radius:14px;background:white}
+.search-input:focus{outline:none;border-color:var(--pink-300)}
+.icon-btn{width:44px;background:white;border:2px solid var(--pink-100);border-radius:14px;font-size:18px;transition:all .2s;display:grid;place-items:center}
+.icon-btn:hover{background:var(--pink-50)}
+.icon-btn.spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.filter-bar{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-chip{background:white;border:2px solid var(--pink-100);padding:7px 13px;border-radius:12px;font-size:12.5px;font-weight:600;color:var(--mid);white-space:nowrap;flex-shrink:0;transition:all .2s}
+.filter-chip.active{background:var(--pink-400);color:white;border-color:var(--pink-400)}
 
-/* ═══════════ SEARCH + FILTERS ═══════════ */
-.search-row { display: flex; gap: 8px; margin-bottom: 12px; }
-.search-input {
-  flex: 1; padding: 11px 14px; border: 2px solid var(--pink-100);
-  border-radius: 14px; background: white;
-}
-.search-input:focus { outline: none; border-color: var(--pink-300); }
-.icon-btn {
-  width: 44px; background: white; border: 2px solid var(--pink-100);
-  border-radius: 14px; font-size: 18px; transition: all 0.2s;
-  display: grid; place-items: center;
-}
-.icon-btn:hover { background: var(--pink-50); }
-.icon-btn.spin { animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ITEM CARDS */
+.items-list{display:flex;flex-direction:column;gap:9px}
+.item-card{background:white;border-radius:16px;padding:13px 14px;box-shadow:var(--shadow);border:2px solid var(--pink-100);display:flex;align-items:center;justify-content:space-between;gap:12px;transition:transform .15s}
+.item-card:active{transform:scale(.98)}
+.item-card.ok{border-left:5px solid #6BCF7F}.item-card.low{border-left:5px solid #FFC75F}.item-card.out{border-left:5px solid #FF7676;opacity:.92}
+.item-info{flex:1;min-width:0}
+.item-name{font-weight:600;color:var(--ink);margin-bottom:2px;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-meta{display:flex;gap:7px;font-size:11px;color:var(--soft);flex-wrap:wrap}
+.item-meta span{display:inline-flex;align-items:center;gap:3px}
+.item-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.item-qty{font-family:'Comfortaa',sans-serif;font-weight:700;font-size:22px;color:var(--ink);line-height:1}
+.item-qty.warn{color:#C67700}.item-qty.danger{color:#C24040}
+.item-actions{display:flex;gap:4px;margin-top:4px}
+.act-btn{width:28px;height:28px;border-radius:8px;background:var(--pink-50);color:var(--pink-600);border:1px solid var(--pink-100);font-size:13px;font-weight:700;display:grid;place-items:center;padding:0}
+.act-btn:hover{background:var(--pink-200)}
+.act-btn:disabled{opacity:.4;cursor:not-allowed}
+.act-btn.edit{background:var(--lavender);color:#6B4A8B;border-color:#D4BFEB}
+.act-btn.archive{background:#FFF2A8;color:#8B6914;border-color:#FFE066}
 
-.filter-bar {
-  display: flex; gap: 6px; margin-bottom: 14px;
-  overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch;
-}
-.filter-bar::-webkit-scrollbar { display: none; }
-.filter-chip {
-  background: white; border: 2px solid var(--pink-100); padding: 7px 13px;
-  border-radius: 12px; font-size: 12.5px; font-weight: 600;
-  color: var(--mid); white-space: nowrap; flex-shrink: 0; transition: all 0.2s;
-}
-.filter-chip.active { background: var(--pink-400); color: white; border-color: var(--pink-400); }
+/* LOADING / EMPTY */
+.loading,.empty{text-align:center;padding:50px 20px;color:var(--mid);font-size:13px}
+.loading::before{content:"✿";display:block;font-size:32px;color:var(--pink-300);margin-bottom:12px;animation:spin 2s linear infinite}
+.empty::before{content:"🌸";display:block;font-size:32px;margin-bottom:12px}
 
-/* ═══════════ ITEM CARDS ═══════════ */
-.items-list { display: flex; flex-direction: column; gap: 9px; }
-.item-card {
-  background: white; border-radius: 16px; padding: 13px 14px;
-  box-shadow: var(--shadow); border: 2px solid var(--pink-100);
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  transition: transform 0.15s;
-}
-.item-card:active { transform: scale(0.98); }
-.item-card.ok { border-left: 5px solid #6BCF7F; }
-.item-card.low { border-left: 5px solid #FFC75F; }
-.item-card.out { border-left: 5px solid #FF7676; opacity: 0.92; }
-.item-info { flex: 1; min-width: 0; }
-.item-name { font-weight: 600; color: var(--ink); margin-bottom: 2px; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.item-meta { display: flex; gap: 7px; font-size: 11px; color: var(--soft); flex-wrap: wrap; }
-.item-meta span { display: inline-flex; align-items: center; gap: 3px; }
-.item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-.item-qty { font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: 22px; color: var(--ink); line-height: 1; }
-.item-qty.warn { color: #C67700; }
-.item-qty.danger { color: #C24040; }
-.item-actions { display: flex; gap: 4px; margin-top: 4px; }
-.act-btn {
-  width: 28px; height: 28px; border-radius: 8px; background: var(--pink-50);
-  color: var(--pink-600); border: 1px solid var(--pink-100);
-  font-size: 13px; font-weight: 700; display: grid; place-items: center; padding: 0;
-}
-.act-btn:hover { background: var(--pink-200); }
-.act-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.act-btn.edit { background: var(--lavender); color: #6B4A8B; border-color: #D4BFEB; }
+/* FAB */
+.fab{position:fixed;bottom:24px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--pink-400),var(--pink-500));color:white;font-size:28px;display:grid;place-items:center;box-shadow:0 6px 24px rgba(255,107,171,.45);z-index:40;transition:all .2s}
+.fab:hover{transform:scale(1.08)}.fab:active{transform:scale(.95)}
 
-/* ═══════════ EMPTY / LOADING ═══════════ */
-.loading, .empty {
-  text-align: center; padding: 50px 20px; color: var(--mid); font-size: 13px;
-}
-.loading::before { content: "✿"; display: block; font-size: 32px; color: var(--pink-300); margin-bottom: 12px; animation: spin 2s linear infinite; }
-.empty::before { content: "🌸"; display: block; font-size: 32px; margin-bottom: 12px; }
+/* MODAL */
+.modal-back{position:fixed;inset:0;background:rgba(74,37,64,.5);display:none;align-items:flex-end;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.modal-back.show{display:flex}
+.modal{background:white;border-radius:28px 28px 0 0;padding:24px 20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(255,107,171,.25);animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:40px;height:4px;background:var(--pink-200);border-radius:2px;margin:-8px auto 16px}
+.modal-title{font-size:18px;color:var(--pink-600);margin-bottom:16px;text-align:center}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--pink-400);background:white}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-btns{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;padding:13px;border-radius:14px;font-weight:700;font-size:14px;transition:all .2s;cursor:pointer;border:none}
+.btn-primary{background:linear-gradient(135deg,var(--pink-400),var(--pink-500));color:white}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(255,107,171,.3)}
+.btn-primary:disabled{opacity:.6;cursor:wait}
+.btn-ghost{background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100)}
+.btn-ghost:hover{background:var(--pink-100)}
+.btn-danger{background:#FFE5E5;color:#C24040;border:2px solid #FFB6D9}
 
-/* ═══════════ FAB (add item) ═══════════ */
-.fab {
-  position: fixed; bottom: 24px; right: 20px; width: 56px; height: 56px;
-  border-radius: 50%; background: linear-gradient(135deg, var(--pink-400), var(--pink-500));
-  color: white; font-size: 28px; display: grid; place-items: center;
-  box-shadow: 0 6px 24px rgba(255, 107, 171, 0.45);
-  z-index: 40; transition: all 0.2s;
-}
-.fab:hover { transform: scale(1.08); }
-.fab:active { transform: scale(0.95); }
+/* TOGGLE SWITCH */
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--pink-100)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:14px;font-weight:600;color:var(--ink)}
+.toggle-sub{font-size:11px;color:var(--soft);margin-top:2px}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#E0E0E0;border-radius:12px;transition:all .3s;cursor:pointer}
+.toggle-slider::before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:white;border-radius:50%;transition:all .3s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle input:checked + .toggle-slider{background:var(--pink-400)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px)}
 
-/* ═══════════ MODAL ═══════════ */
-.modal-back {
-  position: fixed; inset: 0; background: rgba(74, 37, 64, 0.5);
-  display: none; align-items: flex-end; justify-content: center;
-  z-index: 100; padding: 0; backdrop-filter: blur(4px);
-}
-.modal-back.show { display: flex; }
-.modal {
-  background: white; border-radius: 28px 28px 0 0; padding: 24px 20px;
-  width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
-  box-shadow: 0 -8px 40px rgba(255, 107, 171, 0.25);
-  animation: slideUp 0.3s ease;
-}
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.modal-handle {
-  width: 40px; height: 4px; background: var(--pink-200); border-radius: 2px;
-  margin: -8px auto 16px;
-}
-.modal-title { font-size: 18px; color: var(--pink-600); margin-bottom: 16px; text-align: center; }
-.field { margin-bottom: 12px; }
-.field label { display: block; font-size: 12px; font-weight: 600; color: var(--mid); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-.field input, .field select, .field textarea {
-  width: 100%; padding: 11px 14px; border: 2px solid var(--pink-100);
-  border-radius: 12px; background: var(--pink-50);
-}
-.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--pink-400); background: white; }
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.modal-btns { display: flex; gap: 10px; margin-top: 18px; }
-.btn {
-  flex: 1; padding: 13px; border-radius: 14px; font-weight: 700;
-  font-size: 14px; transition: all 0.2s; cursor: pointer;
-}
-.btn-primary { background: linear-gradient(135deg, var(--pink-400), var(--pink-500)); color: white; }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(255, 107, 171, 0.3); }
-.btn-primary:disabled { opacity: 0.6; cursor: wait; }
-.btn-ghost { background: var(--pink-50); color: var(--mid); border: 2px solid var(--pink-100); }
-.btn-ghost:hover { background: var(--pink-100); }
-.btn-danger { background: #FFE5E5; color: #C24040; border: 2px solid #FFB6D9; }
+/* SALES / UNMATCHED */
+.sale-row{background:white;border-radius:12px;padding:10px 14px;border-left:4px solid var(--mint);display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;font-size:13px}
+.sale-row.refund{border-left-color:var(--peach)}.sale-row.adjust{border-left-color:var(--lavender)}
+.sale-meta{color:var(--soft);font-size:10.5px}
+.unmatched-card{background:white;border-radius:16px;padding:14px;border:2px solid var(--peach);margin-bottom:10px;box-shadow:var(--shadow)}
+.unmatched-card .um-name{font-weight:600;color:var(--ink);margin-bottom:4px}
+.unmatched-card .um-meta{font-size:11px;color:var(--soft);margin-bottom:10px}
+.unmatched-card .um-actions{display:flex;gap:6px;flex-wrap:wrap}
+.um-mini-btn{padding:7px 12px;border-radius:10px;font-size:12px;font-weight:600;background:var(--pink-50);color:var(--pink-700);border:1px solid var(--pink-200)}
+.um-mini-btn.create{background:var(--mint);color:#2E6B47;border-color:#A8DDC0}
+.um-mini-btn.ignore{background:#F0F0F0;color:var(--mid);border-color:#E0E0E0}
 
-/* ═══════════ SALES + UNMATCHED ═══════════ */
-.sale-row {
-  background: white; border-radius: 12px; padding: 10px 14px;
-  border-left: 4px solid var(--mint);
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 7px; font-size: 13px;
-}
-.sale-row.refund { border-left-color: var(--peach); }
-.sale-row.adjust { border-left-color: var(--lavender); }
-.sale-meta { color: var(--soft); font-size: 10.5px; }
+/* ARCHIVE */
+.archive-card{background:white;border-radius:16px;padding:13px 14px;box-shadow:var(--shadow);border:2px solid var(--lemon);display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px;opacity:.85}
+.archive-card .item-name{color:var(--mid)}
+.restore-btn{padding:7px 14px;border-radius:10px;font-size:12px;font-weight:700;background:var(--mint);color:#2E6B47;border:1px solid #A8DDC0;white-space:nowrap}
 
-.unmatched-card {
-  background: white; border-radius: 16px; padding: 14px;
-  border: 2px solid var(--peach); margin-bottom: 10px;
-  box-shadow: var(--shadow);
-}
-.unmatched-card .um-name { font-weight: 600; color: var(--ink); margin-bottom: 4px; }
-.unmatched-card .um-meta { font-size: 11px; color: var(--soft); margin-bottom: 10px; }
-.unmatched-card .um-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-.um-mini-btn {
-  padding: 7px 12px; border-radius: 10px; font-size: 12px; font-weight: 600;
-  background: var(--pink-50); color: var(--pink-700); border: 1px solid var(--pink-200);
-}
-.um-mini-btn.create { background: var(--mint); color: #2E6B47; border-color: #A8DDC0; }
-.um-mini-btn.ignore { background: #F0F0F0; color: var(--mid); border-color: #E0E0E0; }
+/* PROFILE */
+.profile-section{background:white;border-radius:20px;padding:18px;box-shadow:var(--shadow);border:2px solid var(--pink-100);margin-bottom:14px}
+.profile-section h3{font-size:15px;color:var(--pink-600);margin-bottom:14px}
+.section-note{font-size:12px;color:var(--soft);margin-bottom:14px}
 
-/* ═══════════ TOAST ═══════════ */
-.toast {
-  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(100px);
-  background: var(--ink); color: white; padding: 12px 22px; border-radius: 14px;
-  font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg);
-  opacity: 0; transition: all 0.3s; z-index: 200; pointer-events: none; max-width: 90vw; text-align: center;
-}
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.error { background: #C24040; }
-.toast.success { background: #4A9B6A; }
+/* MASTER NOTIFICATION PANEL */
+.crocheter-card{background:white;border-radius:16px;padding:14px;border:2px solid var(--pink-100);box-shadow:var(--shadow);margin-bottom:10px}
+.crocheter-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.crocheter-name{font-weight:700;font-size:15px;color:var(--ink)}
+.crocheter-meta{font-size:11px;color:var(--soft);margin-bottom:8px}
+.test-btn{padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;background:var(--lavender);color:#6B4A8B;border:1px solid #D4BFEB}
 
-@media (min-width: 600px) {
-  .stats-grid { grid-template-columns: repeat(4, 1fr); }
-  .modal-back { align-items: center; }
-  .modal { border-radius: 28px; max-height: 80vh; }
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:white;padding:12px 22px;border-radius:14px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;transition:all .3s;z-index:200;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.error{background:#C24040}.toast.success{background:#4A9B6A}
+
+@media(min-width:600px){
+  .stats-grid{grid-template-columns:repeat(4,1fr)}
+  .modal-back{align-items:center}
+  .modal{border-radius:28px;max-height:80vh}
 }
 </style>
 </head>
 <body>
 
-<!-- ═══════════ LOGIN ═══════════ -->
+<!-- LOGIN -->
 <div id="loginScreen" class="login-wrap">
   <div class="login-card">
     <h1 class="login-title">Amioki</h1>
-    <p class="login-sub">✿ Inventory Dashboard v3 ✿</p>
-    <div id="setupBanner" class="setup-banner" style="display:none">
-      ⚠️ <strong>Setup:</strong> paste your Cloudflare Worker URL into <code>API_URL</code> in the source.
-    </div>
+    <p class="login-sub">✿ Inventory Dashboard v4 ✿</p>
     <div class="role-grid">
       <button class="role-btn" data-role="ashley"><span class="emoji">🧵</span>Ashley</button>
       <button class="role-btn" data-role="liz"><span class="emoji">🪡</span>Liz</button>
@@ -351,7 +209,7 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
   </div>
 </div>
 
-<!-- ═══════════ APP ═══════════ -->
+<!-- APP -->
 <div id="app" class="app">
   <div class="topbar">
     <div class="brand"><span class="dot"></span>Amioki ✿</div>
@@ -365,15 +223,18 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
     <div class="tabs" id="tabs">
       <button class="tab active" data-tab="inventory">Inventory</button>
       <button class="tab" data-tab="sales">Sales</button>
-      <button class="tab" data-tab="unmatched" style="display:none">Unmatched <span class="badge" id="umBadge">0</span></button>
+      <button class="tab" data-tab="profile">Profile</button>
+      <button class="tab master-only" data-tab="unmatched" style="display:none">Unmatched <span class="badge" id="umBadge">0</span></button>
+      <button class="tab master-only" data-tab="archive" style="display:none">Archive</button>
+      <button class="tab master-only" data-tab="notifications" style="display:none">Alerts</button>
     </div>
 
-    <!-- INVENTORY TAB -->
+    <!-- INVENTORY -->
     <div class="tab-panel active" id="panel-inventory">
       <div class="stats-grid" id="statsGrid"></div>
       <div class="search-row">
         <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search items...">
-        <button class="icon-btn" id="refreshBtn" title="Refresh">↻</button>
+        <button class="icon-btn" id="refreshBtn">↻</button>
       </div>
       <div class="filter-bar">
         <button class="filter-chip active" data-filter="all">All</button>
@@ -381,59 +242,100 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
         <button class="filter-chip" data-filter="low">⚠️ Low</button>
         <button class="filter-chip" data-filter="out">○ Out</button>
       </div>
-      <div class="items-list" id="itemsList">
-        <div class="loading">Loading inventory...</div>
+      <div class="items-list" id="itemsList"><div class="loading">Loading inventory...</div></div>
+    </div>
+
+    <!-- SALES -->
+    <div class="tab-panel" id="panel-sales">
+      <div id="salesList"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="tab-panel" id="panel-profile">
+      <div class="profile-section">
+        <h3>✿ My Contact Info</h3>
+        <p class="section-note">Only you can see this. Used for inventory alerts.</p>
+        <div class="field"><label>Email</label><input type="email" id="pEmail" placeholder="your@email.com"></div>
+        <div class="field-row">
+          <div class="field"><label>Phone</label><input type="tel" id="pPhone" placeholder="7571234567"></div>
+          <div class="field">
+            <label>Carrier</label>
+            <select id="pCarrier">
+              <option value="">— select —</option>
+              <option value="verizon">Verizon</option>
+              <option value="att">AT&T</option>
+              <option value="tmobile">T-Mobile</option>
+              <option value="cricket">Cricket</option>
+              <option value="boost">Boost</option>
+              <option value="metropcs">Metro PCS</option>
+              <option value="sprint">Sprint</option>
+              <option value="uscellular">US Cellular</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="saveContactBtn" style="margin-top:8px">Save Contact Info ✿</button>
+      </div>
+
+      <div class="profile-section">
+        <h3>🔔 My Notification Prefs</h3>
+        <p class="section-note">Toggle which alerts you want to receive.</p>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Low Stock Alert</div><div class="toggle-sub">When an item drops below minimum</div></div>
+          <label class="toggle"><input type="checkbox" id="tLowStock"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Sold Out Alert</div><div class="toggle-sub">When an item hits zero</div></div>
+          <label class="toggle"><input type="checkbox" id="tSoldOut"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Email Notifications</div><div class="toggle-sub">Send alerts to my email</div></div>
+          <label class="toggle"><input type="checkbox" id="tEmail"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">SMS Notifications</div><div class="toggle-sub">Send alerts as text message</div></div>
+          <label class="toggle"><input type="checkbox" id="tSms"><span class="toggle-slider"></span></label>
+        </div>
+        <button class="btn btn-primary" id="savePrefsBtn" style="margin-top:14px">Save Preferences ✿</button>
       </div>
     </div>
 
-    <!-- SALES TAB -->
-    <div class="tab-panel" id="panel-sales">
-      <div id="salesList"><div class="loading">Loading sales...</div></div>
-    </div>
-
-    <!-- UNMATCHED TAB -->
+    <!-- UNMATCHED -->
     <div class="tab-panel" id="panel-unmatched">
       <div id="unmatchedList"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- ARCHIVE -->
+    <div class="tab-panel" id="panel-archive">
+      <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Items auto-archived when sold out (Limited Edition, Discontinued, Out-of-Rotation). Only you see this tab.</p>
+      <div id="archiveList"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- NOTIFICATIONS (master only) -->
+    <div class="tab-panel" id="panel-notifications">
+      <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Control who gets the daily <strong>Ami's Adopted Plushie Takeaway</strong> digest at 9pm. 🌸</p>
+      <div id="crocheterCards"><div class="loading">Loading...</div></div>
     </div>
   </div>
 
   <button class="fab" id="fabAdd" style="display:none" title="Add item">+</button>
 </div>
 
-<!-- ═══════════ ITEM MODAL ═══════════ -->
+<!-- ITEM MODAL -->
 <div class="modal-back" id="itemModal">
   <div class="modal">
     <div class="modal-handle"></div>
     <h2 class="modal-title" id="modalTitle">Add Item ✿</h2>
     <input type="hidden" id="fId">
-    <div class="field">
-      <label>Item Name *</label>
-      <input type="text" id="fName" placeholder="e.g. Strawberry Frog">
+    <div class="field"><label>Item Name *</label><input type="text" id="fName" placeholder="e.g. Strawberry Frog"></div>
+    <div class="field-row">
+      <div class="field"><label>On Hand</label><input type="number" id="fOnHand" min="0" value="0"></div>
+      <div class="field"><label>Min Stock</label><input type="number" id="fMinStock" min="0" value="0"></div>
     </div>
     <div class="field-row">
-      <div class="field">
-        <label>On Hand</label>
-        <input type="number" id="fOnHand" min="0" value="0">
-      </div>
-      <div class="field">
-        <label>Min Stock</label>
-        <input type="number" id="fMinStock" min="0" value="0">
-      </div>
+      <div class="field"><label>Price ($)</label><input type="number" id="fPrice" min="0" step="0.01" value="0"></div>
+      <div class="field"><label>Cost ($)</label><input type="number" id="fCost" min="0" step="0.01" value="0"></div>
     </div>
-    <div class="field-row">
-      <div class="field">
-        <label>Price ($)</label>
-        <input type="number" id="fPrice" min="0" step="0.01" value="0">
-      </div>
-      <div class="field">
-        <label>Cost ($)</label>
-        <input type="number" id="fCost" min="0" step="0.01" value="0">
-      </div>
-    </div>
-    <div class="field">
-      <label>Category</label>
-      <input type="text" id="fCategory" placeholder="e.g. Keychain, Regular, Sticker">
-    </div>
+    <div class="field"><label>Category</label><input type="text" id="fCategory" placeholder="e.g. Regular, Limited Edition, Keychain"></div>
     <div class="field">
       <label>Crocheter</label>
       <select id="fCrocheter">
@@ -443,11 +345,9 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
         <option value="Sydni">Sydni</option>
       </select>
     </div>
-    <div class="field">
-      <label>Square Catalog ID (optional)</label>
-      <input type="text" id="fSquareId" placeholder="Auto-fills when Square sale matches">
-    </div>
+    <div class="field"><label>Square Catalog ID (optional)</label><input type="text" id="fSquareId" placeholder="Auto-fills on first match"></div>
     <div class="modal-btns">
+      <button class="btn btn-danger" id="btnArchive" style="display:none">Archive</button>
       <button class="btn btn-danger" id="btnDelete" style="display:none">Delete</button>
       <button class="btn btn-ghost" id="btnCancel">Cancel</button>
       <button class="btn btn-primary" id="btnSave">Save ✿</button>
@@ -455,66 +355,65 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
   </div>
 </div>
 
-<!-- ═══════════ UNMATCHED RESOLVE MODAL ═══════════ -->
+<!-- RESOLVE MODAL -->
 <div class="modal-back" id="resolveModal">
   <div class="modal">
     <div class="modal-handle"></div>
     <h2 class="modal-title">Resolve Sale 🔗</h2>
-    <p style="text-align:center;color:var(--mid);font-size:13px;margin-bottom:14px">
-      Square sold <strong id="rmName"></strong> × <strong id="rmQty"></strong> but no item matched.
-    </p>
-    <div class="field">
-      <label>Link to existing item</label>
-      <select id="rmItemSelect">
-        <option value="">— pick an item —</option>
-      </select>
-    </div>
+    <p style="text-align:center;color:var(--mid);font-size:13px;margin-bottom:14px">Square sold <strong id="rmName"></strong> × <strong id="rmQty"></strong> — no item matched.</p>
+    <div class="field"><label>Link to existing item</label><select id="rmItemSelect"><option value="">— pick an item —</option></select></div>
     <div class="modal-btns" style="flex-direction:column">
       <button class="btn btn-primary" id="rmLinkBtn">🔗 Link &amp; Deduct</button>
       <button class="btn btn-ghost" id="rmCreateBtn">➕ Create as new item</button>
-      <button class="btn btn-ghost" id="rmIgnoreBtn">Skip this one</button>
+      <button class="btn btn-ghost" id="rmIgnoreBtn">Skip</button>
     </div>
     <input type="hidden" id="rmId">
+  </div>
+</div>
+
+<!-- RESTORE MODAL -->
+<div class="modal-back" id="restoreModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title">Restore Item 🌸</h2>
+    <p style="text-align:center;color:var(--mid);font-size:13px;margin-bottom:14px">Restoring: <strong id="restoreName"></strong></p>
+    <div class="field"><label>Starting On-Hand Qty</label><input type="number" id="restoreQty" min="0" value="1"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="restoreCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="restoreConfirmBtn">Restore ✿</button>
+    </div>
+    <input type="hidden" id="restoreId">
   </div>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-// CONFIG — paste your Cloudflare Worker URL here
-// ═══════════════════════════════════════════════════════════
-const API_URL = "https://amioki-inventory-api.amioki-co.workers.dev/";
+const API_URL = "https://amioki-inventory-api.amioki-co.workers.dev";
 
-// ═══════════════════════════════════════════════════════════
 const $ = id => document.getElementById(id);
-let selectedRole = null, token = null, canEdit = false;
-let allItems = [];
-let currentFilter = "all", currentSearch = "", currentTab = "inventory";
+let selectedRole = null, token = null, canEdit = false, isMaster = false;
+let allItems = [], currentFilter = "all", currentSearch = "", currentTab = "inventory";
 
-// ───────── Session restore ─────────
+// Session restore
 const saved = localStorage.getItem("amioki_v3_session");
 if (saved) {
   try {
     const s = JSON.parse(saved);
     if (s.token && s.role) {
       token = s.token; selectedRole = s.role; canEdit = !!s.canEdit;
+      isMaster = s.role === "master";
       $("roleLabel").textContent = s.label || s.role;
       showApp();
     }
   } catch (e) {}
 }
 
-// ───────── Setup banner ─────────
-if (API_URL.startsWith("PASTE_")) $("setupBanner").style.display = "block";
-
-// ───────── Login UI ─────────
+// Login
 document.querySelectorAll(".role-btn").forEach(b => {
   b.addEventListener("click", () => {
     document.querySelectorAll(".role-btn").forEach(x => x.classList.remove("active"));
-    b.classList.add("active");
-    selectedRole = b.dataset.role;
-    $("pwInput").focus();
+    b.classList.add("active"); selectedRole = b.dataset.role; $("pwInput").focus();
   });
 });
 $("pwInput").addEventListener("keydown", e => { if (e.key === "Enter") attemptLogin(); });
@@ -526,55 +425,53 @@ async function attemptLogin() {
   const pass = $("pwInput").value;
   if (!pass) return showLoginError("Password required");
   if (API_URL.startsWith("PASTE_")) return showLoginError("API_URL not configured");
-
   const btn = $("pwSubmit");
   btn.disabled = true; btn.textContent = "Checking...";
   try {
     const r = await fetch(`${API_URL}?action=login&who=${encodeURIComponent(selectedRole)}&pass=${encodeURIComponent(pass)}`);
     const d = await r.json();
     if (!d.ok) throw new Error(d.error || "Login failed");
-    token = d.token; canEdit = !!d.canEdit;
+    token = d.token; canEdit = !!d.canEdit; isMaster = d.role === "master";
     localStorage.setItem("amioki_v3_session", JSON.stringify({ token, role: d.role, label: d.label, canEdit }));
     $("roleLabel").textContent = d.label;
     $("pwInput").value = "";
     showApp();
-  } catch (err) {
-    showLoginError(err.message);
-  } finally {
-    btn.disabled = false; btn.textContent = "Enter ✿";
-  }
+  } catch (err) { showLoginError(err.message); }
+  finally { btn.disabled = false; btn.textContent = "Enter ✿"; }
 }
 function showLoginError(msg) { $("loginError").textContent = "✗ " + msg; $("loginError").style.display = "block"; }
 
-// ───────── App boot ─────────
 function showApp() {
   $("loginScreen").style.display = "none";
   $("app").classList.add("active");
-  if (canEdit) { $("fabAdd").style.display = "grid"; document.querySelector('[data-tab="unmatched"]').style.display = ""; }
+  if (canEdit)   $("fabAdd").style.display = "grid";
+  if (isMaster)  document.querySelectorAll(".master-only").forEach(el => el.style.display = "");
   loadAll();
+  loadProfile();
 }
+
 $("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("amioki_v3_session");
-  token = null; selectedRole = null; canEdit = false;
-  $("app").classList.remove("active");
-  $("loginScreen").style.display = "grid";
+  token = null; selectedRole = null; canEdit = false; isMaster = false;
+  $("app").classList.remove("active"); $("loginScreen").style.display = "grid";
   document.querySelectorAll(".role-btn").forEach(b => b.classList.remove("active"));
 });
 
-// ───────── Tabs ─────────
+// Tabs
 document.querySelectorAll(".tab").forEach(t => {
   t.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
     document.querySelectorAll(".tab-panel").forEach(x => x.classList.remove("active"));
-    t.classList.add("active");
-    currentTab = t.dataset.tab;
+    t.classList.add("active"); currentTab = t.dataset.tab;
     $("panel-" + currentTab).classList.add("active");
-    if (currentTab === "sales") loadSales();
-    if (currentTab === "unmatched") loadUnmatched();
+    if (currentTab === "sales")         loadSales();
+    if (currentTab === "unmatched")     loadUnmatched();
+    if (currentTab === "archive")       loadArchive();
+    if (currentTab === "notifications") loadNotifications();
   });
 });
 
-// ───────── Refresh + search ─────────
+// Refresh + search
 $("refreshBtn").addEventListener("click", () => {
   $("refreshBtn").classList.add("spin");
   loadAll().finally(() => setTimeout(() => $("refreshBtn").classList.remove("spin"), 500));
@@ -583,13 +480,11 @@ $("searchInput").addEventListener("input", e => { currentSearch = e.target.value
 document.querySelectorAll(".filter-chip").forEach(c => {
   c.addEventListener("click", () => {
     document.querySelectorAll(".filter-chip").forEach(x => x.classList.remove("active"));
-    c.classList.add("active");
-    currentFilter = c.dataset.filter;
-    renderItems();
+    c.classList.add("active"); currentFilter = c.dataset.filter; renderItems();
   });
 });
 
-// ───────── Data loading ─────────
+// Data loading
 async function loadAll() {
   try {
     const [inv, stats] = await Promise.all([api("getInventory"), api("getStats")]);
@@ -597,7 +492,7 @@ async function loadAll() {
     allItems = inv.items || [];
     renderStats(stats.stats || {});
     renderItems();
-    if (canEdit) updateUnmatchedBadge();
+    if (isMaster) updateUnmatchedBadge();
   } catch (err) {
     if (err.message === "Auth required") { $("logoutBtn").click(); toast("Session expired", "error"); }
     else toast(err.message, "error");
@@ -607,21 +502,18 @@ async function loadAll() {
 async function loadSales() {
   const r = await api("getSalesLog", { limit: 50 });
   const list = $("salesList");
-  if (!r.ok) { list.innerHTML = `<div class="empty">${r.error}</div>`; return; }
-  if (!r.sales || r.sales.length === 0) {
-    list.innerHTML = '<div class="empty">No sales yet ✿</div>'; return;
-  }
+  if (!r.ok || !r.sales?.length) { list.innerHTML = '<div class="empty">No sales yet ✿</div>'; return; }
   list.innerHTML = r.sales.map(s => {
     const t = (s.type || "sale").toLowerCase();
     const date = new Date(s.timestamp);
-    const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
-                    " " + date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-    const icon = t === "refund" ? "↩️" : t === "adjust" || t === "manual" ? "✍️" : "🌸";
-    const qtyStr = s.qty > 0 ? `+${s.qty}` : s.qty;
+    const ds = date.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " " +
+               date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    const icon = t === "refund" ? "↩️" : (t === "adjust" || t === "manual") ? "✍️" : "🌸";
+    const qstr = s.qty > 0 ? `+${s.qty}` : s.qty;
     return `<div class="sale-row ${t}">
       <div>
-        <div style="font-weight:600">${esc(s.item_name)} <span style="color:var(--soft)">${qtyStr}</span></div>
-        <div class="sale-meta">${dateStr}${s.crocheter ? " · " + esc(s.crocheter) : ""}${s.note ? " · " + esc(s.note) : ""}</div>
+        <div style="font-weight:600">${esc(s.item_name)} <span style="color:var(--soft)">${qstr}</span></div>
+        <div class="sale-meta">${ds}${s.crocheter ? " · " + esc(s.crocheter) : ""}${s.note ? " · " + esc(s.note) : ""}</div>
       </div>
       <div style="font-size:18px">${icon}</div>
     </div>`;
@@ -632,16 +524,12 @@ async function loadUnmatched() {
   const r = await api("getUnmatched");
   const list = $("unmatchedList");
   if (!r.ok) { list.innerHTML = `<div class="empty">${r.error}</div>`; return; }
-  if (!r.unmatched || r.unmatched.length === 0) {
-    list.innerHTML = '<div class="empty">No unmatched sales 🌸<br><span style="font-size:11px">All Square sales linked up nicely.</span></div>';
-    return;
-  }
+  if (!r.unmatched?.length) { list.innerHTML = '<div class="empty">No unmatched sales 🌸</div>'; return; }
   list.innerHTML = r.unmatched.map(u => {
-    const date = new Date(u.timestamp);
-    const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    const ds = new Date(u.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     return `<div class="unmatched-card">
       <div class="um-name">${esc(u.square_name)} × ${u.qty}</div>
-      <div class="um-meta">${dateStr}${u.square_catalog_id ? " · ID: " + esc(u.square_catalog_id) : ""}</div>
+      <div class="um-meta">${ds}${u.square_catalog_id ? " · " + esc(u.square_catalog_id) : ""}</div>
       <div class="um-actions">
         <button class="um-mini-btn" data-resolve="link" data-id="${u.id}" data-name="${esc(u.square_name)}" data-qty="${u.qty}">🔗 Link</button>
         <button class="um-mini-btn create" data-resolve="create" data-id="${u.id}" data-name="${esc(u.square_name)}" data-qty="${u.qty}">➕ Create</button>
@@ -649,8 +537,69 @@ async function loadUnmatched() {
       </div>
     </div>`;
   }).join("");
-  list.querySelectorAll("[data-resolve]").forEach(btn => {
-    btn.addEventListener("click", () => handleResolve(btn.dataset));
+  list.querySelectorAll("[data-resolve]").forEach(btn => btn.addEventListener("click", () => handleResolve(btn.dataset)));
+}
+
+async function loadArchive() {
+  const r = await api("getArchive");
+  const list = $("archiveList");
+  if (!r.ok) { list.innerHTML = `<div class="empty">${r.error}</div>`; return; }
+  if (!r.archived?.length) { list.innerHTML = '<div class="empty">No archived items ✿<br><span style="font-size:11px">Limited Edition items auto-archive here when sold out.</span></div>'; return; }
+  list.innerHTML = r.archived.map(i => `
+    <div class="archive-card">
+      <div class="item-info">
+        <div class="item-name">${esc(i.name)}</div>
+        <div class="item-meta">
+          <span>🏷️ ${esc(i.category || "—")}</span>
+          <span>👤 ${esc(i.crocheter)}</span>
+          <span>${i.archive_reason === "auto" ? "🤖 Auto-archived" : "✋ Manual"}</span>
+        </div>
+      </div>
+      <button class="restore-btn" data-id="${i.id}" data-name="${esc(i.name)}">Restore</button>
+    </div>`).join("");
+  list.querySelectorAll(".restore-btn").forEach(btn => {
+    btn.addEventListener("click", () => openRestoreModal(btn.dataset.id, btn.dataset.name));
+  });
+}
+
+async function loadNotifications() {
+  const r = await api("getCrocheters");
+  const container = $("crocheterCards");
+  if (!r.ok) { container.innerHTML = `<div class="empty">${r.error}</div>`; return; }
+  container.innerHTML = r.crocheters.map(c => {
+    const hasEmail = !!c.email;
+    return `<div class="crocheter-card">
+      <div class="crocheter-card-header">
+        <div class="crocheter-name">${esc(c.display_name)}</div>
+        ${hasEmail ? `<button class="test-btn" data-role="${c.role}">Test Digest</button>` : ""}
+      </div>
+      <div class="crocheter-meta">${c.email ? "📧 " + esc(c.email) : "No email set"}</div>
+      <div class="toggle-row" style="padding:8px 0">
+        <div><div class="toggle-label" style="font-size:13px">Daily Digest (9pm)</div><div class="toggle-sub">Ami's Adopted Plushie Takeaway</div></div>
+        <label class="toggle">
+          <input type="checkbox" class="digest-toggle" data-role="${c.role}" ${c.digest_enabled ? "checked" : ""} ${!hasEmail ? "disabled" : ""}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>`;
+  }).join("");
+
+  container.querySelectorAll(".digest-toggle").forEach(chk => {
+    chk.addEventListener("change", async () => {
+      const r = await api("updateCrocheter", { role: chk.dataset.role, digest_enabled: chk.checked ? "1" : "0" });
+      if (r.ok) toast(chk.checked ? "Digest enabled ✿" : "Digest off", "success");
+      else { toast(r.error, "error"); chk.checked = !chk.checked; }
+    });
+  });
+
+  container.querySelectorAll(".test-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true; btn.textContent = "Sending...";
+      const r = await api("sendTestDigest", { role: btn.dataset.role });
+      btn.disabled = false; btn.textContent = "Test Digest";
+      if (r.ok) toast("Test sent ✿", "success");
+      else toast(r.error, "error");
+    });
   });
 }
 
@@ -659,11 +608,45 @@ async function updateUnmatchedBadge() {
   if (!r.ok) return;
   const n = (r.unmatched || []).length;
   const badge = $("umBadge");
-  badge.textContent = n;
-  badge.style.display = n > 0 ? "" : "none";
+  badge.textContent = n; badge.style.display = n > 0 ? "" : "none";
 }
 
-// ───────── Render ─────────
+// Profile
+async function loadProfile() {
+  const r = await api("getMyProfile");
+  if (!r.ok || !r.profile) return;
+  const p = r.profile;
+  $("pEmail").value   = p.email   || "";
+  $("pPhone").value   = p.phone   || "";
+  $("pCarrier").value = p.carrier || "";
+  $("tLowStock").checked = !!p.notify_low_stock;
+  $("tSoldOut").checked  = !!p.notify_sold_out;
+  $("tEmail").checked    = !!p.notify_email;
+  $("tSms").checked      = !!p.notify_sms;
+}
+
+$("saveContactBtn").addEventListener("click", async () => {
+  const r = await api("updateMyProfile", {
+    email: $("pEmail").value.trim(),
+    phone: $("pPhone").value.replace(/\D/g, ""),
+    carrier: $("pCarrier").value
+  });
+  if (r.ok) toast("Contact info saved ✿", "success");
+  else toast(r.error, "error");
+});
+
+$("savePrefsBtn").addEventListener("click", async () => {
+  const r = await api("updateMyProfile", {
+    notify_low_stock: $("tLowStock").checked ? "1" : "0",
+    notify_sold_out:  $("tSoldOut").checked  ? "1" : "0",
+    notify_email:     $("tEmail").checked    ? "1" : "0",
+    notify_sms:       $("tSms").checked      ? "1" : "0"
+  });
+  if (r.ok) toast("Preferences saved ✿", "success");
+  else toast(r.error, "error");
+});
+
+// Render stats + items
 function renderStats(stats) {
   $("statsGrid").innerHTML = [
     { l: "On Hand", v: stats.totalOnHand || 0, c: "pink", s: `${stats.totalItems || 0} SKUs` },
@@ -682,12 +665,10 @@ function renderItems() {
     return true;
   });
   filtered.sort((a, b) => {
-    const order = { out: 0, low: 1, ok: 2 };
-    const d = order[stockStatus(a)] - order[stockStatus(b)];
-    if (d) return d;
-    return a.name.localeCompare(b.name);
+    const d = ({ out: 0, low: 1, ok: 2 }[stockStatus(a)]) - ({ out: 0, low: 1, ok: 2 }[stockStatus(b)]);
+    return d || a.name.localeCompare(b.name);
   });
-  if (filtered.length === 0) { list.innerHTML = '<div class="empty">No items match ✿</div>'; return; }
+  if (!filtered.length) { list.innerHTML = '<div class="empty">No items match ✿</div>'; return; }
 
   list.innerHTML = filtered.map(i => {
     const st = stockStatus(i);
@@ -697,7 +678,7 @@ function renderItems() {
         <div class="item-name">${esc(i.name)}</div>
         <div class="item-meta">
           ${i.category ? `<span>🏷️ ${esc(i.category)}</span>` : ""}
-          ${i.crocheter && selectedRole === "master" ? `<span>👤 ${esc(i.crocheter)}</span>` : ""}
+          ${i.crocheter && isMaster ? `<span>👤 ${esc(i.crocheter)}</span>` : ""}
           ${i.min_stock > 0 ? `<span>min ${i.min_stock}</span>` : ""}
           ${i.price ? `<span>$${i.price.toFixed(2)}</span>` : ""}
         </div>
@@ -720,17 +701,14 @@ function renderItems() {
       btn.addEventListener("click", async e => {
         e.stopPropagation();
         const act = btn.dataset.act;
-        if (act === "edit") openEditModal(item);
-        else {
-          const delta = act === "inc" ? 1 : -1;
-          btn.disabled = true;
-          const r = await api("adjustStock", { id, delta, note: "from dashboard" });
-          if (r.ok) {
-            item.on_hand = r.newQty;
-            renderItems();
-            const s = await api("getStats"); if (s.ok) renderStats(s.stats);
-          } else { toast(r.error, "error"); btn.disabled = false; }
-        }
+        if (act === "edit") { openEditModal(item); return; }
+        const delta = act === "inc" ? 1 : -1;
+        btn.disabled = true;
+        const r = await api("adjustStock", { id, delta, note: "dashboard" });
+        if (r.ok) {
+          item.on_hand = r.newQty; renderItems();
+          const s = await api("getStats"); if (s.ok) renderStats(s.stats);
+        } else { toast(r.error, "error"); btn.disabled = false; }
       });
     });
   });
@@ -742,117 +720,120 @@ function stockStatus(i) {
   return "ok";
 }
 
-// ───────── Modal: add / edit item ─────────
-$("fabAdd").addEventListener("click", () => openAddModal());
-$("btnCancel").addEventListener("click", closeModal);
-$("itemModal").addEventListener("click", e => { if (e.target.id === "itemModal") closeModal(); });
+// Item modal
+$("fabAdd").addEventListener("click", openAddModal);
+$("btnCancel").addEventListener("click", closeItemModal);
+$("itemModal").addEventListener("click", e => { if (e.target.id === "itemModal") closeItemModal(); });
 $("btnSave").addEventListener("click", saveItem);
 $("btnDelete").addEventListener("click", deleteItem);
+$("btnArchive").addEventListener("click", archiveItem);
 
 function openAddModal() {
-  $("modalTitle").textContent = "Add Item ✿";
-  $("fId").value = "";
+  $("modalTitle").textContent = "Add Item ✿"; $("fId").value = "";
   $("fName").value = ""; $("fOnHand").value = 0; $("fMinStock").value = 0;
-  $("fPrice").value = 0; $("fCost").value = 0; $("fCategory").value = "";
-  $("fSquareId").value = "";
-  $("fCrocheter").value = selectedRole === "ami" ? "Amioki" : "Amioki";
-  $("btnDelete").style.display = "none";
+  $("fPrice").value = 0; $("fCost").value = 0; $("fCategory").value = ""; $("fSquareId").value = "";
+  $("fCrocheter").value = "Amioki";
+  $("btnDelete").style.display = "none"; $("btnArchive").style.display = "none";
   $("itemModal").classList.add("show");
   setTimeout(() => $("fName").focus(), 100);
 }
 
 function openEditModal(item) {
-  $("modalTitle").textContent = "Edit Item ✎";
-  $("fId").value = item.id;
-  $("fName").value = item.name;
-  $("fOnHand").value = item.on_hand;
-  $("fMinStock").value = item.min_stock;
-  $("fPrice").value = item.price;
-  $("fCost").value = item.cost;
-  $("fCategory").value = item.category;
-  $("fSquareId").value = item.square_catalog_id || "";
+  $("modalTitle").textContent = "Edit Item ✎"; $("fId").value = item.id;
+  $("fName").value = item.name; $("fOnHand").value = item.on_hand; $("fMinStock").value = item.min_stock;
+  $("fPrice").value = item.price; $("fCost").value = item.cost;
+  $("fCategory").value = item.category; $("fSquareId").value = item.square_catalog_id || "";
   $("fCrocheter").value = item.crocheter;
-  $("btnDelete").style.display = selectedRole === "master" ? "block" : "none";
+  $("btnDelete").style.display = isMaster ? "block" : "none";
+  $("btnArchive").style.display = isMaster ? "block" : "none";
   $("itemModal").classList.add("show");
 }
 
-function closeModal() { $("itemModal").classList.remove("show"); }
+function closeItemModal() { $("itemModal").classList.remove("show"); }
 
 async function saveItem() {
   const id = $("fId").value;
   const params = {
-    name: $("fName").value.trim(),
-    on_hand: $("fOnHand").value,
-    min_stock: $("fMinStock").value,
-    price: $("fPrice").value,
-    cost: $("fCost").value,
-    category: $("fCategory").value.trim(),
-    crocheter: $("fCrocheter").value,
+    name: $("fName").value.trim(), on_hand: $("fOnHand").value,
+    min_stock: $("fMinStock").value, price: $("fPrice").value, cost: $("fCost").value,
+    category: $("fCategory").value.trim(), crocheter: $("fCrocheter").value,
     square_catalog_id: $("fSquareId").value.trim()
   };
   if (!params.name) return toast("Name required", "error");
   $("btnSave").disabled = true;
-  const r = id
-    ? await api("updateItem", { id, ...params })
-    : await api("addItem", params);
+  const r = id ? await api("updateItem", { id, ...params }) : await api("addItem", params);
   $("btnSave").disabled = false;
-  if (r.ok) {
-    toast(id ? "Saved ✿" : "Added ✿", "success");
-    closeModal();
-    loadAll();
-  } else toast(r.error, "error");
-}
-
-async function deleteItem() {
-  const id = $("fId").value;
-  if (!id) return;
-  if (!confirm("Delete this item? Sales history will stay but item disappears from inventory.")) return;
-  const r = await api("deleteItem", { id });
-  if (r.ok) { toast(r.message || "Deleted", "success"); closeModal(); loadAll(); }
+  if (r.ok) { toast(id ? "Saved ✿" : "Added ✿", "success"); closeItemModal(); loadAll(); }
   else toast(r.error, "error");
 }
 
-// ───────── Resolve unmatched ─────────
+async function deleteItem() {
+  const id = $("fId").value; if (!id) return;
+  if (!confirm("Delete this item permanently?")) return;
+  const r = await api("deleteItem", { id });
+  if (r.ok) { toast(r.message || "Deleted", "success"); closeItemModal(); loadAll(); }
+  else toast(r.error, "error");
+}
+
+async function archiveItem() {
+  const id = $("fId").value; if (!id) return;
+  if (!confirm("Archive this item? It'll move to the Archive tab and disappear from inventory.")) return;
+  const r = await api("archiveItem", { id });
+  if (r.ok) { toast("Archived ✿", "success"); closeItemModal(); loadAll(); }
+  else toast(r.error, "error");
+}
+
+// Restore modal
+function openRestoreModal(id, name) {
+  $("restoreId").value = id; $("restoreName").textContent = name; $("restoreQty").value = 1;
+  $("restoreModal").classList.add("show");
+}
+$("restoreCancelBtn").addEventListener("click", () => $("restoreModal").classList.remove("show"));
+$("restoreModal").addEventListener("click", e => { if (e.target.id === "restoreModal") $("restoreModal").classList.remove("show"); });
+$("restoreConfirmBtn").addEventListener("click", async () => {
+  const id = $("restoreId").value;
+  const qty = $("restoreQty").value;
+  const r = await api("restoreItem", { id, on_hand: qty });
+  if (r.ok) { toast("Restored ✿", "success"); $("restoreModal").classList.remove("show"); loadArchive(); loadAll(); }
+  else toast(r.error, "error");
+});
+
+// Unmatched resolve
 async function handleResolve(data) {
-  const id = data.id, kind = data.resolve;
+  const { id, resolve: kind, name, qty } = data;
   if (kind === "ignore") {
-    if (!confirm("Skip this unmatched sale? It won't affect inventory.")) return;
+    if (!confirm("Skip this? Won't affect inventory.")) return;
     const r = await api("resolveUnmatched", { id, choice: "ignore" });
     if (r.ok) { toast("Skipped", "success"); loadUnmatched(); updateUnmatchedBadge(); }
     else toast(r.error, "error");
     return;
   }
   if (kind === "create") {
-    if (!confirm(`Create "${data.name}" as a new item? It'll start at -${data.qty} on hand — adjust after.`)) return;
+    if (!confirm(`Create "${name}" as a new item? Starts at -${qty} on hand.`)) return;
     const r = await api("resolveUnmatched", { id, choice: "create", crocheter: "Amioki" });
     if (r.ok) { toast("Created ✿", "success"); loadUnmatched(); updateUnmatchedBadge(); loadAll(); }
     else toast(r.error, "error");
     return;
   }
   if (kind === "link") {
-    // Populate select
     const sel = $("rmItemSelect");
     sel.innerHTML = '<option value="">— pick an item —</option>' +
       [...allItems].sort((a,b)=>a.name.localeCompare(b.name)).map(i =>
-        `<option value="${i.id}">${esc(i.name)} (${i.crocheter})</option>`
-      ).join("");
-    $("rmName").textContent = data.name;
-    $("rmQty").textContent = data.qty;
-    $("rmId").value = id;
+        `<option value="${i.id}">${esc(i.name)} (${esc(i.crocheter)})</option>`).join("");
+    $("rmName").textContent = name; $("rmQty").textContent = qty; $("rmId").value = id;
     $("resolveModal").classList.add("show");
   }
 }
 $("rmLinkBtn").addEventListener("click", async () => {
-  const id = $("rmId").value;
-  const itemId = $("rmItemSelect").value;
-  if (!itemId) return toast("Pick an item to link to", "error");
+  const id = $("rmId").value, itemId = $("rmItemSelect").value;
+  if (!itemId) return toast("Pick an item", "error");
   const r = await api("resolveUnmatched", { id, choice: "link", itemId });
   if (r.ok) { toast("Linked ✿", "success"); $("resolveModal").classList.remove("show"); loadUnmatched(); updateUnmatchedBadge(); loadAll(); }
   else toast(r.error, "error");
 });
 $("rmCreateBtn").addEventListener("click", async () => {
   const id = $("rmId").value;
-  if (!confirm("Create as new item? Goes negative until you correct.")) return;
+  if (!confirm("Create as new item?")) return;
   const r = await api("resolveUnmatched", { id, choice: "create", crocheter: "Amioki" });
   if (r.ok) { toast("Created ✿", "success"); $("resolveModal").classList.remove("show"); loadUnmatched(); updateUnmatchedBadge(); loadAll(); }
   else toast(r.error, "error");
@@ -865,22 +846,24 @@ $("rmIgnoreBtn").addEventListener("click", async () => {
 });
 $("resolveModal").addEventListener("click", e => { if (e.target.id === "resolveModal") $("resolveModal").classList.remove("show"); });
 
-// ───────── Helpers ─────────
+// API helper
 async function api(action, params = {}) {
   const qs = new URLSearchParams({ action, token: token || "", ...params });
   const r = await fetch(`${API_URL}?${qs}`);
   return r.json();
 }
-function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+// Toast + helpers
 let toastTimer;
 function toast(msg, kind = "") {
-  const t = $("toast");
-  t.textContent = msg; t.className = "toast show " + kind;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.className = "toast " + kind, 2600);
+  const t = $("toast"); t.textContent = msg; t.className = "toast show " + kind;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = "toast " + kind, 2600);
+}
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 }
 
-// ───────── Auto-refresh every 60s ─────────
+// Auto-refresh every 60s
 setInterval(() => { if (token && currentTab === "inventory") loadAll(); }, 60000);
 </script>
 </body>
