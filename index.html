@@ -562,8 +562,10 @@ function showLoginError(msg) { $("loginError").textContent = "✗ " + msg; $("lo
 function showApp() {
   $("loginScreen").style.display = "none";
   $("app").classList.add("active");
-  if (canEdit)   $("fabAdd").style.display = "grid";
-  if (isMaster)  document.querySelectorAll(".master-only").forEach(el => el.style.display = "");
+  if (isMaster) {
+    $("fabAdd").style.display = "grid";
+    document.querySelectorAll(".master-only").forEach(el => el.style.display = "");
+  }
   $("viewToggleBtn").textContent = viewMode === "list" ? "☰" : "⊞";
   loadAll();
   loadProfile();
@@ -803,14 +805,14 @@ function renderItems() {
       const st = stockStatus(i);
       const qc = st === "out" ? "danger" : st === "low" ? "warn" : "";
       return `<div class="gallery-card ${st}" data-id="${i.id}">
-        ${canEdit ? `<button class="act-btn edit edit-overlay" data-act="edit" style="width:24px;height:24px;font-size:11px">✎</button>` : ""}
+        ${isMaster ? `<button class="act-btn edit edit-overlay" data-act="edit" style="width:24px;height:24px;font-size:11px">✎</button>` : ""}
         <div class="g-cat">${esc(i.category || "—")}</div>
         <div class="g-name">${esc(i.name)}</div>
         <div class="g-qty ${qc}">${i.on_hand}</div>
         ${i.min_stock > 0 ? `<div style="font-size:10px;color:var(--soft)">min ${i.min_stock}</div>` : ""}
         <div class="g-actions">
-          <button class="act-btn" data-act="dec" ${i.on_hand <= 0 ? "disabled" : ""}>−</button>
-          <button class="act-btn" data-act="inc">+</button>
+          ${isMaster ? `<button class="act-btn" data-act="dec" ${i.on_hand <= 0 ? "disabled" : ""}>−</button>
+          <button class="act-btn" data-act="inc">+</button>` : ""}
         </div>
       </div>`;
     }).join("");
@@ -832,9 +834,9 @@ function renderItems() {
         <div class="item-right">
           <div class="item-qty ${qc}">${i.on_hand}</div>
           <div class="item-actions">
-            <button class="act-btn" data-act="dec" ${i.on_hand <= 0 ? "disabled" : ""}>−</button>
-            <button class="act-btn" data-act="inc">+</button>
-            ${canEdit ? `<button class="act-btn edit" data-act="edit">✎</button>` : ""}
+            ${isMaster ? `<button class="act-btn" data-act="dec" ${i.on_hand <= 0 ? "disabled" : ""}>−</button>
+            <button class="act-btn" data-act="inc">+</button>` : ""}
+            ${isMaster ? `<button class="act-btn edit" data-act="edit">✎</button>` : ""}
           </div>
         </div>
       </div>`;
