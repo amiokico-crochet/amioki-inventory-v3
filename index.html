@@ -201,6 +201,9 @@ input,select,textarea{font-family:inherit;font-size:15px}
 }
 
 /* CONTRACTS + BATCHES */
+.croch-chip{padding:6px 14px;border-radius:12px;font-size:12px;font-weight:600;background:white;color:var(--mid);border:2px solid var(--pink-100);transition:all .2s;cursor:pointer;white-space:nowrap}
+.croch-chip:hover{background:var(--pink-50);border-color:var(--pink-200)}
+.croch-chip.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;border-color:var(--pink-400);box-shadow:0 2px 8px rgba(255,141,192,.3)}
 .crocheter-pill{padding:8px 16px;border-radius:14px;font-size:13px;font-weight:600;background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100);transition:all .2s;cursor:pointer}
 .crocheter-pill:hover{background:var(--pink-100)}
 .crocheter-pill.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;border-color:var(--pink-400);box-shadow:0 4px 12px rgba(255,141,192,.3)}
@@ -301,6 +304,13 @@ input,select,textarea{font-family:inherit;font-size:15px}
         <button class="filter-chip" data-filter="ok">✿ In Stock</button>
         <button class="filter-chip" data-filter="low">⚠️ Low</button>
         <button class="filter-chip" data-filter="out">○ Out</button>
+      </div>
+      <div class="filter-bar master-only" id="crochetFilterBar" style="display:none">
+        <button class="croch-chip active" data-croch="all">👥 Everyone</button>
+        <button class="croch-chip" data-croch="Ashley">🧵 Ashley</button>
+        <button class="croch-chip" data-croch="Liz">🪡 Liz</button>
+        <button class="croch-chip" data-croch="Sydni">🌷 Sydni</button>
+        <button class="croch-chip" data-croch="Amioki">🌸 Amioki</button>
       </div>
       <div class="items-list" id="itemsList"><div class="loading">Loading inventory...</div></div>
     </div>
@@ -510,7 +520,7 @@ const API_URL = "https://amioki-inventory-api.amioki-co.workers.dev";
 
 const $ = id => document.getElementById(id);
 let selectedRole = null, token = null, canEdit = false, isMaster = false;
-let allItems = [], currentFilter = "all", currentSearch = "", currentTab = "inventory";
+let allItems = [], currentFilter = "all", currentSearch = "", currentTab = "inventory", currentCrocheter = "all";
 let viewMode = localStorage.getItem("amioki_view") || "list"; // "list" | "gallery"
 
 // Session restore
@@ -610,6 +620,12 @@ document.querySelectorAll(".filter-chip").forEach(c => {
   c.addEventListener("click", () => {
     document.querySelectorAll(".filter-chip").forEach(x => x.classList.remove("active"));
     c.classList.add("active"); currentFilter = c.dataset.filter; renderItems();
+  });
+});
+document.querySelectorAll(".croch-chip").forEach(c => {
+  c.addEventListener("click", () => {
+    document.querySelectorAll(".croch-chip").forEach(x => x.classList.remove("active"));
+    c.classList.add("active"); currentCrocheter = c.dataset.croch; renderItems();
   });
 });
 
@@ -791,6 +807,7 @@ function renderItems() {
     if (currentSearch && !i.name.toLowerCase().includes(currentSearch)) return false;
     const st = stockStatus(i);
     if (currentFilter !== "all" && st !== currentFilter) return false;
+    if (currentCrocheter !== "all" && i.crocheter !== currentCrocheter) return false;
     return true;
   });
   filtered.sort((a, b) => {
