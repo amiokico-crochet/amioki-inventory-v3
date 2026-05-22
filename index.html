@@ -1123,15 +1123,23 @@ function showParsedPreview(parsed) {
     { label: "Hourly Rate",    value: "$" + (parsed.hourly_rate || 13) + "/hr" }
   ].map(p => `<div class="summary-pill"><span>${esc(String(p.value))}</span>${p.label}</div>`).join("");
   $("parsedItems").innerHTML = (parsed.items || []).map((item, idx) => `
-    <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;padding:11px 14px;border-bottom:1px solid var(--pink-100);align-items:center">
-      <div>
-        <div style="font-weight:600;font-size:14px;color:var(--ink)">${esc(item.item_name)}</div>
-        <div style="font-size:11px;color:var(--soft)">$${(item.labor_rate||0).toFixed(2)} labor + $${(item.material_cost||0).toFixed(2)} materials</div>
+    <div style="padding:12px 14px;border-bottom:1px solid var(--pink-100)">
+      <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;align-items:center;margin-bottom:8px">
+        <div>
+          <div style="font-weight:600;font-size:14px;color:var(--ink)">${esc(item.item_name)}</div>
+          <div style="font-size:11px;color:var(--soft)">$${(item.labor_rate||0).toFixed(2)} labor + $${(item.material_cost||0).toFixed(2)} materials</div>
+        </div>
+        <input type="number" min="0" value="${item.qty_needed}"
+          style="width:100%;padding:7px 8px;border:2px solid var(--pink-100);border-radius:10px;text-align:center;font-weight:700;font-size:14px"
+          onchange="parsedContractData.items[${idx}].qty_needed=Number(this.value)">
+        <div style="text-align:right;font-weight:600;color:var(--pink-600);font-size:14px">$${(item.piece_rate||0).toFixed(2)}</div>
       </div>
-      <input type="number" min="0" value="${item.qty_needed}"
-        style="width:100%;padding:7px 8px;border:2px solid var(--pink-100);border-radius:10px;text-align:center;font-weight:700;font-size:14px"
-        onchange="parsedContractData.items[${idx}].qty_needed=Number(this.value)">
-      <div style="text-align:right;font-weight:600;color:var(--pink-600);font-size:14px">$${(item.piece_rate||0).toFixed(2)}</div>
+      <input type="text" placeholder="🎨 Color / variant notes (e.g. 4 green, 4 blue, 4 pink)"
+        value="${esc(item.color_notes||'')}"
+        style="width:100%;padding:7px 12px;border:2px solid var(--pink-100);border-radius:10px;font-size:12px;background:var(--pink-50);color:var(--ink)"
+        oninput="parsedContractData.items[${idx}].color_notes=this.value"
+        onfocus="this.style.borderColor='var(--pink-400)';this.style.background='white'"
+        onblur="this.style.borderColor='var(--pink-100)';this.style.background='var(--pink-50)'">
     </div>`).join("");
 }
 
@@ -1173,42 +1181,105 @@ async function loadContracts() {
   const r = await api("getContracts");
   const list = $("contractsList");
   if (!r.ok || !r.contracts?.length) {
-    list.innerHTML = '<div class="empty">No contracts yet ✿<br><span style="font-size:11px">Upload a PDF above to create one.</span></div>';
+    list.innerHTML = '<div class="empty">No contracts yet \u273f<br><span style="font-size:11px">Upload a PDF above to create one.</span></div>';
     return;
   }
   list.innerHTML = r.contracts.map(c => {
     const delivered = c.items?.reduce((s, i) => s + i.qty_delivered, 0) || 0;
     const pct = c.total_items > 0 ? Math.min(100, Math.round((delivered / c.total_items) * 100)) : 0;
     const statusColor = c.status === "active" ? "var(--mint)" : "var(--peach)";
-    return `<div class="contract-card">
+    const itemsHtml = (c.items || []).map(i => {
+      const remaining = i.qty_needed - i.qty_delivered;
+      const done = remaining <= 0;
+      return `<div style="background:var(--pink-50);border-radius:12px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div style="font-weight:600;font-size:14px;color:var(--ink)">${esc(i.item_name)}</div>
+          <div style="text-align:right;font-size:12px">
+            <div style="font-weight:700;color:${done ? "#4A9B6A" : "var(--ink)"}">${i.qty_delivered}/${i.qty_needed}</div>
+            <div style="color:var(--soft)">$${(i.piece_rate||0).toFixed(2)}/ea</div>
+          </div>
+        </div>
+        <input type="text" placeholder="\uD83C\uDFA8 Color notes (e.g. 4 green, 4 blue)"
+          value="${esc(i.color_notes||"")}"
+          style="width:100%;padding:6px 10px;border:1.5px solid var(--pink-200);border-radius:8px;font-size:12px;background:white;margin-bottom:6px"
+          onchange="saveItemNotes(${i.id},'color_notes',this.value)">
+        <input type="text" placeholder="\uD83D\uDCDD Notes (e.g. use chunky yarn, check sizing)"
+          value="${esc(i.notes||"")}"
+          style="width:100%;padding:6px 10px;border:1.5px solid var(--pink-200);border-radius:8px;font-size:12px;background:white;margin-bottom:8px"
+          onchange="saveItemNotes(${i.id},'notes',this.value)">
+        ${!done && c.status === "active" ? `
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input type="number" min="1" max="${remaining}" placeholder="qty" id="dq-${i.id}"
+              style="width:70px;padding:6px 8px;border:1.5px solid var(--pink-200);border-radius:8px;font-size:13px;text-align:center">
+            <input type="text" placeholder="delivery notes (optional)" id="dn-${i.id}"
+              style="flex:1;min-width:100px;padding:6px 10px;border:1.5px solid var(--pink-200);border-radius:8px;font-size:12px">
+            <button class="ab approve" onclick="logManualDelivery(${i.id},${c.id})">+ Log Delivery</button>
+          </div>
+          <div style="font-size:11px;color:var(--soft);margin-top:4px">${remaining} still needed</div>` :
+          done ? `<div style="font-size:11px;color:#4A9B6A;font-weight:600">\u2713 Fully delivered</div>` : ""}
+      </div>`;
+    }).join("");
+
+    return `<div class="contract-card" id="contract-${c.id}">
       <div class="contract-card-header">
         <div>
-          <div class="contract-card-name">🧶 ${esc(c.crocheter_name)}</div>
-          <div class="contract-card-due">Due: ${c.due_date || "—"} · $${(c.total_value||0).toFixed(2)} · ${c.total_items} items</div>
+          <div class="contract-card-name">\uD83E\uDDF6 ${esc(c.crocheter_name)}</div>
+          <div class="contract-card-due">Due: ${c.due_date || "\u2014"} \u00b7 $${(c.total_value||0).toFixed(2)} \u00b7 ${c.total_items} items</div>
         </div>
         <span style="background:${statusColor};padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase">${c.status}</span>
       </div>
       <div class="contract-progress"><div class="contract-progress-fill" style="width:${pct}%"></div></div>
-      <div style="font-size:11px;color:var(--mid);margin-bottom:8px">${delivered} / ${c.total_items} delivered (${pct}%)</div>
-      <details>
-        <summary style="font-size:12px;color:var(--pink-600);cursor:pointer;font-weight:600">View items ▾</summary>
-        <div style="margin-top:8px">
-          ${c.items?.map(i => `
-            <div class="contract-item-row">
-              <div>
-                <div style="font-weight:600;font-size:13px">${esc(i.item_name)}</div>
-                ${i.color_notes ? `<div style="font-size:11px;color:var(--soft)">🎨 ${esc(i.color_notes)}</div>` : ""}
-              </div>
-              <div style="text-align:right;font-size:12px">
-                <div style="font-weight:700;color:var(--ink)">${i.qty_delivered}/${i.qty_needed}</div>
-                <div style="color:var(--soft)">$${(i.piece_rate||0).toFixed(2)}/ea</div>
-              </div>
-            </div>`).join("") || ""}
-        </div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:10px">${delivered} / ${c.total_items} delivered (${pct}%)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        ${c.status === "active" ? `<button class="ab approve" onclick="markContractComplete(${c.id})">\u2713 Mark Complete</button>` : ""}
+        <button class="ab partial" onclick="archiveContractAction(${c.id})">\uD83D\uDCE6 Archive</button>
+        <button class="ab reject" onclick="deleteContractAction(${c.id})">\uD83D\uDDD1 Delete</button>
+      </div>
+      <details open>
+        <summary style="font-size:12px;color:var(--pink-600);cursor:pointer;font-weight:600;margin-bottom:8px">Items \u25be</summary>
+        <div>${itemsHtml}</div>
       </details>
     </div>`;
   }).join("");
 }
+
+async function saveItemNotes(itemId, field, value) {
+  await api("updateContractItem", { id: itemId, [field]: value });
+}
+
+async function logManualDelivery(itemId, contractId) {
+  const qty = Number($("dq-" + itemId)?.value) || 0;
+  const notes = $("dn-" + itemId)?.value || "";
+  if (!qty) return toast("Enter a quantity", "error");
+  const r = await api("manualDelivery", { contract_item_id: itemId, qty, notes });
+  if (r.ok) {
+    toast(r.inventoryUpdated ? "Logged + inventory updated \u273f" : "Logged (item not in inventory yet)", "success");
+    loadContracts(); loadAll();
+  } else toast(r.error, "error");
+}
+
+async function markContractComplete(id) {
+  if (!confirm("Mark this contract as complete?")) return;
+  const r = await api("completeContract", { id });
+  if (r.ok) { toast("Contract marked complete \u273f", "success"); loadContracts(); }
+  else toast(r.error, "error");
+}
+
+async function archiveContractAction(id) {
+  if (!confirm("Archive this contract? Line items will be removed \u2014 confirm the PDF is saved to Google Drive first.")) return;
+  const r = await api("archiveContract", { id });
+  if (r.ok) { toast("Contract archived \u273f", "success"); loadContracts(); }
+  else toast(r.error, "error");
+}
+
+async function deleteContractAction(id) {
+  if (!confirm("Permanently delete this contract? This cannot be undone.")) return;
+  const r = await api("deleteContract", { id });
+  if (r.ok) { toast("Contract deleted", "success"); loadContracts(); }
+  else toast(r.error, "error");
+}
+
+
 
 // ── BATCH APPROVAL ──
 const batchDecisions = {};
