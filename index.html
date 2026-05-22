@@ -199,6 +199,51 @@ input,select,textarea{font-family:inherit;font-size:15px}
   .modal-back{align-items:center}
   .modal{border-radius:28px;max-height:80vh}
 }
+
+/* CONTRACTS + BATCHES */
+.crocheter-pill{padding:8px 16px;border-radius:14px;font-size:13px;font-weight:600;background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100);transition:all .2s;cursor:pointer}
+.crocheter-pill:hover{background:var(--pink-100)}
+.crocheter-pill.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;border-color:var(--pink-400);box-shadow:0 4px 12px rgba(255,141,192,.3)}
+.drop-zone{position:relative;border:3px dashed var(--pink-200);border-radius:20px;background:var(--pink-50);padding:32px 20px;text-align:center;transition:all .3s;cursor:pointer;overflow:hidden}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--pink-400);background:var(--pink-100);transform:scale(1.01)}
+.drop-zone.has-file{border-style:solid;border-color:var(--pink-400);background:linear-gradient(135deg,var(--pink-50),var(--pink-100))}
+.drop-icon{font-size:40px;margin-bottom:10px;transition:transform .3s}
+.drop-zone:hover .drop-icon,.drop-zone.drag-over .drop-icon{transform:scale(1.2) rotate(10deg)}
+.drop-title{font-family:'Comfortaa',sans-serif;font-weight:700;font-size:16px;color:var(--ink);margin-bottom:4px}
+.drop-sub{font-size:12px;color:var(--soft)}
+.drop-filename{font-size:13px;font-weight:600;color:var(--pink-600);margin-top:8px;background:white;padding:6px 14px;border-radius:10px;display:inline-block;border:1px solid var(--pink-200)}
+.summary-pill{background:white;border:2px solid var(--pink-100);border-radius:12px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--ink);box-shadow:var(--shadow)}
+.summary-pill span{color:var(--pink-600);font-family:'Comfortaa',sans-serif;font-size:15px;font-weight:700;display:block}
+.contract-card{background:white;border-radius:16px;padding:14px;border:2px solid var(--pink-100);box-shadow:var(--shadow);margin-bottom:10px}
+.contract-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.contract-card-name{font-weight:700;font-size:15px;color:var(--ink)}
+.contract-card-due{font-size:11px;color:var(--soft);margin-top:2px}
+.contract-progress{background:var(--pink-100);border-radius:6px;height:8px;margin:8px 0;overflow:hidden}
+.contract-progress-fill{background:linear-gradient(90deg,var(--pink-300),var(--pink-400));height:100%;border-radius:6px;transition:width .4s}
+.contract-item-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--pink-100);font-size:13px}
+.contract-item-row:last-child{border-bottom:none}
+.batch-review-card{background:white;border-radius:16px;padding:16px;border:2px solid var(--peach);box-shadow:var(--shadow);margin-bottom:12px}
+.batch-review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.batch-review-crocheter{font-weight:700;font-size:15px;color:var(--ink)}
+.batch-item-approve{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--pink-100)}
+.batch-item-approve:last-child{border-bottom:none}
+.approve-btns{display:flex;gap:4px;flex-shrink:0}
+.ab{padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;transition:all .2s}
+.ab.approve{background:var(--mint);color:#2E6B47}
+.ab.partial{background:var(--lemon);color:#8B6914}
+.ab.reject{background:#FFE5E5;color:#C24040}
+.ab.active-approve{background:#2E6B47;color:white}
+.ab.active-partial{background:#8B6914;color:white}
+.ab.active-reject{background:#C24040;color:white}
+.qc-view{background:var(--pink-50);border-radius:12px;padding:12px;margin-top:10px;font-size:13px}
+.qc-check-row{display:flex;justify-content:space-between;padding:4px 0;color:var(--mid)}
+.qc-check-row .pass{color:#4A9B6A;font-weight:600}
+.qc-check-row .fail{color:#C24040;font-weight:600}
+.sig-view{border:1px solid var(--pink-100);border-radius:8px;overflow:hidden;max-height:80px;margin-top:6px}
+.sig-view img{width:100%;display:block}
+.pay-owed-badge{background:linear-gradient(135deg,var(--lavender),var(--pink-100));border-radius:12px;padding:10px 14px;text-align:center;margin:10px 0}
+.pay-owed-badge .amount{font-family:'Comfortaa',sans-serif;font-size:22px;font-weight:700;color:var(--pink-600)}
+.pay-owed-badge .label{font-size:11px;color:var(--mid)}
 </style>
 </head>
 <body>
@@ -239,6 +284,8 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <button class="tab master-only" data-tab="unmatched" style="display:none">Unmatched <span class="badge" id="umBadge">0</span></button>
       <button class="tab master-only" data-tab="archive" style="display:none">Archive</button>
       <button class="tab master-only" data-tab="notifications" style="display:none">Alerts</button>
+      <button class="tab master-only" data-tab="contracts" style="display:none">Contracts</button>
+      <button class="tab master-only" data-tab="batches" style="display:none">Batches <span class="badge" id="batchBadge" style="display:none">0</span></button>
     </div>
 
     <!-- INVENTORY -->
@@ -327,6 +374,63 @@ input,select,textarea{font-family:inherit;font-size:15px}
     <div class="tab-panel" id="panel-notifications">
       <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Control who gets the daily <strong>Ami's Adopted Plushie Takeaway</strong> digest at 9pm. 🌸</p>
       <div id="crocheterCards"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- CONTRACTS (master only) -->
+    <div class="tab-panel" id="panel-contracts">
+      <div style="margin-bottom:14px">
+        <div id="contractUploadSection">
+          <div style="font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Who is this contract for?</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <button class="crocheter-pill active" data-crocheter="ashley">🧵 Ashley</button>
+            <button class="crocheter-pill" data-crocheter="liz">🪡 Liz</button>
+            <button class="crocheter-pill" data-crocheter="sydni">🌷 Sydni</button>
+            <button class="crocheter-pill" data-crocheter="ami">🌸 Ami</button>
+          </div>
+          <input type="hidden" id="contractCrocheter" value="ashley">
+          <div id="dropZone" class="drop-zone">
+            <div class="drop-zone-inner">
+              <div class="drop-icon" id="dropIcon">🌸</div>
+              <div class="drop-title" id="dropTitle">Drop contract PDF here</div>
+              <div class="drop-sub" id="dropSub">or tap to browse</div>
+              <div class="drop-filename" id="dropFilename" style="display:none"></div>
+            </div>
+            <input type="file" id="contractFile" accept=".pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
+          </div>
+          <button class="btn btn-primary" id="parseContractBtn" style="margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px">
+            <span id="parseBtnIcon">📖</span><span id="parseBtnText">Parse Contract ✿</span>
+          </button>
+          <div id="parseProgressWrap" style="display:none;margin-top:12px">
+            <div style="font-size:12px;color:var(--mid);margin-bottom:6px;text-align:center" id="parseStatusText">Reading PDF...</div>
+            <div style="background:var(--pink-100);border-radius:8px;height:6px;overflow:hidden">
+              <div id="parseProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--pink-300),var(--pink-400));border-radius:8px;transition:width .4s ease"></div>
+            </div>
+          </div>
+        </div>
+        <div id="parsedPreview" style="display:none">
+          <div style="background:linear-gradient(135deg,var(--pink-300),var(--pink-400));border-radius:20px;padding:18px 20px;color:white;text-align:center;margin-bottom:14px">
+            <div style="font-size:28px;margin-bottom:6px">✿</div>
+            <div style="font-family:'Comfortaa',sans-serif;font-size:17px;font-weight:700">Contract Parsed!</div>
+            <div style="font-size:12px;opacity:.85;margin-top:4px">Review the items below and adjust quantities if needed</div>
+          </div>
+          <div id="parsedSummaryPills" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+          <div style="background:white;border-radius:16px;border:2px solid var(--pink-100);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow)">
+            <div style="background:var(--pink-50);padding:10px 14px;display:grid;grid-template-columns:1fr 80px 80px;gap:8px;font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--pink-100)">
+              <div>Item</div><div style="text-align:center">Qty</div><div style="text-align:right">Rate</div>
+            </div>
+            <div id="parsedItems"></div>
+          </div>
+          <button class="btn btn-primary" id="saveContractBtn" style="display:flex;align-items:center;justify-content:center;gap:8px">🌸 <span>Save Contract</span></button>
+          <button class="btn btn-ghost" id="cancelParseBtn" style="margin-top:8px">Start Over</button>
+        </div>
+      </div>
+      <div id="contractsList"><div class="loading">Loading contracts...</div></div>
+    </div>
+
+    <!-- BATCHES (master only) -->
+    <div class="tab-panel" id="panel-batches">
+      <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Review and approve incoming batches from your crocheters.</p>
+      <div id="batchesList"><div class="loading">Loading batches...</div></div>
     </div>
   </div>
 
@@ -483,8 +587,8 @@ document.querySelectorAll(".tab").forEach(t => {
     if (currentTab === "unmatched")     loadUnmatched();
     if (currentTab === "archive")       loadArchive();
     if (currentTab === "notifications") loadNotifications();
-    if (currentTab === "contracts") loadContracts();
-    if (currentTab === "batches")   loadBatches();
+    if (currentTab === "contracts")     loadContracts();
+    if (currentTab === "batches")       loadBatches();
   });
 });
 
@@ -909,6 +1013,298 @@ function esc(s) {
 
 // Auto-refresh every 60s
 setInterval(() => { if (token && currentTab === "inventory") loadAll(); }, 60000);
+
+// ── CONTRACTS + BATCHES (v5) ──
+
+// Crocheter pills
+document.querySelectorAll(".crocheter-pill").forEach(p => {
+  p.addEventListener("click", () => {
+    document.querySelectorAll(".crocheter-pill").forEach(x => x.classList.remove("active"));
+    p.classList.add("active");
+    $("contractCrocheter").value = p.dataset.crocheter;
+  });
+});
+
+// Drag & drop zone
+const dropZone = $("dropZone");
+dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+dropZone.addEventListener("drop", e => {
+  e.preventDefault(); dropZone.classList.remove("drag-over");
+  const file = e.dataTransfer?.files?.[0];
+  if (file && file.type === "application/pdf") setDropFile(file);
+  else toast("Please drop a PDF file", "error");
+});
+$("contractFile").addEventListener("change", () => {
+  const file = $("contractFile").files[0];
+  if (file) setDropFile(file);
+});
+function setDropFile(file) {
+  dropZone.classList.add("has-file");
+  $("dropIcon").textContent = "📋";
+  $("dropTitle").textContent = "Contract ready!";
+  $("dropSub").textContent = "Tap parse to extract items";
+  $("dropFilename").textContent = file.name;
+  $("dropFilename").style.display = "inline-block";
+}
+
+// PDF.js loader
+let pdfJsReady = false;
+(function() {
+  const s = document.createElement("script");
+  s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+  s.onload = () => {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    pdfJsReady = true;
+  };
+  document.head.appendChild(s);
+})();
+
+async function extractPdfText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const pdf = await pdfjsLib.getDocument({ data: e.target.result }).promise;
+        let text = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map(s => s.str).join(" ") + "\n";
+        }
+        resolve(text);
+      } catch (err) { reject(err); }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function setParseProgress(pct, label) {
+  $("parseProgressWrap").style.display = "block";
+  $("parseProgressBar").style.width = pct + "%";
+  $("parseStatusText").textContent = label;
+}
+
+let parsedContractData = null;
+
+$("parseContractBtn").addEventListener("click", async () => {
+  const file = $("contractFile").files[0];
+  const crocheter = $("contractCrocheter").value;
+  if (!file) return toast("Drop a PDF first ✿", "error");
+  if (!pdfJsReady) return toast("PDF reader loading, try again in a moment", "error");
+  const btn = $("parseContractBtn");
+  btn.disabled = true; $("parseBtnIcon").textContent = "⏳"; $("parseBtnText").textContent = "Parsing...";
+  try {
+    setParseProgress(20, "Reading PDF pages...");
+    const pdfText = await extractPdfText(file);
+    setParseProgress(55, "Asking AI to extract items...");
+    const r = await api("parseContract", { pdfText, crocheter });
+    setParseProgress(95, "Almost done ✿");
+    if (!r.ok) throw new Error(r.error);
+    await new Promise(res => setTimeout(res, 300));
+    $("parseProgressWrap").style.display = "none";
+    parsedContractData = { ...r.parsed, crocheter };
+    showParsedPreview(r.parsed);
+  } catch (err) {
+    $("parseProgressWrap").style.display = "none";
+    toast(err.message, "error");
+  } finally {
+    btn.disabled = false; $("parseBtnIcon").textContent = "📖"; $("parseBtnText").textContent = "Parse Contract ✿";
+  }
+});
+
+function showParsedPreview(parsed) {
+  $("contractUploadSection").style.display = "none";
+  $("parsedPreview").style.display = "block";
+  $("parsedSummaryPills").innerHTML = [
+    { label: "Due Date",       value: parsed.due_date || "—" },
+    { label: "Total Items",    value: parsed.total_items || 0 },
+    { label: "Contract Value", value: "$" + (parsed.total_value || 0).toFixed(2) },
+    { label: "Hourly Rate",    value: "$" + (parsed.hourly_rate || 13) + "/hr" }
+  ].map(p => `<div class="summary-pill"><span>${esc(String(p.value))}</span>${p.label}</div>`).join("");
+  $("parsedItems").innerHTML = (parsed.items || []).map((item, idx) => `
+    <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;padding:11px 14px;border-bottom:1px solid var(--pink-100);align-items:center">
+      <div>
+        <div style="font-weight:600;font-size:14px;color:var(--ink)">${esc(item.item_name)}</div>
+        <div style="font-size:11px;color:var(--soft)">$${(item.labor_rate||0).toFixed(2)} labor + $${(item.material_cost||0).toFixed(2)} materials</div>
+      </div>
+      <input type="number" min="0" value="${item.qty_needed}"
+        style="width:100%;padding:7px 8px;border:2px solid var(--pink-100);border-radius:10px;text-align:center;font-weight:700;font-size:14px"
+        onchange="parsedContractData.items[${idx}].qty_needed=Number(this.value)">
+      <div style="text-align:right;font-weight:600;color:var(--pink-600);font-size:14px">$${(item.piece_rate||0).toFixed(2)}</div>
+    </div>`).join("");
+}
+
+$("cancelParseBtn").addEventListener("click", () => {
+  $("parsedPreview").style.display = "none";
+  $("contractUploadSection").style.display = "block";
+  dropZone.classList.remove("has-file");
+  $("dropIcon").textContent = "🌸"; $("dropTitle").textContent = "Drop contract PDF here";
+  $("dropSub").textContent = "or tap to browse"; $("dropFilename").style.display = "none";
+  $("contractFile").value = ""; parsedContractData = null;
+});
+
+$("saveContractBtn").addEventListener("click", async () => {
+  if (!parsedContractData) return;
+  const btn = $("saveContractBtn"); btn.disabled = true;
+  btn.querySelector("span").textContent = "Saving...";
+  try {
+    const nameMap = { ashley: "Ashley", liz: "Liz", sydni: "Sydni", ami: "Ami" };
+    const r = await api("saveContract", {
+      crocheter: parsedContractData.crocheter,
+      crocheter_name: nameMap[parsedContractData.crocheter] || parsedContractData.crocheter,
+      due_date: parsedContractData.due_date, total_items: parsedContractData.total_items,
+      total_value: parsedContractData.total_value, hourly_rate: parsedContractData.hourly_rate,
+      margin_of_error: parsedContractData.margin_of_error,
+      items: JSON.stringify(parsedContractData.items || [])
+    });
+    if (!r.ok) throw new Error(r.error);
+    toast("Contract saved ✿", "success");
+    $("parsedPreview").style.display = "none"; $("contractUploadSection").style.display = "block";
+    dropZone.classList.remove("has-file"); $("dropIcon").textContent = "🌸";
+    $("dropTitle").textContent = "Drop contract PDF here"; $("dropSub").textContent = "or tap to browse";
+    $("dropFilename").style.display = "none"; $("contractFile").value = ""; parsedContractData = null;
+    loadContracts();
+  } catch (err) { toast(err.message, "error"); }
+  finally { btn.disabled = false; btn.querySelector("span").textContent = "Save Contract"; }
+});
+
+async function loadContracts() {
+  const r = await api("getContracts");
+  const list = $("contractsList");
+  if (!r.ok || !r.contracts?.length) {
+    list.innerHTML = '<div class="empty">No contracts yet ✿<br><span style="font-size:11px">Upload a PDF above to create one.</span></div>';
+    return;
+  }
+  list.innerHTML = r.contracts.map(c => {
+    const delivered = c.items?.reduce((s, i) => s + i.qty_delivered, 0) || 0;
+    const pct = c.total_items > 0 ? Math.min(100, Math.round((delivered / c.total_items) * 100)) : 0;
+    const statusColor = c.status === "active" ? "var(--mint)" : "var(--peach)";
+    return `<div class="contract-card">
+      <div class="contract-card-header">
+        <div>
+          <div class="contract-card-name">🧶 ${esc(c.crocheter_name)}</div>
+          <div class="contract-card-due">Due: ${c.due_date || "—"} · $${(c.total_value||0).toFixed(2)} · ${c.total_items} items</div>
+        </div>
+        <span style="background:${statusColor};padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase">${c.status}</span>
+      </div>
+      <div class="contract-progress"><div class="contract-progress-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:8px">${delivered} / ${c.total_items} delivered (${pct}%)</div>
+      <details>
+        <summary style="font-size:12px;color:var(--pink-600);cursor:pointer;font-weight:600">View items ▾</summary>
+        <div style="margin-top:8px">
+          ${c.items?.map(i => `
+            <div class="contract-item-row">
+              <div>
+                <div style="font-weight:600;font-size:13px">${esc(i.item_name)}</div>
+                ${i.color_notes ? `<div style="font-size:11px;color:var(--soft)">🎨 ${esc(i.color_notes)}</div>` : ""}
+              </div>
+              <div style="text-align:right;font-size:12px">
+                <div style="font-weight:700;color:var(--ink)">${i.qty_delivered}/${i.qty_needed}</div>
+                <div style="color:var(--soft)">$${(i.piece_rate||0).toFixed(2)}/ea</div>
+              </div>
+            </div>`).join("") || ""}
+        </div>
+      </details>
+    </div>`;
+  }).join("");
+}
+
+// ── BATCH APPROVAL ──
+const batchDecisions = {};
+
+async function loadBatches() {
+  const r = await api("getPendingBatches");
+  const list = $("batchesList");
+  if (!r.ok || !r.batches?.length) {
+    list.innerHTML = '<div class="empty">No batches yet ✿<br><span style="font-size:11px">Batches appear here when crocheters log their production.</span></div>';
+    $("batchBadge").style.display = "none"; return;
+  }
+  const pendingCount = r.batches.filter(b => b.status === "pending" || b.status === "qc_submitted").length;
+  if (pendingCount > 0) { $("batchBadge").textContent = pendingCount; $("batchBadge").style.display = ""; }
+
+  r.batches.forEach(b => {
+    if (!batchDecisions[b.id]) {
+      batchDecisions[b.id] = {};
+      b.items?.forEach(i => {
+        batchDecisions[b.id][i.id] = { status: "approved", qty_approved: i.qty_logged, adjustment_pct: 100, rejection_reason: "" };
+      });
+    }
+  });
+
+  list.innerHTML = r.batches.map(b => {
+    const payEst = b.pay_estimated ? `$${Number(b.pay_estimated).toFixed(2)}` : "—";
+    const statusColor = b.status === "approved" ? "var(--mint)" : b.status === "rejected" ? "#FFE5E5" : "var(--lemon)";
+    return `<div class="batch-review-card" id="batch-${b.id}">
+      <div class="batch-review-header">
+        <div>
+          <div class="batch-review-crocheter">🧶 ${esc(b.crocheter_name)} — Batch #${b.id}</div>
+          <div style="font-size:11px;color:var(--soft)">${b.batch_date} · ${b.items?.length || 0} items · Est. ${payEst}</div>
+        </div>
+        <span style="background:${statusColor};padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase">${b.status}</span>
+      </div>
+      ${b.qc ? `<div class="qc-view">
+        <div style="font-weight:600;font-size:13px;color:var(--pink-600);margin-bottom:8px">✅ QC — Signed by ${esc(b.qc.name_signed)} on ${b.qc.date_signed}</div>
+        ${["fluff_stuff","perfectly_puffed","shape_of_cuteness","smooth_as_butter","hug_friendly","snuggle_safe","color_pop","durability_darling","kawaii_harmony"].map(k =>
+          `<div class="qc-check-row"><span>${k.split("_").map(w=>w[0].toUpperCase()+w.slice(1)).join(" ")}</span><span class="${b.qc[k]?'pass':'fail'}">${b.qc[k]?"✓ Pass":"✗ Fail"}</span></div>`
+        ).join("")}
+        ${b.qc.signature_data ? `<div class="sig-view"><img src="${b.qc.signature_data}" alt="Signature"></div>` : ""}
+      </div>` : `<div style="background:#FFF2A8;border-radius:10px;padding:10px;font-size:13px;color:#8B6914;margin:8px 0">⚠️ QC checklist not yet submitted</div>`}
+      <div style="margin-top:12px">
+        ${b.items?.map(i => {
+          const dec = batchDecisions[b.id]?.[i.id] || {};
+          return `<div class="batch-item-approve">
+            <div style="flex:1">
+              <div style="font-weight:600;font-size:14px">${esc(i.item_name)} ×${i.qty_logged}</div>
+              <div style="font-size:11px;color:var(--soft)">${i.is_contract?"📋 Contract":"✨ Bonus"} · $${(i.piece_rate||0).toFixed(2)}/ea${i.color_notes?` · 🎨 ${esc(i.color_notes)}`:""}</div>
+              ${dec.status==="partial"?`<div style="margin-top:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <input type="number" min="0" max="${i.qty_logged}" value="${dec.qty_approved}" style="width:60px;padding:4px 8px;border:2px solid var(--pink-100);border-radius:8px;font-size:13px"
+                  onchange="batchDecisions[${b.id}][${i.id}].qty_approved=Number(this.value)">
+                <select style="padding:4px 8px;border:2px solid var(--pink-100);border-radius:8px;font-size:12px"
+                  onchange="batchDecisions[${b.id}][${i.id}].adjustment_pct=Number(this.value)">
+                  <option value="100">Full pay</option><option value="90">-10% (1 issue)</option>
+                  <option value="85">-15% (2-3 issues)</option><option value="80">-20% (4+ issues)</option>
+                </select></div>`:""}
+              ${dec.status==="rejected"?`<input type="text" placeholder="Reason" style="width:100%;margin-top:4px;padding:6px 10px;border:2px solid #FFB6D9;border-radius:8px;font-size:12px"
+                onchange="batchDecisions[${b.id}][${i.id}].rejection_reason=this.value">`:""}
+            </div>
+            <div class="approve-btns">
+              <button class="ab approve ${dec.status==='approved'?'active-approve':''}" onclick="setDecision(${b.id},${i.id},'approved');loadBatches()">✓</button>
+              <button class="ab partial ${dec.status==='partial'?'active-partial':''}" onclick="setDecision(${b.id},${i.id},'partial');loadBatches()">~</button>
+              <button class="ab reject ${dec.status==='rejected'?'active-reject':''}" onclick="setDecision(${b.id},${i.id},'rejected');loadBatches()">✗</button>
+            </div>
+          </div>`;
+        }).join("")||""}
+      </div>
+      <div class="pay-owed-badge">
+        <div class="amount">$${calcBatchPay(b).toFixed(2)}</div>
+        <div class="label">Estimated payment owed ✿</div>
+      </div>
+      ${b.status!=="approved"?`<button class="btn btn-primary" style="margin-top:6px" onclick="submitBatchApproval(${b.id})">Approve Batch ✿</button>`:""}
+    </div>`;
+  }).join("");
+}
+
+function setDecision(batchId, itemId, status) {
+  if (!batchDecisions[batchId]) batchDecisions[batchId] = {};
+  const cur = batchDecisions[batchId][itemId] || {};
+  batchDecisions[batchId][itemId] = { ...cur, status, qty_approved: status==="rejected"?0:(cur.qty_approved||1), adjustment_pct: status==="rejected"?0:(cur.adjustment_pct||100) };
+}
+
+function calcBatchPay(batch) {
+  return (batch.items||[]).reduce((sum, item) => {
+    const d = batchDecisions[batch.id]?.[item.id];
+    if (!d || d.status==="rejected") return sum;
+    return sum + (item.piece_rate||0) * (d.qty_approved||item.qty_logged) * ((d.adjustment_pct||100)/100);
+  }, 0);
+}
+
+async function submitBatchApproval(logId) {
+  const decisions = Object.entries(batchDecisions[logId]||{}).map(([itemId,d]) => ({ item_id: Number(itemId), ...d }));
+  const r = await api("approveBatch", { log_id: logId, decisions: JSON.stringify(decisions) });
+  if (r.ok) { toast(`Batch approved! Pay: $${r.payApproved} ✿`, "success"); loadBatches(); loadAll(); }
+  else toast(r.error, "error");
+}
 </script>
 </body>
 </html>
