@@ -182,6 +182,36 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:white;padding:12px 22px;border-radius:14px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;transition:all .3s;z-index:200;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.error{background:#C24040}.toast.success{background:#4A9B6A}
+/* BATCH APPROVAL (Ami only) */
+.pb-card{background:white;border-radius:20px;padding:16px;border:2px solid var(--pink-100);box-shadow:var(--shadow);margin-bottom:12px}
+.pb-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.pb-crocheter{font-weight:700;font-size:15px;color:var(--ink)}
+.pb-meta{font-size:11px;color:var(--soft);margin-top:2px}
+.pb-status{padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase}
+.pb-status.pending{background:var(--lemon);color:#8B6914}
+.pb-status.approved{background:var(--mint);color:#2E6B47}
+.pb-status.partial{background:var(--peach);color:#8B4914}
+.pb-status.qc_submitted{background:var(--lavender);color:#6B4A8B}
+.pb-qc{background:var(--pink-50);border-radius:12px;padding:12px;margin-bottom:12px;font-size:12px}
+.pb-qc-title{font-weight:700;color:var(--pink-600);margin-bottom:8px;font-size:13px}
+.pb-qc-row{display:flex;justify-content:space-between;padding:3px 0;color:var(--mid)}
+.pb-qc-row .pass{color:#4A9B6A;font-weight:700}
+.pb-qc-row .fail{color:#C24040;font-weight:700}
+.pb-item{background:var(--pink-50);border-radius:12px;padding:12px;margin-bottom:8px;border:1.5px solid var(--pink-100)}
+.pb-item-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.pb-item-name{font-weight:700;font-size:14px;color:var(--ink)}
+.pb-item-meta{font-size:11px;color:var(--soft);margin-top:2px}
+.pb-decision-btns{display:flex;gap:6px}
+.pb-btn{padding:7px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.pb-btn.approve{background:var(--mint);color:#2E6B47;border-color:#A8DDC0}
+.pb-btn.partial{background:var(--lemon);color:#8B6914;border-color:#FFE066}
+.pb-btn.reject{background:#FFE5E5;color:#C24040;border-color:#FFB6B6}
+.pb-btn.active-approve{background:#2E6B47;color:white;border-color:#2E6B47}
+.pb-btn.active-partial{background:#8B6914;color:white;border-color:#8B6914}
+.pb-btn.active-reject{background:#C24040;color:white;border-color:#C24040}
+.pb-pay{background:linear-gradient(135deg,var(--lavender),var(--pink-100));border-radius:12px;padding:12px 16px;text-align:center;margin:10px 0}
+.pb-pay-amount{font-family:'Comfortaa',sans-serif;font-size:24px;font-weight:700;color:var(--pink-600)}
+.pb-pay-label{font-size:11px;color:var(--mid)}
 </style>
 </head>
 <body>
@@ -219,6 +249,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <button class="tab" data-tab="inventory">🧶 Inventory</button>
       <button class="tab" data-tab="log">📦 Log Batch</button>
       <button class="tab" data-tab="qc">✅ Quality Check</button>
+      <button class="tab ami-only" data-tab="batches" id="batchesTab" style="display:none">🌸 Approve</button>
       <button class="tab" data-tab="history">📅 History</button>
     </div>
 
@@ -397,6 +428,12 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <button class="btn btn-primary" id="submitQCBtn" style="margin-top:14px">Submit Quality Check ✿</button>
     </div>
 
+    <!-- BATCHES TAB (Ami only) -->
+    <div class="tab-panel" id="panel-batches">
+      <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Review batches from your crocheters and approve items to add to inventory.</p>
+      <div id="portalBatchesList"><div class="loading">Loading batches...</div></div>
+    </div>
+
     <!-- HISTORY TAB -->
     <div class="tab-panel" id="panel-history">
       <div id="historyList"><div class="loading">Loading...</div></div>
@@ -458,6 +495,10 @@ function showApp() {
   $("loginScreen").style.display = "none";
   $("app").classList.add("active");
   $("qcDate").value = new Date().toISOString().split("T")[0];
+  // Show batches tab for Ami only
+  if (selectedRole === "ami") {
+    document.querySelectorAll(".ami-only").forEach(el => el.style.display = "");
+  }
   loadContract();
   loadPieceRates();
 }
@@ -480,6 +521,7 @@ document.querySelectorAll(".tab").forEach(t => {
     if (t.dataset.tab === "history")   loadHistory();
     if (t.dataset.tab === "qc")        loadQCBatchPicker();
     if (t.dataset.tab === "inventory") loadPortalInventory();
+    if (t.dataset.tab === "batches")   loadPortalBatches();
   });
 });
 
@@ -877,6 +919,115 @@ async function loadPortalInventory() {
       </div>`).join("")}
     </div>`;
   container.innerHTML = renderGroup("✿ In Stock", "var(--pink-600)", inStock) + renderGroup("⚠️ Running Low", "#8B6914", low) + renderGroup("○ Out of Stock", "#C24040", out);
+}
+
+// ── PORTAL BATCH APPROVAL (Ami only) ──
+let portalBatchDecisions = {};
+
+async function loadPortalBatches() {
+  const container = $("portalBatchesList");
+  const r = await api("getPendingBatches");
+  if (!r.ok) { container.innerHTML = `<div class="empty">${r.error || "Error loading batches"}</div>`; return; }
+  if (!r.batches?.length) { container.innerHTML = '<div class="empty">No batches yet ✿<br><span style="font-size:11px">Batches appear when crocheters log their production.</span></div>'; return; }
+
+  // Init decisions
+  r.batches.forEach(b => {
+    if (!portalBatchDecisions[b.id]) {
+      portalBatchDecisions[b.id] = {};
+      b.items?.forEach(i => {
+        portalBatchDecisions[b.id][i.id] = { status: "approved", qty_approved: i.qty_logged, adjustment_pct: 100, rejection_reason: "" };
+      });
+    }
+  });
+
+  container.innerHTML = r.batches.map(b => {
+    const payEst = b.pay_estimated ? `$${Number(b.pay_estimated).toFixed(2)}` : "—";
+    const statusKey = b.status === "pending" && b.qc_submitted ? "qc_submitted" : b.status;
+
+    const qcSection = b.qc ? `<div class="pb-qc">
+      <div class="pb-qc-title">✅ QC by ${esc(b.qc.name_signed)} · ${b.qc.date_signed}</div>
+      ${["fluff_stuff","perfectly_puffed","shape_of_cuteness","smooth_as_butter","hug_friendly","snuggle_safe","color_pop","durability_darling","kawaii_harmony"].map(k =>
+        `<div class="pb-qc-row"><span>${k.split("_").map(w=>w[0].toUpperCase()+w.slice(1)).join(" ")}</span><span class="${b.qc[k]?"pass":"fail"}">${b.qc[k]?"✓":"✗"}</span></div>`
+      ).join("")}
+      ${b.qc.signature_data ? `<div style="margin-top:8px;border:1px solid var(--pink-100);border-radius:8px;overflow:hidden"><img src="${b.qc.signature_data}" style="width:100%;display:block;max-height:60px;object-fit:contain"></div>` : ""}
+    </div>` : `<div style="background:var(--lemon);border-radius:10px;padding:10px 12px;font-size:12px;color:#8B6914;margin-bottom:10px">⚠️ QC checklist not yet submitted</div>`;
+
+    const itemsHtml = (b.items || []).map(i => {
+      const dec = portalBatchDecisions[b.id]?.[i.id] || {};
+      return `<div class="pb-item">
+        <div class="pb-item-top">
+          <div>
+            <div class="pb-item-name">${esc(i.item_name)} ×${i.qty_logged}</div>
+            <div class="pb-item-meta">${i.is_contract?"📋 Contract":"✨ Bonus"} · $${(i.piece_rate||0).toFixed(2)}/ea${i.color_notes?` · 🎨 ${esc(i.color_notes)}`:""}</div>
+          </div>
+        </div>
+        <div class="pb-decision-btns" style="margin-bottom:${dec.status==="partial"||dec.status==="rejected"?"8px":"0"}">
+          <button class="pb-btn approve ${dec.status==="approved"?"active-approve":""}" onclick="setPBDecision(${b.id},${i.id},"approved")">✓ Approve</button>
+          <button class="pb-btn partial ${dec.status==="partial"?"active-partial":""}" onclick="setPBDecision(${b.id},${i.id},"partial")">~ Partial</button>
+          <button class="pb-btn reject ${dec.status==="rejected"?"active-reject":""}" onclick="setPBDecision(${b.id},${i.id},"rejected")">✗ Reject</button>
+        </div>
+        ${dec.status==="partial"?`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+          <input type="number" min="0" max="${i.qty_logged}" value="${dec.qty_approved}" style="width:70px;padding:6px 8px;border:2px solid var(--pink-200);border-radius:8px;font-size:13px;text-align:center" onchange="portalBatchDecisions[${b.id}][${i.id}].qty_approved=Number(this.value)">
+          <span style="font-size:12px;color:var(--mid)">approved qty</span>
+          <select style="padding:6px 10px;border:2px solid var(--pink-200);border-radius:8px;font-size:12px" onchange="portalBatchDecisions[${b.id}][${i.id}].adjustment_pct=Number(this.value)">
+            <option value="100">Full rate</option>
+            <option value="90">−10% (1 issue)</option>
+            <option value="85">−15% (2-3 issues)</option>
+            <option value="80">−20% (4+ issues)</option>
+          </select>
+        </div>`:""}
+        ${dec.status==="rejected"?`<input type="text" placeholder="Reason for rejection" style="width:100%;padding:7px 10px;border:2px solid #FFB6B6;border-radius:8px;font-size:12px;margin-bottom:6px" onchange="portalBatchDecisions[${b.id}][${i.id}].rejection_reason=this.value">`:""}
+      </div>`;
+    }).join("");
+
+    const payOwed = calcPortalPay(b);
+
+    return `<div class="pb-card" id="pb-${b.id}">
+      <div class="pb-header">
+        <div>
+          <div class="pb-crocheter">🧶 ${esc(b.crocheter_name)} — Batch #${b.id}</div>
+          <div class="pb-meta">${b.batch_date} · ${b.items?.length||0} items · Est. ${payEst}</div>
+        </div>
+        <span class="pb-status ${statusKey}">${statusKey==="qc_submitted"?"QC Done":b.status}</span>
+      </div>
+      ${qcSection}
+      <div style="margin-bottom:10px">${itemsHtml}</div>
+      <div class="pb-pay">
+        <div class="pb-pay-amount">$${payOwed.toFixed(2)}</div>
+        <div class="pb-pay-label">Pay owed for this batch ✿</div>
+      </div>
+      ${b.status!=="approved"?`<button class="btn btn-primary" onclick="submitPortalBatchApproval(${b.id})">Approve Batch + Add to Inventory ✿</button>`:""}
+    </div>`;
+  }).join("");
+}
+
+function setPBDecision(batchId, itemId, status) {
+  if (!portalBatchDecisions[batchId]) portalBatchDecisions[batchId] = {};
+  const cur = portalBatchDecisions[batchId][itemId] || {};
+  portalBatchDecisions[batchId][itemId] = {
+    ...cur, status,
+    qty_approved: status === "rejected" ? 0 : (cur.qty_approved || cur.qty_logged || 1),
+    adjustment_pct: status === "rejected" ? 0 : (cur.adjustment_pct || 100)
+  };
+  loadPortalBatches();
+}
+
+function calcPortalPay(batch) {
+  return (batch.items || []).reduce((sum, item) => {
+    const d = portalBatchDecisions[batch.id]?.[item.id];
+    if (!d || d.status === "rejected") return sum;
+    return sum + (item.piece_rate || 0) * (d.qty_approved || item.qty_logged) * ((d.adjustment_pct || 100) / 100);
+  }, 0);
+}
+
+async function submitPortalBatchApproval(logId) {
+  const decisions = Object.entries(portalBatchDecisions[logId] || {}).map(([itemId, d]) => ({ item_id: Number(itemId), ...d }));
+  if (!decisions.length) return toast("No decisions made", "error");
+  const r = await api("approveBatch", { log_id: logId, decisions: JSON.stringify(decisions) });
+  if (r.ok) {
+    toast(`Batch approved! Pay: $${r.payApproved} · Inventory updated ✿`, "success");
+    loadPortalBatches();
+  } else toast(r.error || "Approval failed", "error");
 }
 
 // ── API ──
