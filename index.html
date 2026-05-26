@@ -596,6 +596,9 @@ function showLoginError(msg) { $("loginError").textContent = "✗ " + msg; $("lo
 function showApp() {
   $("loginScreen").style.display = "none";
   $("app").classList.add("active");
+  // Always reset master-only elements first, then show only if master
+  document.querySelectorAll(".master-only").forEach(el => el.style.display = "none");
+  $("fabAdd").style.display = "none";
   if (isMaster) {
     $("fabAdd").style.display = "grid";
     document.querySelectorAll(".master-only").forEach(el => el.style.display = "");
