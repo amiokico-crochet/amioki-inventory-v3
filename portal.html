@@ -469,7 +469,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
     </div>
 
     <!-- AMI: RECEIVE INVENTORY TAB -->
-    <div class="tab-panel active" id="panel-receive" style="display:none">
+    <div class="tab-panel" id="panel-receive" style="display:none">
       <div class="card">
         <div class="card-title">📦 Receive Supplier Order</div>
         <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Log a new delivery from a supplier. Items are added to inventory automatically.</p>
@@ -678,11 +678,16 @@ $("logoutBtn").addEventListener("click", () => {
   document.querySelectorAll(".role-btn").forEach(b => b.classList.remove("active"));
 });
 
-// ── TABS ──
+// ── TABS (crocheters only — Ami gets her own handler in showApp) ──
 document.querySelectorAll(".tab").forEach(t => {
   t.addEventListener("click", () => {
+    if (selectedRole === "ami") return; // Ami has her own handler
     document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
     document.querySelectorAll(".tab-panel").forEach(x => x.classList.remove("active"));
+    // Also make sure Ami panels stay hidden
+    ["panel-receive","panel-suppliers","panel-batches","panel-ami-history"].forEach(id => {
+      const p = $(id); if (p) p.style.display = "none";
+    });
     t.classList.add("active");
     $("panel-" + t.dataset.tab).classList.add("active");
     if (t.dataset.tab === "history") loadHistory();
