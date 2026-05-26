@@ -1443,22 +1443,73 @@ $("addSupplierBtn")?.addEventListener("click", async () => {
 
 // ── AMI HISTORY ──
 async function loadAmiHistory() {
-  const r = await api("getSupplierDeliveries");
   const list = $("amiHistoryList");
-  if (!r.ok || !r.deliveries?.length) { list.innerHTML = '<div class="empty">No deliveries logged yet ✿</div>'; return; }
-  list.innerHTML = r.deliveries.map(d => `
-    <div class="batch-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div style="font-weight:700;color:var(--ink)">${d.item_name}</div>
-        <span style="font-size:12px;font-weight:600;color:var(--pink-600)">×${d.qty}</span>
-      </div>
-      <div style="font-size:12px;color:var(--mid);margin-bottom:4px">${d.supplier_name} · ${d.category || ""}</div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--soft)">
-        <span>Unit: $${Number(d.unit_cost).toFixed(2)} · Total: $${Number(d.total_cost).toFixed(2)}</span>
-        <span>${new Date(d.received_at).toLocaleDateString()}</span>
-      </div>
-      ${d.notes ? `<div style="font-size:11px;color:var(--soft);margin-top:4px;font-style:italic">${d.notes}</div>` : ""}
-    </div>`).join("");
+  list.innerHTML = '<div class="loading">Loading...</div>';
+
+  const [batchRes, deliveryRes] = await Promise.all([
+    api("getPendingBatches"),
+    api("getSupplierDeliveries")
+  ]);
+
+  let html = "";
+
+  // ── Crocheter batches (with delete) ──
+  const batches = batchRes.ok ? (batchRes.batches || []) : [];
+  if (batches.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--pink-600);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🧶 Crocheter Batches</div>`;
+    html += batches.map(b => {
+      const statusKey = b.status === "pending" && b.qc_submitted ? "qc_submitted" : b.status;
+      const statusLabel = statusKey === "qc_submitted" ? "QC Done" : b.status;
+      const payDisplay = b.pay_approved > 0 ? `$${Number(b.pay_approved).toFixed(2)} approved` : `$${Number(b.pay_estimated||0).toFixed(2)} est.`;
+      return `<div class="batch-card" style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div>
+            <div style="font-weight:700;color:var(--ink)">${esc(b.crocheter_name)} — Batch #${b.id}</div>
+            <div style="font-size:11px;color:var(--soft)">${b.batch_date} · ${payDisplay}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="batch-status ${statusKey}">${statusLabel}</span>
+            <button style="padding:5px 10px;border-radius:8px;background:#FFE5E5;color:#C24040;border:1.5px solid #FFB6B6;font-size:11px;font-weight:700;cursor:pointer" onclick="deleteAmiHistoryBatch(${b.id})">🗑</button>
+          </div>
+        </div>
+        <div style="font-size:12px;flex-wrap:wrap;display:flex;gap:4px">
+          ${b.items?.map(i => `<span style="background:var(--pink-50);padding:2px 8px;border-radius:6px;font-size:11px;border:1px solid var(--pink-100)">${esc(i.item_name)} ×${i.qty_logged}</span>`).join("") || ""}
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // ── Supplier deliveries ──
+  const deliveries = deliveryRes.ok ? (deliveryRes.deliveries || []) : [];
+  if (deliveries.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--pink-600);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px">📦 Supplier Deliveries</div>`;
+    html += deliveries.map(d => `
+      <div class="batch-card" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div style="font-weight:700;color:var(--ink)">${esc(d.item_name)}</div>
+          <span style="font-size:12px;font-weight:600;color:var(--pink-600)">×${d.qty}</span>
+        </div>
+        <div style="font-size:12px;color:var(--mid);margin-bottom:3px">${esc(d.supplier_name)} · ${d.category||""}</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--soft)">
+          <span>Unit: $${Number(d.unit_cost).toFixed(2)} · Total: $${Number(d.total_cost).toFixed(2)}</span>
+          <span>${new Date(d.received_at).toLocaleDateString()}</span>
+        </div>
+        ${d.notes?`<div style="font-size:11px;color:var(--soft);margin-top:3px;font-style:italic">${esc(d.notes)}</div>`:""}
+      </div>`).join("");
+  }
+
+  if (!batches.length && !deliveries.length) {
+    html = '<div class="empty">No history yet ✿</div>';
+  }
+
+  list.innerHTML = html;
+}
+
+async function deleteAmiHistoryBatch(logId) {
+  if (!confirm("Delete this batch? Removes it from the crocheter\'s history too and cannot be undone.")) return;
+  const r = await api("deleteBatch", { log_id: logId });
+  if (r.ok) { toast("Batch deleted ✿", "success"); loadAmiHistory(); }
+  else toast(r.error || "Delete failed", "error");
 }
 
 // ── API ──
