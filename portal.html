@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#FFB6D9">
-<title>Amioki Portal ✿</title>
+<title>Amioki Contractor Portal ✿</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Quicksand:wght@400;500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --pink-50:#FFF5FA;--pink-100:#FFE5F0;--pink-200:#FFCCE0;--pink-300:#FFB6D9;
@@ -23,7 +23,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 input,select,textarea{font-family:inherit;font-size:15px}
 
 /* LOGIN */
-.login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px;z-index:1;position:relative}
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
 .login-card{background:white;border-radius:32px;padding:40px 28px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);border:3px solid var(--pink-100);position:relative}
 .login-card::before{content:"🧶";position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:48px;height:48px;background:var(--pink-300);border-radius:50%;display:grid;place-items:center;font-size:22px;box-shadow:0 4px 14px rgba(255,141,192,.4)}
 .login-title{text-align:center;font-size:26px;color:var(--pink-600);margin-bottom:4px}
@@ -45,14 +45,15 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .app.active{display:block}
 .topbar{background:white;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--pink-100);position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(255,107,171,.08)}
 .brand{font-family:'Comfortaa',sans-serif;font-size:18px;font-weight:700;color:var(--pink-600);display:flex;align-items:center;gap:6px}
-.brand .dot{width:8px;height:8px;background:var(--mint);border-radius:50%}
+.brand .dot{width:8px;height:8px;background:var(--mint);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .role-badge{background:var(--pink-100);color:var(--pink-700);padding:5px 12px;border-radius:14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
 .logout-btn{color:var(--mid);font-size:11px;padding:2px 6px;border-radius:6px}
 .logout-btn:hover{background:var(--pink-100);color:var(--pink-600)}
 .content{padding:16px 14px;max-width:640px;margin:0 auto}
 
 /* TABS */
-.tabs{display:flex;gap:6px;margin-bottom:16px;background:white;padding:5px;border-radius:16px;border:2px solid var(--pink-100);box-shadow:var(--shadow);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:white;padding:5px;border-radius:16px;border:2px solid var(--pink-100);box-shadow:var(--shadow);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:1;min-width:max-content;padding:10px 12px;border-radius:12px;font-size:13px;font-weight:600;color:var(--mid);white-space:nowrap;transition:all .2s}
 .tab.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;box-shadow:0 2px 8px rgba(255,141,192,.3)}
@@ -61,55 +62,104 @@ input,select,textarea{font-family:inherit;font-size:15px}
 
 /* CARDS */
 .card{background:white;border-radius:20px;padding:18px;box-shadow:var(--shadow);border:2px solid var(--pink-100);margin-bottom:14px}
-.card-title{font-size:15px;color:var(--pink-600);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-title{font-size:15px;color:var(--pink-600);margin-bottom:12px;display:flex;align-items:center;gap:8px;font-weight:700}
 
-/* CONTRACT PROGRESS */
+/* CONTRACT */
 .contract-header{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));border-radius:20px;padding:20px;color:white;margin-bottom:14px;text-align:center}
 .contract-header h2{font-size:20px;margin-bottom:4px}
 .contract-header .sub{font-size:13px;opacity:.85}
 .due-badge{display:inline-block;background:rgba(255,255,255,.25);padding:6px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-top:8px}
-.progress-item{margin-bottom:12px}
+.progress-item{margin-bottom:14px}
 .progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .progress-name{font-size:14px;font-weight:600;color:var(--ink)}
 .progress-count{font-size:12px;color:var(--mid)}
 .progress-bar-bg{background:var(--pink-100);border-radius:8px;height:10px;overflow:hidden}
-.progress-bar-fill{background:linear-gradient(90deg,var(--pink-300),var(--pink-400));height:100%;border-radius:8px;transition:width .4s ease}
+.progress-bar-fill{background:linear-gradient(90deg,var(--pink-300),var(--pink-400));height:100%;border-radius:8px;transition:width .6s ease}
 .progress-bar-fill.done{background:linear-gradient(90deg,#6BCF7F,#4AA860)}
 .color-note{font-size:11px;color:var(--soft);margin-top:3px;font-style:italic}
 
-/* FORM FIELDS */
-.field{margin-bottom:12px}
-.field label{display:block;font-size:11.5px;font-weight:600;color:var(--mid);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
-.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50)}
-.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--pink-400);background:white}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* ITEM SEARCH (batch log) */
+.item-search-wrap{position:relative;margin-bottom:10px}
+.item-search-input{width:100%;padding:12px 16px;border:2px solid var(--pink-200);border-radius:14px;background:white;font-size:14px;transition:all .2s}
+.item-search-input:focus{outline:none;border-color:var(--pink-400);box-shadow:0 0 0 3px rgba(255,141,192,.15)}
+.item-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:2px solid var(--pink-200);border-radius:14px;box-shadow:var(--shadow-lg);z-index:100;max-height:220px;overflow-y:auto;display:none}
+.item-dropdown.show{display:block}
+.item-dropdown-item{padding:11px 16px;cursor:pointer;border-bottom:1px solid var(--pink-50);transition:background .15s;display:flex;justify-content:space-between;align-items:center}
+.item-dropdown-item:last-child{border-bottom:none}
+.item-dropdown-item:hover{background:var(--pink-50)}
+.item-dropdown-item .iname{font-weight:600;font-size:14px;color:var(--ink)}
+.item-dropdown-item .irate{font-size:12px;color:var(--pink-600);font-weight:600}
+.item-dropdown-item .itag{font-size:10px;background:var(--pink-100);color:var(--mid);padding:2px 7px;border-radius:6px;margin-left:6px}
 
-/* BATCH ITEMS */
-.batch-item-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--pink-100)}
-.batch-item-row:last-child{border-bottom:none}
-.batch-item-name{flex:1;font-size:14px;font-weight:600;color:var(--ink)}
-.batch-item-meta{font-size:11px;color:var(--soft)}
-.qty-input{width:70px;padding:8px 10px;border:2px solid var(--pink-100);border-radius:10px;background:white;text-align:center;font-weight:700}
-.add-item-row{display:flex;gap:8px;margin-top:10px}
-.add-item-row input{flex:1;padding:10px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50)}
-.add-item-row input:focus{outline:none;border-color:var(--pink-400);background:white}
-.add-btn{padding:10px 16px;background:var(--pink-100);color:var(--pink-700);border-radius:12px;font-weight:600;font-size:13px}
-.add-btn:hover{background:var(--pink-200)}
-.remove-btn{width:28px;height:28px;background:#FFE5E5;color:#C24040;border-radius:8px;font-size:16px;display:grid;place-items:center;flex-shrink:0}
+/* BATCH ITEM ROW */
+.batch-row{background:var(--pink-50);border-radius:14px;padding:12px 14px;margin-bottom:8px;border:1.5px solid var(--pink-100)}
+.batch-row-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.batch-row-name{flex:1;font-weight:700;font-size:14px;color:var(--ink)}
+.batch-row-tag{font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700}
+.batch-row-tag.contract{background:var(--lavender);color:#6B4A8B}
+.batch-row-tag.bonus{background:var(--peach);color:#8B4914}
+.qty-ctrl{display:flex;align-items:center;gap:6px}
+.qty-btn{width:32px;height:32px;border-radius:10px;background:white;border:2px solid var(--pink-200);font-size:18px;font-weight:700;color:var(--pink-600);display:grid;place-items:center;transition:all .15s;flex-shrink:0}
+.qty-btn:hover{background:var(--pink-100)}
+.qty-num{width:44px;text-align:center;font-weight:700;font-size:16px;color:var(--ink);border:2px solid var(--pink-200);border-radius:10px;padding:4px;background:white}
+.batch-row-rate{font-size:12px;color:var(--mid)}
+.batch-row-remove{width:28px;height:28px;background:#FFE5E5;color:#C24040;border-radius:8px;font-size:16px;display:grid;place-items:center;flex-shrink:0}
 
-/* QC CHECKLIST */
-.qc-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--pink-100)}
-.qc-item:last-of-type{border-bottom:none}
-.qc-check{width:28px;height:28px;border:2px solid var(--pink-200);border-radius:8px;flex-shrink:0;cursor:pointer;display:grid;place-items:center;font-size:16px;transition:all .2s;background:white;margin-top:2px}
-.qc-check.checked{background:var(--pink-400);border-color:var(--pink-400);color:white}
-.qc-label strong{color:var(--pink-600);font-size:14px}
-.qc-label p{font-size:12.5px;color:var(--mid);margin-top:2px;line-height:1.4}
+/* PAY BREAKDOWN */
+.pay-breakdown{background:white;border-radius:16px;border:2px solid var(--pink-100);overflow:hidden;margin:14px 0}
+.pay-breakdown-header{background:var(--pink-50);padding:10px 16px;font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--pink-100)}
+.pay-breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--pink-50);font-size:13px}
+.pay-breakdown-row:last-child{border-bottom:none}
+.pay-breakdown-item{font-weight:600;color:var(--ink)}
+.pay-breakdown-calc{color:var(--soft);font-size:12px;margin-top:2px}
+.pay-breakdown-sub{font-weight:700;color:var(--pink-600)}
+.pay-total-row{background:linear-gradient(135deg,var(--pink-100),var(--lavender));padding:16px;text-align:center}
+.pay-total-amount{font-family:'Comfortaa',sans-serif;font-size:32px;font-weight:700;color:var(--pink-600)}
+.pay-total-label{font-size:12px;color:var(--mid);margin-top:2px}
+.pay-motivate{font-size:12px;color:var(--pink-500);margin-top:6px;font-style:italic}
 
-/* SIGNATURE PAD */
-.sig-wrap{border:2px solid var(--pink-100);border-radius:14px;overflow:hidden;background:white;margin-bottom:10px}
-.sig-canvas{width:100%;display:block;cursor:crosshair;touch-action:none}
-.sig-actions{display:flex;gap:8px;margin-top:6px}
-.sig-clear{padding:8px 14px;background:var(--pink-50);color:var(--mid);border:1px solid var(--pink-100);border-radius:10px;font-size:12px;font-weight:600}
+/* QC CHECKLIST — PDF style */
+.qc-doc{background:white;border-radius:20px;border:2px solid var(--pink-100);overflow:hidden;box-shadow:var(--shadow)}
+.qc-doc-header{background:linear-gradient(135deg,#FFF0F7,#FFE5F0);padding:20px;text-align:center;border-bottom:2px solid var(--pink-100)}
+.qc-doc-logo{font-size:48px;margin-bottom:8px}
+.qc-doc-title{font-family:'Comfortaa',sans-serif;font-size:20px;font-weight:700;color:var(--pink-500);letter-spacing:2px;text-transform:uppercase}
+.qc-initials-bar{background:var(--pink-50);padding:12px 16px;border-bottom:2px solid var(--pink-100);display:flex;align-items:center;gap:10px}
+.qc-initials-label{font-size:12px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.qc-initials-input{flex:1;padding:8px 12px;border:2px solid var(--pink-200);border-radius:10px;font-size:14px;font-weight:700;background:white;max-width:120px;text-align:center;text-transform:uppercase}
+.qc-initials-input:focus{outline:none;border-color:var(--pink-400)}
+.qc-instructions{padding:12px 16px;font-size:12px;color:var(--mid);background:var(--pink-50);border-bottom:1px solid var(--pink-100);line-height:1.5}
+.qc-instructions span{color:var(--pink-600);font-weight:600}
+.qc-rows{border-bottom:2px solid var(--pink-100)}
+.qc-row{display:flex;align-items:stretch;border-bottom:1px solid var(--pink-100)}
+.qc-row:last-child{border-bottom:none}
+.qc-row.checked-row{background:linear-gradient(135deg,#FFF8FC,#FFF0F7)}
+.qc-row-content{flex:1;padding:14px 16px;border-right:1px solid var(--pink-100)}
+.qc-row-name{font-weight:700;color:var(--pink-600);font-size:13px;margin-bottom:3px}
+.qc-row-desc{font-size:12px;color:var(--mid);line-height:1.4}
+.qc-row-box{width:70px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .2s;background:white}
+.qc-row-box:hover{background:var(--pink-50)}
+.qc-stamp{width:52px;height:52px;border-radius:10px;border:2px solid var(--pink-200);background:white;display:flex;align-items:center;justify-content:center;transition:all .3s;position:relative;overflow:hidden}
+.qc-stamp.stamped{background:linear-gradient(135deg,var(--pink-400),var(--pink-500));border-color:var(--pink-500);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,107,171,.35)}
+.qc-stamp.stamped::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.3),transparent)}
+.qc-stamp-text{font-family:'Kalam',cursive;font-size:15px;font-weight:700;color:var(--soft);letter-spacing:1px;transition:all .3s}
+.qc-stamp.stamped .qc-stamp-text{color:white;font-size:16px;text-shadow:0 1px 2px rgba(0,0,0,.2)}
+
+/* QC SIGNATURE SECTION */
+.qc-sig-section{padding:16px}
+.qc-sig-label{font-size:12px;font-weight:700;color:var(--pink-600);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.qc-sig-line{border-bottom:2px solid var(--pink-300);margin-bottom:14px;padding-bottom:4px;font-size:13px;color:var(--mid)}
+.sig-canvas-wrap{border:2px solid var(--pink-200);border-radius:12px;overflow:hidden;background:white;position:relative}
+.sig-canvas-wrap::before{content:"Sign here";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;color:var(--pink-200);pointer-events:none;font-style:italic}
+.sig-canvas{width:100%;display:block;cursor:crosshair;touch-action:none;position:relative;z-index:1}
+.sig-clear-btn{margin-top:6px;padding:6px 14px;background:var(--pink-50);color:var(--mid);border:1px solid var(--pink-100);border-radius:8px;font-size:12px;font-weight:600}
+
+/* BUTTONS */
+.btn{padding:13px;border-radius:14px;font-weight:700;font-size:14px;transition:all .2s;cursor:pointer;border:none;width:100%}
+.btn-primary{background:linear-gradient(135deg,var(--pink-400),var(--pink-500));color:white;box-shadow:0 4px 14px rgba(255,107,171,.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,107,171,.4)}
+.btn-primary:disabled{opacity:.6;cursor:wait;transform:none}
+.btn-ghost{background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100)}
+.btn-ghost:hover{background:var(--pink-100)}
 
 /* BATCH HISTORY */
 .batch-card{background:white;border-radius:16px;padding:14px;border:2px solid var(--pink-100);box-shadow:var(--shadow);margin-bottom:10px}
@@ -120,29 +170,18 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .batch-status.rejected{background:#FFE5E5;color:#C24040}
 .batch-status.qc_submitted{background:var(--lavender);color:#6B4A8B}
 
-/* BUTTONS */
-.btn{padding:13px;border-radius:14px;font-weight:700;font-size:14px;transition:all .2s;cursor:pointer;border:none;width:100%}
-.btn-primary{background:linear-gradient(135deg,var(--pink-400),var(--pink-500));color:white;box-shadow:0 4px 14px rgba(255,107,171,.3)}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,107,171,.4)}
-.btn-primary:disabled{opacity:.6;cursor:wait;transform:none}
-.btn-ghost{background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100)}
-.btn-ghost:hover{background:var(--pink-100)}
-.pay-estimate{background:linear-gradient(135deg,var(--lavender),var(--pink-100));border-radius:14px;padding:14px 16px;text-align:center;margin:14px 0}
-.pay-estimate .amount{font-family:'Comfortaa',sans-serif;font-size:28px;font-weight:700;color:var(--pink-600)}
-.pay-estimate .label{font-size:12px;color:var(--mid);margin-top:2px}
-
-/* LOADING/EMPTY */
+/* MISC */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11.5px;font-weight:600;color:var(--mid);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--pink-400);background:white}
 .loading,.empty{text-align:center;padding:40px 20px;color:var(--mid);font-size:13px}
 .loading::before{content:"✿";display:block;font-size:28px;color:var(--pink-300);margin-bottom:10px;animation:spin 2s linear infinite}
 .empty::before{content:"🌸";display:block;font-size:28px;margin-bottom:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:white;padding:12px 22px;border-radius:14px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;transition:all .3s;z-index:200;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.error{background:#C24040}.toast.success{background:#4A9B6A}
-
-@media(min-width:600px){.modal-back{align-items:center}.modal{border-radius:28px}}
 </style>
 </head>
 <body>
@@ -197,36 +236,34 @@ input,select,textarea{font-family:inherit;font-size:15px}
     <div class="tab-panel" id="panel-log">
       <div class="card">
         <div class="card-title">📦 Log Items You're Bringing</div>
-        <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Log everything you're bringing to our meeting. Contract items will automatically track against your contract progress.</p>
+        <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Search for items or pick from the dropdown. Contract items track automatically.</p>
 
-        <div id="batchItems"></div>
+        <!-- Searchable item picker -->
+        <div class="item-search-wrap">
+          <input type="text" class="item-search-input" id="itemSearchInput" placeholder="🔍 Search or type an item name..." autocomplete="off">
+          <div class="item-dropdown" id="itemDropdown"></div>
+        </div>
 
-        <!-- Add from contract -->
-        <div id="contractItemPicker" style="display:none;margin-bottom:12px">
-          <div class="field">
-            <label>Add Contract Item</label>
-            <select id="contractItemSelect">
-              <option value="">— pick a contract item —</option>
-            </select>
+        <!-- Added items list -->
+        <div id="batchItemsList" style="margin-bottom:14px"></div>
+
+        <!-- Notes -->
+        <div class="field">
+          <label>Batch Notes (optional)</label>
+          <textarea id="batchNotesInput" rows="2" style="width:100%;padding:10px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50);resize:vertical" placeholder="Anything Ami should know about this batch..."></textarea>
+        </div>
+
+        <!-- Pay breakdown (hidden until items added) -->
+        <div id="payBreakdown" style="display:none">
+          <div class="pay-breakdown">
+            <div class="pay-breakdown-header">💰 Your Pay Breakdown</div>
+            <div id="payBreakdownRows"></div>
+            <div class="pay-total-row">
+              <div class="pay-total-amount" id="payTotalAmount">$0.00</div>
+              <div class="pay-total-label">Estimated total for this batch</div>
+              <div class="pay-motivate" id="payMotivate"></div>
+            </div>
           </div>
-        </div>
-
-        <!-- Add non-contract item -->
-        <div class="add-item-row">
-          <input type="text" id="newItemName" placeholder="Item name (non-contract)">
-          <button class="add-btn" id="addNonContractBtn">+ Add</button>
-        </div>
-
-        <div id="batchNotes" style="margin-top:12px">
-          <div class="field">
-            <label>Notes for this batch</label>
-            <textarea id="batchNotesInput" rows="2" style="width:100%;padding:10px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50);resize:vertical" placeholder="Any notes about this batch..."></textarea>
-          </div>
-        </div>
-
-        <div class="pay-estimate" id="payEstimate" style="display:none">
-          <div class="amount" id="payAmount">$0.00</div>
-          <div class="label">Estimated pay for this batch ✿</div>
         </div>
 
         <button class="btn btn-primary" id="submitBatchBtn" style="margin-top:6px">Submit Batch ✿</button>
@@ -235,84 +272,129 @@ input,select,textarea{font-family:inherit;font-size:15px}
 
     <!-- QC TAB -->
     <div class="tab-panel" id="panel-qc">
-      <div class="card">
-        <div class="card-title">✅ Quality Control Checklist</div>
-
-        <div id="qcBatchPicker" style="margin-bottom:14px">
-          <div class="field">
-            <label>Which batch is this for?</label>
-            <select id="qcBatchSelect">
-              <option value="">— select a batch —</option>
-            </select>
-          </div>
-        </div>
-
-        <p style="font-size:13px;color:var(--mid);margin-bottom:16px">
-          Review all plushies in this batch against each standard below. Check each box to confirm your items meet that standard.
-        </p>
-
-        <div id="qcChecklist">
-          <!-- 9 QC items -->
-          <div class="qc-item" data-key="fluff_stuff">
-            <div class="qc-check" role="checkbox">☐</div>
-            <div class="qc-label"><strong>Fluff &amp; Stuff</strong><p>Stuffing is firm and evenly distributed — no lumps or air pockets.</p></div>
-          </div>
-          <div class="qc-item" data-key="perfectly_puffed">
-            <div class="qc-check" role="checkbox">☐</div>
-            <div class="qc-label"><strong>Perfectly Puffed</strong><p>Dimensions are within the ±0.30 inch margin (or as specified in your contract).</p></div>
-          </div>
-          <div class="qc-item" data-key="shape_of_cuteness">
-            <div class="qc-check" role="checkbox">☐</div>
-            <div class="qc-label"><strong>Shape of Cuteness</strong><p>Shape matches the intended design — no distortions or asymmetry.</p></div>
-          </div>
-          <div class="qc-item" data-key="smooth_as_butter">
-            <div class="qc-check" role="checkbox">☐</div>
-            <div class="qc-label"><strong>Smooth as Butter</strong><p>Clean, smooth finish — no visible knots, loose ends, mistakes, or holes.</p></div>
-          </div>
-          <div class="qc-item" data-key="hug_friendly">
-            <div class="qc-check" role="checkbox">☐</div>
-            <div class="qc-label"><strong>Hug-Friendly</strong><p>Stitches are consistently tight — not too loose, not too tight.</p></div>
-          </div>
-          <div class="qc-item" data-key="snuggle_safe">
-            <div class="qc-check" role="checkbox">☐</div>
-            <div class="qc-label"><strong>Snuggle Safe</strong><p>All small parts (eyes, buttons, etc.) are securely fastened.</p></div>
-          </div>
-          <div class="qc-item" data-key="color_pop">
-            <div class="qc-check" role="checkbox">☐</div>
-            <div class="qc-label"><strong>Color Pop</strong><p>Colors are consistent — no noticeable fading, mismatched tones, or inconsistencies.</p></div>
-          </div>
-          <div class="qc-item" data-key="durability_darling">
-            <div class="qc-check" role="checkbox">☐</div>
-            <div class="qc-label"><strong>Durability Darling</strong><p>Plushie withstands light pulling without unraveling or deformation.</p></div>
-          </div>
-          <div class="qc-item" data-key="kawaii_harmony">
-            <div class="qc-check" role="checkbox">☐</div>
-            <div class="qc-label"><strong>Kawaii Harmony</strong><p>Overall design aligns with the kawaii aesthetic — cute, balanced, visually appealing.</p></div>
-          </div>
-        </div>
-
-        <div style="margin-top:18px">
-          <div class="field">
-            <label>Your Name</label>
-            <input type="text" id="qcName" placeholder="Sign your name">
-          </div>
-          <div class="field">
-            <label>Date</label>
-            <input type="date" id="qcDate">
-          </div>
-          <div class="field">
-            <label>Signature</label>
-            <div class="sig-wrap">
-              <canvas id="sigCanvas" class="sig-canvas" height="120"></canvas>
-            </div>
-            <div class="sig-actions">
-              <button class="sig-clear" id="sigClear">Clear Signature</button>
-            </div>
-          </div>
-        </div>
-
-        <button class="btn btn-primary" id="submitQCBtn" style="margin-top:6px">Submit Quality Check ✿</button>
+      <!-- Batch selector -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">🎯 Select Batch</div>
+        <select id="qcBatchSelect" style="width:100%;padding:11px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50);font-size:14px">
+          <option value="">— select a batch to review —</option>
+        </select>
       </div>
+
+      <!-- QC Document — PDF replica -->
+      <div class="qc-doc">
+        <!-- Header -->
+        <div class="qc-doc-header">
+          <div class="qc-doc-logo">🌸</div>
+          <div class="qc-doc-title">Quality-Control<br>Check List</div>
+        </div>
+
+        <!-- Initials bar -->
+        <div class="qc-initials-bar">
+          <span class="qc-initials-label">Your initials:</span>
+          <input type="text" class="qc-initials-input" id="qcInitials" placeholder="e.g. AP" maxlength="4">
+          <span style="font-size:12px;color:var(--soft);flex:1">↑ Enter initials first, then check each box</span>
+        </div>
+
+        <!-- Instructions -->
+        <div class="qc-instructions">
+          <span>♡</span> Look over all plushies in this batch &nbsp;·&nbsp;
+          <span>♡</span> Compare each to the standard &nbsp;·&nbsp;
+          <span>♡</span> Tap each box to initial &nbsp;·&nbsp;
+          <span>♡</span> Sign at the bottom
+        </div>
+
+        <!-- 9 QC rows -->
+        <div class="qc-rows">
+          <div class="qc-row" data-key="fluff_stuff">
+            <div class="qc-row-content">
+              <div class="qc-row-name">Fluff &amp; Stuff</div>
+              <div class="qc-row-desc">Stuffing must be firm and evenly distributed, ensuring a cuddly, soft, yet sturdy feel with no lumps or air pockets.</div>
+            </div>
+            <div class="qc-row-box"><div class="qc-stamp"><span class="qc-stamp-text"></span></div></div>
+          </div>
+          <div class="qc-row" data-key="perfectly_puffed">
+            <div class="qc-row-content">
+              <div class="qc-row-name">Perfectly Puffed</div>
+              <div class="qc-row-desc">Dimensions must be within a <strong>[±.30 inch margin]</strong> of the approved size. Margin-of-error will vary contract-to-contract.</div>
+            </div>
+            <div class="qc-row-box"><div class="qc-stamp"><span class="qc-stamp-text"></span></div></div>
+          </div>
+          <div class="qc-row" data-key="shape_of_cuteness">
+            <div class="qc-row-content">
+              <div class="qc-row-name">Shape of Cuteness</div>
+              <div class="qc-row-desc">The shape of each plushie must match the intended design, ensuring no distortions, asymmetry, or quirky shapes that detract from the cute factor.</div>
+            </div>
+            <div class="qc-row-box"><div class="qc-stamp"><span class="qc-stamp-text"></span></div></div>
+          </div>
+          <div class="qc-row" data-key="smooth_as_butter">
+            <div class="qc-row-content">
+              <div class="qc-row-name">Smooth as Butter</div>
+              <div class="qc-row-desc">The crochet work should have a clean, smooth, and even finish, with no visible knots, loose ends, mistakes, or holes — just like a soft, buttery finish.</div>
+            </div>
+            <div class="qc-row-box"><div class="qc-stamp"><span class="qc-stamp-text"></span></div></div>
+          </div>
+          <div class="qc-row" data-key="hug_friendly">
+            <div class="qc-row-content">
+              <div class="qc-row-name">Hug-Friendly</div>
+              <div class="qc-row-desc">The stitches should be consistently tight, like a cozy hug — not too loose and not too tight — ensuring a sturdy, snuggly structure.</div>
+            </div>
+            <div class="qc-row-box"><div class="qc-stamp"><span class="qc-stamp-text"></span></div></div>
+          </div>
+          <div class="qc-row" data-key="snuggle_safe">
+            <div class="qc-row-content">
+              <div class="qc-row-name">Snuggle Safe</div>
+              <div class="qc-row-desc">Any small parts (eyes, buttons, etc.) must be securely fastened to avoid any choking hazards, ensuring the safety of the end user.</div>
+            </div>
+            <div class="qc-row-box"><div class="qc-stamp"><span class="qc-stamp-text"></span></div></div>
+          </div>
+          <div class="qc-row" data-key="color_pop">
+            <div class="qc-row-content">
+              <div class="qc-row-name">Color Pop</div>
+              <div class="qc-row-desc">If multiple pieces are used in a color pattern, the colors must be consistent with no noticeable fading, mismatched tones, or color inconsistencies.</div>
+            </div>
+            <div class="qc-row-box"><div class="qc-stamp"><span class="qc-stamp-text"></span></div></div>
+          </div>
+          <div class="qc-row" data-key="durability_darling">
+            <div class="qc-row-content">
+              <div class="qc-row-name">Durability Darling</div>
+              <div class="qc-row-desc">The plushie should withstand light pulling or handling without signs of unraveling or deformation — this little plushie is made to last.</div>
+            </div>
+            <div class="qc-row-box"><div class="qc-stamp"><span class="qc-stamp-text"></span></div></div>
+          </div>
+          <div class="qc-row" data-key="kawaii_harmony">
+            <div class="qc-row-content">
+              <div class="qc-row-name">Kawaii Harmony</div>
+              <div class="qc-row-desc">The overall design must align with the kawaii aesthetic: cute, balanced, and visually appealing with cohesive elements that scream charm.</div>
+            </div>
+            <div class="qc-row-box"><div class="qc-stamp"><span class="qc-stamp-text"></span></div></div>
+          </div>
+        </div>
+
+        <!-- Contractor signature section -->
+        <div class="qc-sig-section">
+          <div class="qc-sig-label">Contractor Date &amp; Signature</div>
+          <div class="qc-sig-line">Confirming All Plushies Meet Quality Standards:</div>
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            <div style="flex:1">
+              <div style="font-size:11px;color:var(--mid);margin-bottom:4px;font-weight:600">NAME</div>
+              <input type="text" id="qcName" placeholder="Full name" style="width:100%;padding:9px 12px;border:2px solid var(--pink-200);border-radius:10px;font-size:13px;background:white">
+            </div>
+            <div style="width:140px">
+              <div style="font-size:11px;color:var(--mid);margin-bottom:4px;font-weight:600">DATE</div>
+              <input type="date" id="qcDate" style="width:100%;padding:9px 12px;border:2px solid var(--pink-200);border-radius:10px;font-size:13px;background:white">
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--mid);margin-bottom:6px;font-weight:600">SIGNATURE</div>
+          <div class="sig-canvas-wrap">
+            <canvas id="sigCanvas" class="sig-canvas" height="110"></canvas>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="sig-clear-btn" id="sigClear">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="submitQCBtn" style="margin-top:14px">Submit Quality Check ✿</button>
     </div>
 
     <!-- HISTORY TAB -->
@@ -326,26 +408,23 @@ input,select,textarea{font-family:inherit;font-size:15px}
 
 <script>
 const API_URL = "https://amioki-inventory-api.amioki-co.workers.dev";
-
 const $ = id => document.getElementById(id);
-let token = null, selectedRole = null, myContract = null;
-let batchItems = []; // { item_name, qty, is_contract, contract_item_id, piece_rate, color_notes }
-let pieceRates = [];
 
-// Session restore
+let token = null, selectedRole = null, myContract = null;
+let batchItems = [];
+let pieceRates = [];
+let allKnownItems = []; // contract items + piece rate items combined for search
+
+// ── SESSION RESTORE ──
 const saved = localStorage.getItem("amioki_portal_session");
 if (saved) {
   try {
     const s = JSON.parse(saved);
-    if (s.token && s.role) {
-      token = s.token; selectedRole = s.role;
-      $("roleLabel").textContent = s.label || s.role;
-      showApp();
-    }
+    if (s.token && s.role) { token = s.token; selectedRole = s.role; $("roleLabel").textContent = s.label || s.role; showApp(); }
   } catch (e) {}
 }
 
-// Login
+// ── LOGIN ──
 document.querySelectorAll(".role-btn").forEach(b => {
   b.addEventListener("click", () => {
     document.querySelectorAll(".role-btn").forEach(x => x.classList.remove("active"));
@@ -371,17 +450,16 @@ async function attemptLogin() {
     $("pwInput").value = "";
     showApp();
   } catch (err) { showErr(err.message); }
-  finally { btn.disabled = false; btn.textContent = "Enter Portal ✿"; }
+  finally { $("pwSubmit").disabled = false; $("pwSubmit").textContent = "Enter Portal ✿"; }
 }
 function showErr(msg) { $("loginError").textContent = "✗ " + msg; $("loginError").style.display = "block"; }
 
 function showApp() {
   $("loginScreen").style.display = "none";
   $("app").classList.add("active");
+  $("qcDate").value = new Date().toISOString().split("T")[0];
   loadContract();
   loadPieceRates();
-  // Set today's date on QC form
-  $("qcDate").value = new Date().toISOString().split("T")[0];
 }
 
 $("logoutBtn").addEventListener("click", () => {
@@ -392,15 +470,15 @@ $("logoutBtn").addEventListener("click", () => {
   document.querySelectorAll(".role-btn").forEach(b => b.classList.remove("active"));
 });
 
-// Tabs
+// ── TABS ──
 document.querySelectorAll(".tab").forEach(t => {
   t.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
     document.querySelectorAll(".tab-panel").forEach(x => x.classList.remove("active"));
     t.classList.add("active");
     $("panel-" + t.dataset.tab).classList.add("active");
-    if (t.dataset.tab === "history") loadHistory();
-    if (t.dataset.tab === "qc") loadQCBatchPicker();
+    if (t.dataset.tab === "history")   loadHistory();
+    if (t.dataset.tab === "qc")        loadQCBatchPicker();
     if (t.dataset.tab === "inventory") loadPortalInventory();
   });
 });
@@ -422,8 +500,8 @@ async function loadContract() {
   container.innerHTML = `
     <div class="contract-header">
       <h2>🌸 Active Contract</h2>
-      <div class="sub">Total: ${totalDelivered} / ${totalNeeded} items delivered</div>
-      ${c.due_date ? `<div class="due-badge">Due: ${c.due_date}${daysLeft !== null ? ` · ${daysLeft > 0 ? daysLeft + " days left" : "Due today!"}` : ""}</div>` : ""}
+      <div class="sub">${totalDelivered} / ${totalNeeded} items delivered</div>
+      ${c.due_date ? `<div class="due-badge">Due: ${c.due_date}${daysLeft !== null ? ` · ${daysLeft > 0 ? daysLeft + " days left" : "Due today! 🎉"}` : ""}</div>` : ""}
     </div>
     <div class="card">
       <div class="card-title">📊 Progress by Item</div>
@@ -435,9 +513,7 @@ async function loadContract() {
             <div class="progress-name">${esc(i.item_name)}</div>
             <div class="progress-count">${i.qty_delivered} / ${i.qty_needed} <span style="color:var(--pink-500);font-weight:700">(${pct}%)</span></div>
           </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill ${done ? "done" : ""}" style="width:${pct}%"></div>
-          </div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill ${done?"done":""}" style="width:${pct}%"></div></div>
           ${i.color_notes ? `<div class="color-note">🎨 ${esc(i.color_notes)}</div>` : ""}
           ${i.notes ? `<div class="color-note">📝 ${esc(i.notes)}</div>` : ""}
         </div>`;
@@ -447,95 +523,174 @@ async function loadContract() {
       <div class="card-title">💰 Contract Value</div>
       <div style="text-align:center">
         <div style="font-family:'Comfortaa',sans-serif;font-size:28px;font-weight:700;color:var(--pink-600)">$${c.total_value.toFixed(2)}</div>
-        <div style="font-size:12px;color:var(--mid);margin-top:4px">Total contract value · ${c.total_items} items @ $${c.hourly_rate}/hr</div>
+        <div style="font-size:12px;color:var(--mid);margin-top:4px">Total · ${c.total_items} items @ $${c.hourly_rate}/hr</div>
       </div>
     </div>`;
 
-  // Populate contract item picker in Log tab
-  populateContractPicker(c.items);
-}
-
-function populateContractPicker(items) {
-  const picker = $("contractItemPicker");
-  const sel = $("contractItemSelect");
-  if (!items || !items.length) return;
-  picker.style.display = "block";
-  sel.innerHTML = '<option value="">— pick a contract item —</option>' +
-    items.filter(i => i.qty_delivered < i.qty_needed).map(i =>
-      `<option value="${i.id}" data-name="${esc(i.item_name)}" data-rate="${i.piece_rate}" data-remaining="${i.qty_needed - i.qty_delivered}">
-        ${esc(i.item_name)} (${i.qty_needed - i.qty_delivered} remaining)
-      </option>`
-    ).join("");
-
-  sel.addEventListener("change", () => {
-    const opt = sel.options[sel.selectedIndex];
-    if (!opt.value) return;
-    const itemId = Number(opt.value);
-    const itemName = opt.dataset.name;
-    const rate = Number(opt.dataset.rate) || 0;
-    const remaining = Number(opt.dataset.remaining) || 0;
-    if (batchItems.find(b => b.contract_item_id === itemId)) {
-      toast("Already added", "error"); sel.value = ""; return;
-    }
-    batchItems.push({ item_name: itemName, qty: 1, is_contract: true, contract_item_id: itemId, piece_rate: rate, color_notes: "", remaining });
-    renderBatchItems();
-    sel.value = "";
-  });
+  buildSearchItems();
 }
 
 async function loadPieceRates() {
-  const r = await api("getPieceRates", { crocheter: $("roleLabel").textContent });
-  if (r.ok) pieceRates = r.rates || [];
+  const label = $("roleLabel").textContent;
+  const r = await api("getPieceRates", { crocheter: label });
+  if (r.ok) { pieceRates = r.rates || []; buildSearchItems(); }
 }
 
-// ── LOG BATCH TAB ──
-$("addNonContractBtn").addEventListener("click", () => {
-  const name = $("newItemName").value.trim();
-  if (!name) return toast("Enter an item name", "error");
-  // Find piece rate
-  const rate = pieceRates.find(r => r.item_name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(r.item_name.toLowerCase().split(" ")[0]));
-  batchItems.push({ item_name: name, qty: 1, is_contract: false, contract_item_id: null, piece_rate: rate?.total_rate || 0, color_notes: "" });
-  renderBatchItems();
-  $("newItemName").value = "";
+function buildSearchItems() {
+  allKnownItems = [];
+  // Contract items first
+  if (myContract?.items) {
+    myContract.items.forEach(i => {
+      const remaining = i.qty_needed - i.qty_delivered;
+      if (remaining > 0) {
+        allKnownItems.push({
+          item_name: i.item_name, piece_rate: i.piece_rate || 0,
+          is_contract: true, contract_item_id: i.id, remaining,
+          tag: `contract · ${remaining} left`
+        });
+      }
+    });
+  }
+  // Piece rate items (non-contract)
+  pieceRates.forEach(r => {
+    const alreadyIn = allKnownItems.find(x => x.item_name.toLowerCase() === r.item_name.toLowerCase());
+    if (!alreadyIn) {
+      allKnownItems.push({
+        item_name: r.item_name, piece_rate: r.total_rate || 0,
+        is_contract: false, contract_item_id: null, remaining: null,
+        tag: `$${(r.total_rate || 0).toFixed(2)}/ea`
+      });
+    }
+  });
+}
+
+// ── LOG BATCH TAB — searchable item picker ──
+const searchInput = $("itemSearchInput");
+const dropdown = $("itemDropdown");
+
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q) { dropdown.classList.remove("show"); return; }
+  const matches = allKnownItems.filter(x => x.item_name.toLowerCase().includes(q));
+  // Also allow free-text entry
+  const exactMatch = allKnownItems.find(x => x.item_name.toLowerCase() === q);
+  renderDropdown(matches, q, !exactMatch);
 });
 
+searchInput.addEventListener("focus", () => {
+  if (searchInput.value.trim()) searchInput.dispatchEvent(new Event("input"));
+  else renderDropdown(allKnownItems, "", false);
+  dropdown.classList.add("show");
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".item-search-wrap")) dropdown.classList.remove("show");
+});
+
+function renderDropdown(items, query, showCustom) {
+  const rows = items.map(i => `
+    <div class="item-dropdown-item" data-name="${esc(i.item_name)}" data-rate="${i.piece_rate}" data-contract="${i.is_contract}" data-cid="${i.contract_item_id||""}" data-remaining="${i.remaining||""}">
+      <div>
+        <span class="iname">${esc(i.item_name)}</span>
+        <span class="itag">${esc(i.tag)}</span>
+      </div>
+      <span class="irate">$${(i.piece_rate||0).toFixed(2)}/ea</span>
+    </div>`).join("");
+
+  const customRow = showCustom && query ? `
+    <div class="item-dropdown-item" data-name="${esc(query)}" data-rate="0" data-contract="false" data-cid="" data-remaining="">
+      <div><span class="iname">+ Add "${esc(query)}"</span><span class="itag">custom</span></div>
+      <span class="irate">rate TBD</span>
+    </div>` : "";
+
+  dropdown.innerHTML = rows + customRow || `<div style="padding:12px 16px;color:var(--soft);font-size:13px">No items found — type to add custom</div>`;
+  dropdown.classList.add("show");
+
+  dropdown.querySelectorAll(".item-dropdown-item").forEach(el => {
+    el.addEventListener("click", () => {
+      const name = el.dataset.name;
+      const rate = Number(el.dataset.rate) || 0;
+      const isContract = el.dataset.contract === "true";
+      const cid = el.dataset.cid ? Number(el.dataset.cid) : null;
+      const remaining = el.dataset.remaining ? Number(el.dataset.remaining) : null;
+
+      if (isContract && cid && batchItems.find(b => b.contract_item_id === cid)) {
+        toast("Already added ✿", "error");
+      } else {
+        batchItems.push({ item_name: name, qty: 1, is_contract: isContract, contract_item_id: cid, piece_rate: rate, color_notes: "", remaining });
+        renderBatchItems();
+      }
+      searchInput.value = "";
+      dropdown.classList.remove("show");
+    });
+  });
+}
+
 function renderBatchItems() {
-  const container = $("batchItems");
+  const container = $("batchItemsList");
   if (!batchItems.length) {
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--soft);font-size:13px">No items added yet ✿</div>';
-    $("payEstimate").style.display = "none";
+    container.innerHTML = "";
+    $("payBreakdown").style.display = "none";
     return;
   }
 
   container.innerHTML = batchItems.map((item, idx) => `
-    <div class="batch-item-row">
-      <div style="flex:1">
-        <div class="batch-item-name">${esc(item.item_name)}</div>
-        <div class="batch-item-meta">
-          ${item.is_contract ? "📋 Contract" : "✨ Bonus"} ·
-          ${item.piece_rate ? "$" + item.piece_rate.toFixed(2) + "/ea" : "rate TBD"}
-          ${item.remaining ? ` · ${item.remaining} remaining` : ""}
+    <div class="batch-row">
+      <div class="batch-row-top">
+        <div style="flex:1">
+          <div class="batch-row-name">${esc(item.item_name)}</div>
+          <div class="batch-row-rate">${item.piece_rate ? "$" + item.piece_rate.toFixed(2) + "/ea" : "rate TBD"}${item.remaining ? " · " + item.remaining + " remaining in contract" : ""}</div>
         </div>
-        <input type="text" placeholder="Color notes (optional)" value="${esc(item.color_notes)}"
-          style="width:100%;margin-top:6px;padding:6px 10px;border:1px solid var(--pink-100);border-radius:8px;font-size:12px;background:var(--pink-50)"
+        <span class="batch-row-tag ${item.is_contract ? "contract" : "bonus"}">${item.is_contract ? "📋 contract" : "✨ bonus"}</span>
+        <button class="batch-row-remove" onclick="removeBatchItem(${idx})">×</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="changeBatchQty(${idx},-1)">−</button>
+          <input type="number" class="qty-num" min="1" value="${item.qty}" onchange="batchItems[${idx}].qty=Math.max(1,Number(this.value));renderBatchItems()">
+          <button class="qty-btn" onclick="changeBatchQty(${idx},1)">+</button>
+        </div>
+        <input type="text" placeholder="🎨 Color notes" value="${esc(item.color_notes)}"
+          style="flex:1;min-width:120px;padding:7px 10px;border:1.5px solid var(--pink-200);border-radius:8px;font-size:12px;background:white"
           oninput="batchItems[${idx}].color_notes=this.value">
       </div>
-      <input type="number" class="qty-input" min="1" value="${item.qty}"
-        oninput="batchItems[${idx}].qty=Number(this.value)||1;updatePayEstimate()">
-      <button class="remove-btn" onclick="batchItems.splice(${idx},1);renderBatchItems()">×</button>
     </div>`).join("");
 
-  updatePayEstimate();
+  renderPayBreakdown();
 }
 
-function updatePayEstimate() {
-  const total = batchItems.reduce((s, i) => s + (i.piece_rate * (i.qty || 1)), 0);
-  if (total > 0) {
-    $("payAmount").textContent = "$" + total.toFixed(2);
-    $("payEstimate").style.display = "block";
-  } else {
-    $("payEstimate").style.display = "none";
-  }
+function removeBatchItem(idx) { batchItems.splice(idx, 1); renderBatchItems(); }
+function changeBatchQty(idx, delta) {
+  batchItems[idx].qty = Math.max(1, (batchItems[idx].qty || 1) + delta);
+  renderBatchItems();
+}
+
+function renderPayBreakdown() {
+  const total = batchItems.reduce((s, i) => s + (i.piece_rate || 0) * (i.qty || 1), 0);
+  if (!total && !batchItems.length) { $("payBreakdown").style.display = "none"; return; }
+
+  $("payBreakdown").style.display = "block";
+  $("payBreakdownRows").innerHTML = batchItems.map(item => {
+    const sub = (item.piece_rate || 0) * (item.qty || 1);
+    return `<div class="pay-breakdown-row">
+      <div>
+        <div class="pay-breakdown-item">${esc(item.item_name)}</div>
+        <div class="pay-breakdown-calc">$${(item.piece_rate||0).toFixed(2)} × ${item.qty} ${item.is_contract ? "📋" : "✨"}</div>
+      </div>
+      <div class="pay-breakdown-sub">$${sub.toFixed(2)}</div>
+    </div>`;
+  }).join("");
+
+  $("payTotalAmount").textContent = "$" + total.toFixed(2);
+
+  // Motivational message based on total
+  const motivates = [
+    "Every stitch counts! ✿", "Keep crocheting, keep earning! 🧶",
+    "You're amazing — imagine what a full batch looks like! 💕",
+    "The more you make, the more you take home! 🌸",
+    "Your plushies are bringing joy and income! ✨"
+  ];
+  $("payMotivate").textContent = total > 0 ? motivates[Math.floor(total * 7) % motivates.length] : "";
 }
 
 $("submitBatchBtn").addEventListener("click", async () => {
@@ -551,30 +706,48 @@ $("submitBatchBtn").addEventListener("click", async () => {
       notes: $("batchNotesInput").value
     });
     if (!r.ok) throw new Error(r.error);
-    toast(`Batch logged! Est. pay: $${r.payEstimated} ✿`, "success");
+    const total = batchItems.reduce((s, i) => s + (i.piece_rate || 0) * (i.qty || 1), 0);
+    toast(`Batch logged! Est. pay: $${total.toFixed(2)} ✿`, "success");
     batchItems = [];
     renderBatchItems();
     $("batchNotesInput").value = "";
-    await loadContract(); // Refresh progress
-    // Switch to QC tab
-    setTimeout(() => {
-      document.querySelector('[data-tab="qc"]').click();
-      loadQCBatchPicker();
-    }, 1500);
+    await loadContract();
+    setTimeout(() => { document.querySelector('[data-tab="qc"]').click(); loadQCBatchPicker(); }, 1500);
   } catch (err) { toast(err.message, "error"); }
   finally { btn.disabled = false; btn.textContent = "Submit Batch ✿"; }
 });
 
-// ── QC TAB ──
+// ── QC CHECKLIST ──
 const qcState = {};
-document.querySelectorAll(".qc-item").forEach(item => {
-  const key = item.dataset.key;
+document.querySelectorAll(".qc-row").forEach(row => {
+  const key = row.dataset.key;
   qcState[key] = 0;
-  const box = item.querySelector(".qc-check");
+  const box = row.querySelector(".qc-row-box");
+  const stamp = row.querySelector(".qc-stamp");
+  const stampText = row.querySelector(".qc-stamp-text");
+
   box.addEventListener("click", () => {
+    const initials = $("qcInitials").value.trim().toUpperCase();
+    if (!initials) { toast("Enter your initials first ✿", "error"); $("qcInitials").focus(); return; }
+
     qcState[key] = qcState[key] ? 0 : 1;
-    box.textContent = qcState[key] ? "✓" : "☐";
-    box.classList.toggle("checked", !!qcState[key]);
+    if (qcState[key]) {
+      stamp.classList.add("stamped");
+      stampText.textContent = initials;
+      row.classList.add("checked-row");
+    } else {
+      stamp.classList.remove("stamped");
+      stampText.textContent = "";
+      row.classList.remove("checked-row");
+    }
+  });
+});
+
+// Update all existing stamps when initials change
+$("qcInitials").addEventListener("input", () => {
+  const initials = $("qcInitials").value.trim().toUpperCase();
+  document.querySelectorAll(".qc-stamp.stamped .qc-stamp-text").forEach(el => {
+    el.textContent = initials;
   });
 });
 
@@ -583,82 +756,100 @@ async function loadQCBatchPicker() {
   if (!r.ok) return;
   const sel = $("qcBatchSelect");
   const pending = (r.batches || []).filter(b => !b.qc_submitted);
-  sel.innerHTML = '<option value="">— select a batch —</option>' +
-    pending.map(b => `<option value="${b.id}">Batch #${b.id} — ${b.batch_date} (${b.items?.length || 0} items)</option>`).join("");
+  sel.innerHTML = '<option value="">— select a batch to review —</option>' +
+    pending.map(b => {
+      const items = b.items?.map(i => `${i.item_name} ×${i.qty_logged}`).join(", ") || "";
+      return `<option value="${b.id}">Batch #${b.id} — ${b.batch_date} (${items})</option>`;
+    }).join("");
 }
 
 // Signature canvas
-const canvas = $("sigCanvas");
-const ctx2d = canvas.getContext("2d");
+const sigCanvas = $("sigCanvas");
+const ctx2d = sigCanvas.getContext("2d");
 let drawing = false;
 
-function resizeCanvas() {
-  const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width - 4;
-  canvas.height = 120;
+function resizeSig() {
+  const rect = sigCanvas.parentElement.getBoundingClientRect();
+  sigCanvas.width = rect.width - 4;
+  sigCanvas.height = 110;
 }
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+resizeSig();
+window.addEventListener("resize", resizeSig);
 
 function getPos(e) {
-  const rect = canvas.getBoundingClientRect();
+  const rect = sigCanvas.getBoundingClientRect();
   const src = e.touches ? e.touches[0] : e;
-  return { x: (src.clientX - rect.left) * (canvas.width / rect.width), y: (src.clientY - rect.top) * (canvas.height / rect.height) };
+  return { x: (src.clientX - rect.left) * (sigCanvas.width / rect.width), y: (src.clientY - rect.top) * (sigCanvas.height / rect.height) };
 }
-canvas.addEventListener("mousedown", e => { drawing = true; const p = getPos(e); ctx2d.beginPath(); ctx2d.moveTo(p.x, p.y); });
-canvas.addEventListener("mousemove", e => { if (!drawing) return; ctx2d.strokeStyle = "#4A2540"; ctx2d.lineWidth = 2; ctx2d.lineCap = "round"; const p = getPos(e); ctx2d.lineTo(p.x, p.y); ctx2d.stroke(); });
-canvas.addEventListener("mouseup", () => drawing = false);
-canvas.addEventListener("touchstart", e => { e.preventDefault(); drawing = true; const p = getPos(e); ctx2d.beginPath(); ctx2d.moveTo(p.x, p.y); }, { passive: false });
-canvas.addEventListener("touchmove", e => { e.preventDefault(); if (!drawing) return; ctx2d.strokeStyle = "#4A2540"; ctx2d.lineWidth = 2.5; ctx2d.lineCap = "round"; const p = getPos(e); ctx2d.lineTo(p.x, p.y); ctx2d.stroke(); }, { passive: false });
-canvas.addEventListener("touchend", () => drawing = false);
-$("sigClear").addEventListener("click", () => { ctx2d.clearRect(0, 0, canvas.width, canvas.height); });
+sigCanvas.addEventListener("mousedown", e => { drawing = true; const p = getPos(e); ctx2d.beginPath(); ctx2d.moveTo(p.x, p.y); });
+sigCanvas.addEventListener("mousemove", e => { if (!drawing) return; ctx2d.strokeStyle = "#4A2540"; ctx2d.lineWidth = 2; ctx2d.lineCap = "round"; const p = getPos(e); ctx2d.lineTo(p.x, p.y); ctx2d.stroke(); });
+sigCanvas.addEventListener("mouseup", () => drawing = false);
+sigCanvas.addEventListener("mouseleave", () => drawing = false);
+sigCanvas.addEventListener("touchstart", e => { e.preventDefault(); drawing = true; const p = getPos(e); ctx2d.beginPath(); ctx2d.moveTo(p.x, p.y); }, { passive: false });
+sigCanvas.addEventListener("touchmove", e => { e.preventDefault(); if (!drawing) return; ctx2d.strokeStyle = "#4A2540"; ctx2d.lineWidth = 2.5; ctx2d.lineCap = "round"; const p = getPos(e); ctx2d.lineTo(p.x, p.y); ctx2d.stroke(); }, { passive: false });
+sigCanvas.addEventListener("touchend", () => drawing = false);
+$("sigClear").addEventListener("click", () => ctx2d.clearRect(0, 0, sigCanvas.width, sigCanvas.height));
 
 $("submitQCBtn").addEventListener("click", async () => {
   const logId = $("qcBatchSelect").value;
   if (!logId) return toast("Select a batch first", "error");
+  const initials = $("qcInitials").value.trim();
+  if (!initials) return toast("Enter your initials first", "error");
   const name = $("qcName").value.trim();
   const date = $("qcDate").value;
-  if (!name) return toast("Please sign your name", "error");
+  if (!name) return toast("Please sign your full name", "error");
   if (!date) return toast("Please add a date", "error");
 
-  const allChecked = Object.values(qcState).every(v => v === 1);
-  if (!allChecked) {
-    if (!confirm("Not all quality checks are marked. Submit anyway?")) return;
+  const checkedCount = Object.values(qcState).filter(v => v === 1).length;
+  if (checkedCount < 9) {
+    if (!confirm(`Only ${checkedCount}/9 checks are initialed. Submit anyway?`)) return;
   }
 
-  const sigData = canvas.toDataURL("image/png");
+  const sigData = sigCanvas.toDataURL("image/png");
   const btn = $("submitQCBtn"); btn.disabled = true; btn.textContent = "Submitting...";
 
   try {
     const r = await api("submitQC", {
-      log_id: logId, name_signed: name, date_signed: date,
-      signature_data: sigData, ...qcState
+      log_id: logId, name_signed: name, date_signed: date, signature_data: sigData,
+      initials_used: initials, ...qcState
     });
     if (!r.ok) throw new Error(r.error);
     toast("Quality check submitted ✿", "success");
     loadQCBatchPicker();
+    // Reset
+    Object.keys(qcState).forEach(k => {
+      qcState[k] = 0;
+      const row = document.querySelector(`.qc-row[data-key="${k}"]`);
+      if (row) {
+        row.classList.remove("checked-row");
+        row.querySelector(".qc-stamp")?.classList.remove("stamped");
+        if (row.querySelector(".qc-stamp-text")) row.querySelector(".qc-stamp-text").textContent = "";
+      }
+    });
+    ctx2d.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    $("qcName").value = ""; $("qcInitials").value = "";
   } catch (err) { toast(err.message, "error"); }
   finally { btn.disabled = false; btn.textContent = "Submit Quality Check ✿"; }
 });
 
-// ── HISTORY TAB ──
+// ── HISTORY ──
 async function loadHistory() {
   const r = await api("getMyBatches");
   const list = $("historyList");
-  if (!r.ok || !r.batches?.length) {
-    list.innerHTML = '<div class="empty">No batches yet ✿</div>'; return;
-  }
+  if (!r.ok || !r.batches?.length) { list.innerHTML = '<div class="empty">No batches yet ✿</div>'; return; }
   list.innerHTML = r.batches.map(b => {
     const totalItems = b.items?.reduce((s, i) => s + i.qty_logged, 0) || 0;
     const payDisplay = b.pay_approved > 0 ? `$${Number(b.pay_approved).toFixed(2)} approved` : `$${Number(b.pay_estimated).toFixed(2)} est.`;
+    const statusKey = b.qc_submitted && b.status === "pending" ? "qc_submitted" : b.status;
+    const statusLabel = statusKey === "qc_submitted" ? "QC Submitted" : b.status;
     return `<div class="batch-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-weight:700;color:var(--ink)">Batch #${b.id}</div>
-        <span class="batch-status ${b.qc_submitted && b.status === 'pending' ? 'qc_submitted' : b.status}">${b.qc_submitted && b.status === 'pending' ? 'QC Submitted' : b.status}</span>
+        <span class="batch-status ${statusKey}">${statusLabel}</span>
       </div>
       <div style="font-size:12px;color:var(--mid);margin-bottom:6px">${b.batch_date} · ${totalItems} items · ${payDisplay}</div>
-      <div style="font-size:13px">
-        ${b.items?.map(i => `<span style="display:inline-block;background:var(--pink-50);padding:2px 8px;border-radius:6px;margin:2px;font-size:12px">${esc(i.item_name)} ×${i.qty_logged}</span>`).join("") || ""}
+      <div style="font-size:13px;flex-wrap:wrap;display:flex;gap:4px">
+        ${b.items?.map(i => `<span style="background:var(--pink-50);padding:3px 10px;border-radius:6px;font-size:12px;border:1px solid var(--pink-100)">${esc(i.item_name)} ×${i.qty_logged}</span>`).join("") || ""}
       </div>
       ${b.notes ? `<div style="font-size:12px;color:var(--soft);margin-top:6px;font-style:italic">${esc(b.notes)}</div>` : ""}
     </div>`;
@@ -669,41 +860,27 @@ async function loadHistory() {
 async function loadPortalInventory() {
   const container = $("portalInventoryContent");
   const r = await api("getInventory");
-  if (!r.ok || !r.items?.length) {
-    container.innerHTML = '<div class="empty">No items yet ✿</div>';
-    return;
-  }
-  // Group by in-stock / low / out
+  if (!r.ok || !r.items?.length) { container.innerHTML = '<div class="empty">No items yet ✿</div>'; return; }
   const items = r.items;
   const inStock = items.filter(i => i.on_hand > 0 && !(i.min_stock > 0 && i.on_hand < i.min_stock));
   const low = items.filter(i => i.on_hand > 0 && i.min_stock > 0 && i.on_hand < i.min_stock);
   const out = items.filter(i => i.on_hand <= 0);
-
-  const renderGroup = (title, color, list) => {
-    if (!list.length) return "";
-    return `<div style="margin-bottom:16px">
+  const renderGroup = (title, color, list) => !list.length ? "" : `
+    <div style="margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${title}</div>
-      ${list.map(i => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:white;border-radius:12px;margin-bottom:6px;border:1.5px solid var(--pink-100)">
-          <div>
-            <div style="font-weight:600;font-size:14px;color:var(--ink)">${esc(i.name)}</div>
-            ${i.category ? `<div style="font-size:11px;color:var(--soft)">${esc(i.category)}</div>` : ""}
-          </div>
-          <div style="font-weight:700;font-size:16px;color:${i.on_hand <= 0 ? "#C24040" : i.min_stock > 0 && i.on_hand < i.min_stock ? "#8B6914" : "var(--pink-600)"}">${i.on_hand}</div>
-        </div>`).join("")}
+      ${list.map(i => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:white;border-radius:12px;margin-bottom:6px;border:1.5px solid var(--pink-100)">
+        <div>
+          <div style="font-weight:600;font-size:14px;color:var(--ink)">${esc(i.name)}</div>
+          ${i.category ? `<div style="font-size:11px;color:var(--soft)">${esc(i.category)}</div>` : ""}
+        </div>
+        <div style="font-weight:700;font-size:16px;color:${i.on_hand<=0?"#C24040":i.min_stock>0&&i.on_hand<i.min_stock?"#8B6914":"var(--pink-600)"}">${i.on_hand}</div>
+      </div>`).join("")}
     </div>`;
-  };
-
-  container.innerHTML =
-    renderGroup("✿ In Stock", "var(--pink-600)", inStock) +
-    renderGroup("⚠️ Running Low", "#8B6914", low) +
-    renderGroup("○ Out of Stock", "#C24040", out);
+  container.innerHTML = renderGroup("✿ In Stock", "var(--pink-600)", inStock) + renderGroup("⚠️ Running Low", "#8B6914", low) + renderGroup("○ Out of Stock", "#C24040", out);
 }
 
-// Helpers
+// ── API ──
 async function api(action, params = {}) {
-  // For actions with large JSON payloads, send params in query string but encode JSON values properly
-  // Worker reads everything from url.searchParams so we keep GET but encode carefully
   const flat = { action, token: token || "" };
   for (const [k, v] of Object.entries(params)) {
     flat[k] = typeof v === "object" ? JSON.stringify(v) : String(v);
@@ -718,7 +895,7 @@ function esc(s) {
 let toastTimer;
 function toast(msg, kind = "") {
   const t = $("toast"); t.textContent = msg; t.className = "toast show " + kind;
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = "toast " + kind, 2800);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = "toast " + kind, 3000);
 }
 </script>
 </body>
