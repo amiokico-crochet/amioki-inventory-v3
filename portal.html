@@ -620,37 +620,48 @@ function showApp() {
   $("qcDate").value = new Date().toISOString().split("T")[0];
 
   if (selectedRole === "ami") {
-    // Ami sees a completely different set of tabs
+    const amiPanels = ["receive","suppliers","batches","inventory","ami-history"];
+
+    // Hide all crocheter panels
+    ["contract","log","qc","history","batches"].forEach(id => {
+      const p = $("panel-" + id);
+      if (p) p.style.display = "none";
+    });
+
+    // Show all Ami panels but hide all except receive initially
+    amiPanels.forEach(id => {
+      const p = $("panel-" + id);
+      if (p) p.style.display = id === "receive" ? "block" : "none";
+    });
+
+    // Replace tab bar
     document.querySelector(".tabs").innerHTML = `
       <button class="tab active" data-tab="receive">📦 Receive</button>
       <button class="tab" data-tab="suppliers">🏪 Suppliers</button>
       <button class="tab" data-tab="batches">✅ Approve</button>
       <button class="tab" data-tab="inventory">🧶 Inventory</button>
       <button class="tab" data-tab="ami-history">📅 History</button>`;
-    // Re-bind tab clicks for Ami's tabs
+
+    // Bind tab clicks using display toggling (not classList.active on panels)
     document.querySelectorAll(".tab").forEach(t => {
       t.addEventListener("click", () => {
         document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-        document.querySelectorAll(".tab-panel").forEach(x => x.classList.remove("active"));
         t.classList.add("active");
-        $("panel-" + t.dataset.tab)?.classList.add("active");
-        if (t.dataset.tab === "batches")      loadPortalBatches();
-        if (t.dataset.tab === "inventory")    loadPortalInventory();
-        if (t.dataset.tab === "suppliers")    loadSuppliers();
-        if (t.dataset.tab === "ami-history")  loadAmiHistory();
+        // Hide all Ami panels then show the selected one
+        amiPanels.forEach(id => {
+          const p = $("panel-" + id);
+          if (p) p.style.display = "none";
+        });
+        const target = $("panel-" + t.dataset.tab);
+        if (target) target.style.display = "block";
+        // Load data for each tab
+        if (t.dataset.tab === "batches")     loadPortalBatches();
+        if (t.dataset.tab === "inventory")   loadPortalInventory();
+        if (t.dataset.tab === "suppliers")   loadSuppliers();
+        if (t.dataset.tab === "ami-history") loadAmiHistory();
       });
     });
-    // Show Ami panels, hide crocheter panels
-    $("panel-receive").style.display  = "block";
-    $("panel-suppliers").style.display = "none";
-    $("panel-batches").style.display   = "none";
-    $("panel-inventory").style.display = "none";
-    $("panel-ami-history").style.display = "none";
-    // Hide crocheter-only panels
-    ["contract","log","qc","history"].forEach(id => {
-      const p = $("panel-" + id);
-      if (p) p.style.display = "none";
-    });
+
     loadAmiSupplierSetup();
   } else {
     // Crocheters get normal tabs
