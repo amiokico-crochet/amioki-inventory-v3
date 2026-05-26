@@ -1488,6 +1488,10 @@ async function loadContracts() {
               style="flex:1;min-width:100px;padding:6px 10px;border:1.5px solid var(--pink-200);border-radius:8px;font-size:12px">
             <button class="ab approve" onclick="logManualDelivery(${i.id},${c.id})">+ Log Delivery</button>
           </div>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer;font-size:12px;color:var(--mid)">
+            <input type="checkbox" id="dinv-${i.id}" checked style="accent-color:var(--pink-400);width:14px;height:14px">
+            Also update inventory on-hand
+          </label>
           <div style="font-size:11px;color:var(--soft);margin-top:4px">${remaining} still needed</div>` :
           done ? `<div style="font-size:11px;color:#4A9B6A;font-weight:600">\u2713 Fully delivered</div>` : ""}
       </div>`;
@@ -1523,10 +1527,14 @@ async function saveItemNotes(itemId, field, value) {
 async function logManualDelivery(itemId, contractId) {
   const qty = Number($("dq-" + itemId)?.value) || 0;
   const notes = $("dn-" + itemId)?.value || "";
+  const updateInventory = $("dinv-" + itemId)?.checked !== false;
   if (!qty) return toast("Enter a quantity", "error");
-  const r = await api("manualDelivery", { contract_item_id: itemId, qty, notes });
+  const r = await api("manualDelivery", { contract_item_id: itemId, qty, notes, update_inventory: updateInventory ? "1" : "0" });
   if (r.ok) {
-    toast(r.inventoryUpdated ? "Logged + inventory updated \u273f" : "Logged (item not in inventory yet)", "success");
+    const msg = updateInventory
+      ? (r.inventoryUpdated ? "Logged + inventory updated \u273f" : "Contract logged (item not found in inventory)")
+      : "Contract logged \u273f (inventory unchanged)";
+    toast(msg, "success");
     loadContracts(); loadAll();
   } else toast(r.error, "error");
 }
