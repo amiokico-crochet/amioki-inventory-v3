@@ -1632,7 +1632,10 @@ async function loadBatches() {
         <div class="amount">$${calcBatchPay(b).toFixed(2)}</div>
         <div class="label">Estimated payment owed ✿</div>
       </div>
-      ${b.status!=="approved"?`<button class="btn btn-primary" style="margin-top:6px" onclick="submitBatchApproval(${b.id})">Approve Batch ✿</button>`:""}
+      <div style="display:flex;gap:8px;margin-top:6px">
+        ${b.status!=="approved"?`<button class="btn btn-primary" style="flex:1" onclick="submitBatchApproval(${b.id})">Approve Batch ✿</button>`:""}
+        <button style="padding:13px 16px;border-radius:14px;background:#FFE5E5;color:#C24040;border:2px solid #FFB6B6;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap" onclick="deleteBatch(${b.id})">🗑 Delete</button>
+      </div>
     </div>`;
   }).join("");
 }
@@ -1656,6 +1659,13 @@ async function submitBatchApproval(logId) {
   const r = await api("approveBatch", { log_id: logId, decisions: JSON.stringify(decisions) });
   if (r.ok) { toast(`Batch approved! Pay: $${r.payApproved} ✿`, "success"); loadBatches(); loadAll(); }
   else toast(r.error, "error");
+}
+
+async function deleteBatch(logId) {
+  if (!confirm("Delete this batch? This will also remove it from the crocheter's history and cannot be undone.")) return;
+  const r = await api("deleteBatch", { log_id: logId });
+  if (r.ok) { toast("Batch deleted ✿", "success"); loadBatches(); }
+  else toast(r.error || "Delete failed", "error");
 }
 </script>
 </body>
