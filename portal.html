@@ -1200,7 +1200,10 @@ async function loadPortalBatches() {
         <div class="pb-pay-amount">$${payOwed.toFixed(2)}</div>
         <div class="pb-pay-label">Pay owed for this batch ✿</div>
       </div>
-      ${b.status!=="approved"?`<button class="btn btn-primary" onclick="submitPortalBatchApproval(${b.id})">Approve Batch + Add to Inventory ✿</button>`:""}
+      <div style="display:flex;gap:8px;margin-top:6px">
+        ${b.status!=="approved"?`<button class="btn btn-primary" style="flex:1" onclick="submitPortalBatchApproval(${b.id})">Approve + Add to Inventory ✿</button>`:""}
+        <button style="padding:13px 16px;border-radius:14px;background:#FFE5E5;color:#C24040;border:2px solid #FFB6B6;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap" onclick="deletePortalBatch(${b.id})">🗑 Delete</button>
+      </div>
     </div>`;
   }).join("");
 }
@@ -1232,6 +1235,13 @@ async function submitPortalBatchApproval(logId) {
     toast(`Batch approved! Pay: $${r.payApproved} · Inventory updated ✿`, "success");
     loadPortalBatches();
   } else toast(r.error || "Approval failed", "error");
+}
+
+async function deletePortalBatch(logId) {
+  if (!confirm("Delete this batch? This removes it from the crocheter's history too and cannot be undone.")) return;
+  const r = await api("deleteBatch", { log_id: logId });
+  if (r.ok) { toast("Batch deleted ✿", "success"); loadPortalBatches(); }
+  else toast(r.error || "Delete failed", "error");
 }
 
 // ═══════════════════════════════════════════════════════════
