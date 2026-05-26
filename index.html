@@ -384,6 +384,26 @@ input,select,textarea{font-family:inherit;font-size:15px}
     <div class="tab-panel" id="panel-notifications">
       <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Control who gets the daily <strong>Ami's Adopted Plushie Takeaway</strong> digest at 9pm. 🌸</p>
       <div id="crocheterCards"><div class="loading">Loading...</div></div>
+      <!-- Digest Preview -->
+      <div style="margin-top:16px">
+        <button class="btn btn-ghost" id="previewDigestBtn" style="font-size:13px">👁 Preview Digest Email</button>
+      </div>
+      <div id="digestPreviewWrap" style="display:none;margin-top:14px">
+        <div style="background:white;border-radius:16px;padding:14px;border:2px solid var(--pink-100);margin-bottom:10px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.5px">Preview for</div>
+            <select id="digestPreviewRole" style="padding:7px 12px;border:2px solid var(--pink-100);border-radius:10px;font-size:13px;background:var(--pink-50);flex:1">
+              <option value="ashley">🧵 Ashley</option>
+              <option value="liz">🪡 Liz</option>
+              <option value="sydni">🌷 Sydni</option>
+              <option value="ami">🌸 Ami</option>
+            </select>
+            <button class="btn btn-ghost" id="sendDigestNowBtn" style="font-size:12px;padding:7px 14px;white-space:nowrap">📤 Send Now</button>
+          </div>
+          <div style="font-size:11px;color:var(--soft)">Shows sales from the last 24 hours. If no sales exist, sample data is displayed so you can see the layout.</div>
+        </div>
+        <div id="digestPreviewFrame" style="border:2px solid var(--pink-100);border-radius:16px;overflow:hidden;background:white;max-height:600px;overflow-y:auto"></div>
+      </div>
     </div>
 
     <!-- CONTRACTS (master only) -->
@@ -713,13 +733,51 @@ async function loadNotifications() {
   if (!r.ok) { container.innerHTML = `<div class="empty">${r.error}</div>`; return; }
   container.innerHTML = r.crocheters.map(c => {
     const hasEmail = !!c.email;
+    const hasSms = !!(c.phone && c.carrier);
     return `<div class="crocheter-card">
       <div class="crocheter-card-header">
         <div class="crocheter-name">${esc(c.display_name)}</div>
-        ${hasEmail ? `<button class="test-btn" data-role="${c.role}">Test Digest</button>` : ""}
+        <button class="test-btn" data-role="${c.role}">Test Digest</button>
       </div>
-      <div class="crocheter-meta">${c.email ? "📧 " + esc(c.email) : "No email set"}</div>
-      <div class="toggle-row" style="padding:8px 0">
+
+      <!-- Email edit row -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <input type="email" class="notif-email-input" data-role="${c.role}"
+          value="${esc(c.email||"")}" placeholder="📧 email address"
+          style="flex:1;padding:7px 12px;border:2px solid var(--pink-100);border-radius:10px;font-size:13px;background:var(--pink-50)">
+        <button class="test-btn save-email-btn" data-role="${c.role}" style="white-space:nowrap">Save</button>
+      </div>
+
+      <!-- SMS row -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <input type="tel" class="notif-phone-input" data-role="${c.role}"
+          value="${esc(c.phone||"")}" placeholder="📱 phone (digits only)"
+          style="flex:1;padding:7px 12px;border:2px solid var(--pink-100);border-radius:10px;font-size:13px;background:var(--pink-50)">
+        <select class="notif-carrier-input" data-role="${c.role}"
+          style="padding:7px 10px;border:2px solid var(--pink-100);border-radius:10px;font-size:12px;background:var(--pink-50)">
+          <option value="">Carrier</option>
+          <option value="verizon" ${c.carrier==="verizon"?"selected":""}>Verizon</option>
+          <option value="att" ${c.carrier==="att"?"selected":""}>AT&T</option>
+          <option value="tmobile" ${c.carrier==="tmobile"?"selected":""}>T-Mobile</option>
+          <option value="cricket" ${c.carrier==="cricket"?"selected":""}>Cricket</option>
+          <option value="boost" ${c.carrier==="boost"?"selected":""}>Boost</option>
+          <option value="metropcs" ${c.carrier==="metropcs"?"selected":""}>Metro PCS</option>
+        </select>
+        <button class="test-btn save-sms-btn" data-role="${c.role}" style="white-space:nowrap">Save</button>
+      </div>
+
+      <!-- Status indicators -->
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="font-size:11px;padding:3px 8px;border-radius:6px;background:${hasEmail?"var(--mint)":"#FFE5E5"};color:${hasEmail?"#2E6B47":"#C24040"}">
+          ${hasEmail ? "✓ Email set" : "✗ No email"}
+        </span>
+        <span style="font-size:11px;padding:3px 8px;border-radius:6px;background:${hasSms?"var(--mint)":"#FFF2A8"};color:${hasSms?"#2E6B47":"#8B6914"}">
+          ${hasSms ? "✓ SMS set" : "○ No SMS"}
+        </span>
+      </div>
+
+      <!-- Digest toggle -->
+      <div class="toggle-row" style="padding:8px 0 0">
         <div><div class="toggle-label" style="font-size:13px">Daily Digest (9pm)</div><div class="toggle-sub">Ami's Adopted Plushie Takeaway</div></div>
         <label class="toggle">
           <input type="checkbox" class="digest-toggle" data-role="${c.role}" ${c.digest_enabled ? "checked" : ""} ${!hasEmail ? "disabled" : ""}>
@@ -729,6 +787,34 @@ async function loadNotifications() {
     </div>`;
   }).join("");
 
+  // Save email
+  container.querySelectorAll(".save-email-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const role = btn.dataset.role;
+      const email = container.querySelector(`.notif-email-input[data-role="${role}"]`).value.trim();
+      btn.disabled = true; btn.textContent = "Saving...";
+      const r = await api("updateCrocheter", { role, email });
+      btn.disabled = false; btn.textContent = "Save";
+      if (r.ok) { toast("Email saved ✿", "success"); loadNotifications(); }
+      else toast(r.error || "Failed", "error");
+    });
+  });
+
+  // Save SMS
+  container.querySelectorAll(".save-sms-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const role = btn.dataset.role;
+      const phone = container.querySelector(`.notif-phone-input[data-role="${role}"]`).value.replace(/\D/g,"");
+      const carrier = container.querySelector(`.notif-carrier-input[data-role="${role}"]`).value;
+      btn.disabled = true; btn.textContent = "Saving...";
+      const r = await api("updateCrocheter", { role, phone, carrier });
+      btn.disabled = false; btn.textContent = "Save";
+      if (r.ok) { toast("SMS info saved ✿", "success"); loadNotifications(); }
+      else toast(r.error || "Failed", "error");
+    });
+  });
+
+  // Digest toggle
   container.querySelectorAll(".digest-toggle").forEach(chk => {
     chk.addEventListener("change", async () => {
       const r = await api("updateCrocheter", { role: chk.dataset.role, digest_enabled: chk.checked ? "1" : "0" });
@@ -737,15 +823,137 @@ async function loadNotifications() {
     });
   });
 
-  container.querySelectorAll(".test-btn").forEach(btn => {
+  // Test digest
+  container.querySelectorAll(".test-btn:not(.save-email-btn):not(.save-sms-btn)").forEach(btn => {
     btn.addEventListener("click", async () => {
+      const role = btn.dataset.role;
+      // Check email is saved first
+      const emailInput = container.querySelector(`.notif-email-input[data-role="${role}"]`);
+      if (!emailInput?.value.trim()) return toast("Save an email address first", "error");
       btn.disabled = true; btn.textContent = "Sending...";
-      const r = await api("sendTestDigest", { role: btn.dataset.role });
+      const r = await api("sendTestDigest", { role });
       btn.disabled = false; btn.textContent = "Test Digest";
-      if (r.ok) toast("Test sent ✿", "success");
+      if (r.ok) toast(`Test sent to ${emailInput.value} ✿`, "success");
       else toast(r.error, "error");
     });
   });
+
+  // Digest preview
+  $("previewDigestBtn").onclick = () => {
+    const wrap = $("digestPreviewWrap");
+    wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+    if (wrap.style.display === "block") renderDigestPreview();
+  };
+  $("digestPreviewRole").onchange = renderDigestPreview;
+
+  // Send digest now button
+  $("sendDigestNowBtn").onclick = async () => {
+    const role = $("digestPreviewRole").value;
+    const emailInput = container.querySelector(`.notif-email-input[data-role="${role}"]`);
+    if (!emailInput?.value.trim()) return toast("Save an email address for this crocheter first", "error");
+    const btn = $("sendDigestNowBtn");
+    btn.disabled = true; btn.textContent = "Sending...";
+    const r = await api("sendTestDigest", { role });
+    btn.disabled = false; btn.textContent = "📤 Send Now";
+    if (r.ok) toast(`Digest sent to ${emailInput.value} ✿`, "success");
+    else toast(r.error || "Failed to send", "error");
+  };
+}
+
+async function renderDigestPreview() {
+  const frame = $("digestPreviewFrame");
+  const role = $("digestPreviewRole").value;
+  frame.innerHTML = '<div style="padding:20px;text-align:center;color:#B894A8;font-size:13px">Loading preview...</div>';
+
+  // Get real sales data for this crocheter
+  const [salesRes, crochetersRes] = await Promise.all([
+    api("getSalesLog", { limit: 100 }),
+    api("getCrocheters")
+  ]);
+
+  const roleMap = { ashley: "Ashley", liz: "Liz", sydni: "Sydni", ami: "Amioki" };
+  const crocheterFilter = roleMap[role] || role;
+  const crocheter = crochetersRes.crocheters?.find(c => c.role === role);
+  const name = crocheter?.display_name || role;
+
+  // Filter to last 24h sales for this crocheter
+  const since = Date.now() - 24 * 60 * 60 * 1000;
+  const sales = (salesRes.sales || []).filter(s =>
+    s.crocheter === crocheterFilter &&
+    s.type === "sale" &&
+    new Date(s.timestamp).getTime() > since
+  );
+
+  // Group by item
+  const grouped = {};
+  sales.forEach(s => { grouped[s.item_name] = (grouped[s.item_name] || 0) + s.qty; });
+  const totalSold = Object.values(grouped).reduce((a,b) => a+b, 0);
+
+  // Get low/out items
+  const invRes = await api("getInventory");
+  const myItems = (invRes.items || []).filter(i => i.crocheter === crocheterFilter);
+  const alerts = myItems.filter(i => i.on_hand <= 0 || (i.min_stock > 0 && i.on_hand < i.min_stock));
+
+  const today = new Date().toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" });
+
+  // Use sample data if no real sales yet
+  const displayGrouped = totalSold > 0 ? grouped : { "Sample Plushie": 2, "Heart Keychain": 3 };
+  const displayTotal = totalSold > 0 ? totalSold : 5;
+  const displayAlerts = alerts.length > 0 ? alerts : [
+    { name: "Baby Chicks", on_hand: 2, min_stock: 5 },
+    { name: crocheterFilter + " Item", on_hand: 0, min_stock: 10 }
+  ];
+  const isSample = totalSold === 0;
+
+  const itemRows = Object.entries(displayGrouped)
+    .sort((a,b) => b[1]-a[1])
+    .map(([item, qty]) => `<tr>
+      <td style="padding:10px 16px;border-bottom:1px solid #FFE5F0;font-size:14px;color:#4A2540">${item}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #FFE5F0;text-align:center;font-weight:700;font-size:14px;color:#E91E63">${qty}</td>
+    </tr>`).join("");
+
+  const soldOut = displayAlerts.filter(a => a.on_hand <= 0);
+  const low = displayAlerts.filter(a => a.on_hand > 0 && a.min_stock > 0 && a.on_hand < a.min_stock);
+
+  const soldOutHtml = soldOut.length ? `<div style="background:#FFE5E5;border-radius:12px;padding:14px 16px;margin-top:16px">
+    <div style="font-weight:700;color:#C2185B;margin-bottom:8px;font-size:13px">🚨 SOLD OUT:</div>
+    ${soldOut.map(i => `<div style="font-size:13px;color:#4A2540;padding:3px 0">• ${i.name}</div>`).join("")}
+  </div>` : "";
+
+  const lowHtml = low.length ? `<div style="background:#FFF2A8;border-radius:12px;padding:14px 16px;margin-top:12px">
+    <div style="font-weight:700;color:#8B6914;margin-bottom:8px;font-size:13px">⚠️ RUNNING LOW:</div>
+    ${low.map(i => `<div style="font-size:13px;color:#4A2540;padding:3px 0">• ${i.name} — ${i.on_hand} left</div>`).join("")}
+  </div>` : "";
+
+  frame.innerHTML = `
+    ${isSample ? '<div style="background:#FFF2A8;padding:8px 14px;font-size:12px;color:#8B6914;text-align:center">⚠️ No sales in last 24h — showing sample data</div>' : ""}
+    <div style="max-width:520px;margin:0 auto;padding:24px 16px;background:#FFF5FA;font-family:Helvetica Neue,Arial,sans-serif">
+      <div style="background:linear-gradient(135deg,#FFB6D9,#FF8DC0);border-radius:24px;padding:28px 24px;text-align:center;margin-bottom:20px">
+        <div style="font-size:32px;margin-bottom:8px">🌸</div>
+        <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:white">Ami's Adopted Plushie Takeaway</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:6px">${today}</div>
+      </div>
+      <div style="background:white;border-radius:20px;padding:20px 24px;box-shadow:0 4px 20px rgba(255,107,171,.12);border:2px solid #FFE5F0;margin-bottom:16px">
+        <div style="font-size:15px;color:#4A2540;margin-bottom:16px">Hey <strong>${name}</strong>! Here's what found new homes today 🧶</div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#FFF5FA">
+            <th style="padding:10px 16px;text-align:left;font-size:11px;color:#B894A8;text-transform:uppercase;letter-spacing:0.8px;font-weight:600">Item</th>
+            <th style="padding:10px 16px;text-align:center;font-size:11px;color:#B894A8;text-transform:uppercase;letter-spacing:0.8px;font-weight:600">Sold</th>
+          </tr></thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+        <div style="background:#FFF5FA;border-radius:12px;padding:12px 16px;margin-top:14px;text-align:center">
+          <span style="font-size:13px;color:#8B5A75">Total today: </span>
+          <span style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#E91E63">${displayTotal}</span>
+          <span style="font-size:13px;color:#8B5A75"> plushie${displayTotal !== 1 ? "s" : ""} adopted ✿</span>
+        </div>
+      </div>
+      ${soldOutHtml}${lowHtml}
+      <div style="text-align:center;padding:20px 0 8px;font-size:12px;color:#B894A8">
+        Thank you for your work — every plushie matters! 🌸<br>
+        <span style="color:#FFB6D9">— Ami & Amioki</span>
+      </div>
+    </div>`;
 }
 
 async function updateUnmatchedBadge() {
