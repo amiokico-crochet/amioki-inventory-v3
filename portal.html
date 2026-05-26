@@ -182,6 +182,19 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:white;padding:12px 22px;border-radius:14px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;transition:all .3s;z-index:200;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.error{background:#C24040}.toast.success{background:#4A9B6A}
+/* CATEGORY PILLS (Ami receive tab) */
+.cat-pill{padding:7px 14px;border-radius:12px;font-size:12px;font-weight:600;background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100);transition:all .2s;cursor:pointer}
+.cat-pill:hover{background:var(--pink-100)}
+.cat-pill.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;border-color:var(--pink-400);box-shadow:0 2px 8px rgba(255,141,192,.3)}
+/* SUPPLIER CARD */
+.supplier-card{background:white;border-radius:16px;padding:16px;border:2px solid var(--pink-100);box-shadow:var(--shadow);margin-bottom:10px}
+.supplier-name{font-weight:700;font-size:16px;color:var(--ink);margin-bottom:2px}
+.supplier-cat{font-size:11px;color:var(--soft);margin-bottom:10px}
+.supplier-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.supplier-stat{background:var(--pink-50);border-radius:10px;padding:8px 10px;text-align:center}
+.supplier-stat-val{font-family:'Comfortaa',sans-serif;font-size:16px;font-weight:700;color:var(--pink-600)}
+.supplier-stat-label{font-size:10px;color:var(--mid);margin-top:2px}
+.supplier-stat.owed .supplier-stat-val{color:#C24040}
 /* BATCH APPROVAL (Ami only) */
 .pb-card{background:white;border-radius:20px;padding:16px;border:2px solid var(--pink-100);box-shadow:var(--shadow);margin-bottom:12px}
 .pb-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
@@ -246,10 +259,8 @@ input,select,textarea{font-family:inherit;font-size:15px}
   <div class="content">
     <div class="tabs">
       <button class="tab active" data-tab="contract">📋 Contract</button>
-      <button class="tab" data-tab="inventory">🧶 Inventory</button>
       <button class="tab" data-tab="log">📦 Log Batch</button>
       <button class="tab" data-tab="qc">✅ Quality Check</button>
-      <button class="tab ami-only" data-tab="batches" id="batchesTab" style="display:none">🌸 Approve</button>
       <button class="tab" data-tab="history">📅 History</button>
     </div>
 
@@ -434,9 +445,103 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <div id="portalBatchesList"><div class="loading">Loading batches...</div></div>
     </div>
 
-    <!-- HISTORY TAB -->
+    <!-- HISTORY TAB (crocheters) -->
     <div class="tab-panel" id="panel-history">
       <div id="historyList"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- AMI: RECEIVE INVENTORY TAB -->
+    <div class="tab-panel active" id="panel-receive" style="display:none">
+      <div class="card">
+        <div class="card-title">📦 Receive Supplier Order</div>
+        <p style="font-size:13px;color:var(--mid);margin-bottom:14px">Log a new delivery from a supplier. Items are added to inventory automatically.</p>
+
+        <!-- Supplier picker -->
+        <div class="field">
+          <label>Supplier</label>
+          <div class="item-search-wrap">
+            <input type="text" class="item-search-input" id="supplierSearchInput" placeholder="🔍 Search or type supplier name..." autocomplete="off">
+            <div class="item-dropdown" id="supplierDropdown"></div>
+          </div>
+          <input type="hidden" id="selectedSupplierId" value="">
+          <input type="hidden" id="selectedSupplierName" value="">
+        </div>
+
+        <!-- Item details -->
+        <div class="field">
+          <label>Item Name</label>
+          <input type="text" id="receiveItemName" placeholder="e.g. Strawberry Cloud Puffs, Pink Ergonomic Hook Set">
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="categoryPills">
+            <button type="button" class="cat-pill active" data-val="Candy">🍬 Candy</button>
+            <button type="button" class="cat-pill" data-val="Hooks">🪝 Hooks</button>
+            <button type="button" class="cat-pill" data-val="Stickers">✨ Stickers</button>
+            <button type="button" class="cat-pill" data-val="Packaging">📦 Packaging</button>
+            <button type="button" class="cat-pill" data-val="Yarn">🧶 Yarn</button>
+            <button type="button" class="cat-pill" data-val="Other">Other</button>
+          </div>
+          <input type="hidden" id="receiveCategory" value="Candy">
+        </div>
+
+        <!-- Qty + Cost -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="field" style="margin-bottom:0">
+            <label>Qty Received</label>
+            <input type="number" id="receiveQty" min="1" value="1" placeholder="100">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Item Cost ($)</label>
+            <input type="number" id="receiveItemCost" min="0" step="0.01" value="0" placeholder="0.00">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="field" style="margin-bottom:0">
+            <label>Shipping ($)</label>
+            <input type="number" id="receiveShipping" min="0" step="0.01" value="0" placeholder="0.00">
+          </div>
+          <div style="background:linear-gradient(135deg,var(--lavender),var(--pink-100));border-radius:14px;padding:12px;text-align:center">
+            <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Unit Cost</div>
+            <div id="unitCostDisplay" style="font-family:'Comfortaa',sans-serif;font-size:22px;font-weight:700;color:var(--pink-600)">$0.00</div>
+            <div style="font-size:10px;color:var(--soft);margin-top:2px">(item + shipping) ÷ qty</div>
+          </div>
+        </div>
+
+        <!-- Total cost display -->
+        <div style="background:var(--pink-50);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1.5px solid var(--pink-100)">
+          <span style="font-size:13px;font-weight:600;color:var(--mid)">Total Order Cost</span>
+          <span id="totalCostDisplay" style="font-family:'Comfortaa',sans-serif;font-size:20px;font-weight:700;color:var(--pink-600)">$0.00</span>
+        </div>
+
+        <div class="field">
+          <label>Notes (optional)</label>
+          <input type="text" id="receiveNotes" placeholder="e.g. Order #1234, batch ref, color details...">
+        </div>
+
+        <button class="btn btn-primary" id="receiveSubmitBtn">Log Delivery + Add to Inventory ✿</button>
+      </div>
+    </div>
+
+    <!-- AMI: SUPPLIERS TAB -->
+    <div class="tab-panel" id="panel-suppliers" style="display:none">
+      <!-- Add new supplier -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">+ Add Supplier</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="newSupplierName" placeholder="Supplier name" style="flex:1;padding:10px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50);font-size:14px">
+          <input type="text" id="newSupplierCat" placeholder="Category" style="width:110px;padding:10px 14px;border:2px solid var(--pink-100);border-radius:12px;background:var(--pink-50);font-size:13px">
+        </div>
+        <button class="btn btn-ghost" id="addSupplierBtn" style="font-size:13px">Save Supplier</button>
+      </div>
+
+      <!-- Supplier list -->
+      <div id="suppliersList"><div class="loading">Loading suppliers...</div></div>
+    </div>
+
+    <!-- AMI: HISTORY TAB -->
+    <div class="tab-panel" id="panel-ami-history" style="display:none">
+      <div id="amiHistoryList"><div class="loading">Loading...</div></div>
     </div>
   </div>
 </div>
@@ -495,12 +600,45 @@ function showApp() {
   $("loginScreen").style.display = "none";
   $("app").classList.add("active");
   $("qcDate").value = new Date().toISOString().split("T")[0];
-  // Show batches tab for Ami only
+
   if (selectedRole === "ami") {
-    document.querySelectorAll(".ami-only").forEach(el => el.style.display = "");
+    // Ami sees a completely different set of tabs
+    document.querySelector(".tabs").innerHTML = `
+      <button class="tab active" data-tab="receive">📦 Receive</button>
+      <button class="tab" data-tab="suppliers">🏪 Suppliers</button>
+      <button class="tab" data-tab="batches">✅ Approve</button>
+      <button class="tab" data-tab="inventory">🧶 Inventory</button>
+      <button class="tab" data-tab="ami-history">📅 History</button>`;
+    // Re-bind tab clicks for Ami's tabs
+    document.querySelectorAll(".tab").forEach(t => {
+      t.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(x => x.classList.remove("active"));
+        t.classList.add("active");
+        $("panel-" + t.dataset.tab)?.classList.add("active");
+        if (t.dataset.tab === "batches")      loadPortalBatches();
+        if (t.dataset.tab === "inventory")    loadPortalInventory();
+        if (t.dataset.tab === "suppliers")    loadSuppliers();
+        if (t.dataset.tab === "ami-history")  loadAmiHistory();
+      });
+    });
+    // Show Ami panels, hide crocheter panels
+    $("panel-receive").style.display  = "block";
+    $("panel-suppliers").style.display = "none";
+    $("panel-batches").style.display   = "none";
+    $("panel-inventory").style.display = "none";
+    $("panel-ami-history").style.display = "none";
+    // Hide crocheter-only panels
+    ["contract","log","qc","history"].forEach(id => {
+      const p = $("panel-" + id);
+      if (p) p.style.display = "none";
+    });
+    loadAmiSupplierSetup();
+  } else {
+    // Crocheters get normal tabs
+    loadContract();
+    loadPieceRates();
   }
-  loadContract();
-  loadPieceRates();
 }
 
 $("logoutBtn").addEventListener("click", () => {
@@ -518,10 +656,8 @@ document.querySelectorAll(".tab").forEach(t => {
     document.querySelectorAll(".tab-panel").forEach(x => x.classList.remove("active"));
     t.classList.add("active");
     $("panel-" + t.dataset.tab).classList.add("active");
-    if (t.dataset.tab === "history")   loadHistory();
-    if (t.dataset.tab === "qc")        loadQCBatchPicker();
-    if (t.dataset.tab === "inventory") loadPortalInventory();
-    if (t.dataset.tab === "batches")   loadPortalBatches();
+    if (t.dataset.tab === "history") loadHistory();
+    if (t.dataset.tab === "qc")      loadQCBatchPicker();
   });
 });
 
@@ -1028,6 +1164,207 @@ async function submitPortalBatchApproval(logId) {
     toast(`Batch approved! Pay: $${r.payApproved} · Inventory updated ✿`, "success");
     loadPortalBatches();
   } else toast(r.error || "Approval failed", "error");
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🌸 AMI'S PORTAL — SUPPLIER + RECEIVE INVENTORY
+// ═══════════════════════════════════════════════════════════
+
+let suppliersList = [];
+
+async function loadAmiSupplierSetup() {
+  await loadSupplierSearch();
+}
+
+// ── CATEGORY PILLS ──
+document.querySelectorAll(".cat-pill").forEach(p => {
+  p.addEventListener("click", () => {
+    document.querySelectorAll(".cat-pill").forEach(x => x.classList.remove("active"));
+    p.classList.add("active");
+    $("receiveCategory").value = p.dataset.val;
+  });
+});
+
+// ── UNIT COST CALCULATOR ──
+function calcUnitCost() {
+  const qty = Number($("receiveQty")?.value) || 1;
+  const itemCost = Number($("receiveItemCost")?.value) || 0;
+  const shipping = Number($("receiveShipping")?.value) || 0;
+  const total = itemCost + shipping;
+  const unit = qty > 0 ? total / qty : 0;
+  if ($("unitCostDisplay")) $("unitCostDisplay").textContent = "$" + unit.toFixed(2);
+  if ($("totalCostDisplay")) $("totalCostDisplay").textContent = "$" + total.toFixed(2);
+}
+["receiveQty","receiveItemCost","receiveShipping"].forEach(id => {
+  document.getElementById(id)?.addEventListener("input", calcUnitCost);
+});
+
+// ── SUPPLIER SEARCH DROPDOWN ──
+async function loadSupplierSearch() {
+  const r = await api("getSuppliers");
+  if (r.ok) suppliersList = r.suppliers || [];
+  wireSupplierSearch();
+}
+
+function wireSupplierSearch() {
+  const input = $("supplierSearchInput");
+  const dd = $("supplierDropdown");
+  if (!input || !dd) return;
+
+  input.addEventListener("input", () => {
+    const q = input.value.trim().toLowerCase();
+    const matches = q ? suppliersList.filter(s => s.name.toLowerCase().includes(q)) : suppliersList;
+    renderSupplierDropdown(matches, q);
+  });
+  input.addEventListener("focus", () => {
+    renderSupplierDropdown(suppliersList, "");
+    dd.classList.add("show");
+  });
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".item-search-wrap")) dd.classList.remove("show");
+  });
+}
+
+function renderSupplierDropdown(suppliers, query) {
+  const dd = $("supplierDropdown");
+  const rows = suppliers.map(s => `
+    <div class="item-dropdown-item" data-id="${s.id}" data-name="${s.name}">
+      <div><span class="iname">${s.name}</span>${s.category ? `<span class="itag">${s.category}</span>` : ""}</div>
+      ${s.balance_owed > 0 ? `<span class="irate" style="color:#C24040">owes $${Number(s.balance_owed).toFixed(2)}</span>` : ""}
+    </div>`).join("");
+
+  const addNew = query && !suppliers.find(s => s.name.toLowerCase() === query.toLowerCase()) ? `
+    <div class="item-dropdown-item" data-id="" data-name="${query}">
+      <span class="iname">+ Add "${query}"</span><span class="itag">new supplier</span>
+    </div>` : "";
+
+  dd.innerHTML = rows + addNew || '<div style="padding:12px 16px;color:var(--soft);font-size:13px">No suppliers — type to add</div>';
+  dd.classList.add("show");
+
+  dd.querySelectorAll(".item-dropdown-item").forEach(el => {
+    el.addEventListener("click", () => {
+      $("selectedSupplierId").value = el.dataset.id || "";
+      $("selectedSupplierName").value = el.dataset.name;
+      $("supplierSearchInput").value = el.dataset.name;
+      dd.classList.remove("show");
+    });
+  });
+}
+
+// ── RECEIVE ORDER SUBMIT ──
+$("receiveSubmitBtn")?.addEventListener("click", async () => {
+  const supplierName = $("selectedSupplierName").value.trim() || $("supplierSearchInput").value.trim();
+  const itemName     = $("receiveItemName").value.trim();
+  const category     = $("receiveCategory").value;
+  const qty          = Number($("receiveQty").value) || 0;
+  const itemCost     = Number($("receiveItemCost").value) || 0;
+  const shipping     = Number($("receiveShipping").value) || 0;
+  const notes        = $("receiveNotes").value.trim();
+
+  if (!supplierName) return toast("Enter a supplier name", "error");
+  if (!itemName)     return toast("Enter an item name", "error");
+  if (!qty)          return toast("Enter qty received", "error");
+
+  const btn = $("receiveSubmitBtn"); btn.disabled = true; btn.textContent = "Logging...";
+  try {
+    const r = await api("receiveSupplierOrder", { supplier_name: supplierName, item_name: itemName, category, qty, item_cost: itemCost, shipping_cost: shipping, notes });
+    if (!r.ok) throw new Error(r.error);
+    toast(`Logged! Unit cost: $${r.unitCost} · Inventory ${r.inventoryAction} ✿`, "success");
+    // Reset form
+    $("receiveItemName").value = "";
+    $("receiveQty").value = 1;
+    $("receiveItemCost").value = 0;
+    $("receiveShipping").value = 0;
+    $("receiveNotes").value = "";
+    $("selectedSupplierId").value = "";
+    $("selectedSupplierName").value = "";
+    $("supplierSearchInput").value = "";
+    $("unitCostDisplay").textContent = "$0.00";
+    $("totalCostDisplay").textContent = "$0.00";
+    await loadSupplierSearch();
+  } catch (err) { toast(err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = "Log Delivery + Add to Inventory ✿"; }
+});
+
+// ── SUPPLIERS LIST ──
+async function loadSuppliers() {
+  const r = await api("getSuppliers");
+  const container = $("suppliersList");
+  if (!r.ok || !r.suppliers?.length) {
+    container.innerHTML = '<div class="empty">No suppliers yet ✿<br><span style="font-size:11px">Add one above or receive an order.</span></div>';
+    return;
+  }
+  container.innerHTML = r.suppliers.map(s => `
+    <div class="supplier-card">
+      <div class="supplier-name">${s.name}</div>
+      ${s.category ? `<div class="supplier-cat">${s.category}</div>` : ""}
+      <div class="supplier-stats">
+        <div class="supplier-stat">
+          <div class="supplier-stat-val">${Number(s.total_received)||0}</div>
+          <div class="supplier-stat-label">Units Received</div>
+        </div>
+        <div class="supplier-stat">
+          <div class="supplier-stat-val">$${Number(s.total_paid||0).toFixed(0)}</div>
+          <div class="supplier-stat-label">Total Paid</div>
+        </div>
+        <div class="supplier-stat ${s.balance_owed > 0 ? 'owed' : ''}">
+          <div class="supplier-stat-val">$${Number(s.balance_owed||0).toFixed(0)}</div>
+          <div class="supplier-stat-label">Balance Owed</div>
+        </div>
+      </div>
+      <!-- Log a payment -->
+      ${s.balance_owed > 0 ? `
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" min="0.01" step="0.01" placeholder="Amount paid" id="pay-${s.id}"
+          style="flex:1;padding:8px 12px;border:2px solid var(--pink-200);border-radius:10px;font-size:13px">
+        <input type="text" placeholder="Method (Zelle, etc.)" id="paymethod-${s.id}"
+          style="width:110px;padding:8px 10px;border:2px solid var(--pink-200);border-radius:10px;font-size:12px">
+        <button class="btn-primary btn" style="width:auto;padding:8px 14px;font-size:12px" onclick="logSupplierPayment(${s.id})">Pay</button>
+      </div>` : `<div style="font-size:12px;color:#4A9B6A;font-weight:600;text-align:center">✓ Fully paid</div>`}
+    </div>`).join("");
+}
+
+async function logSupplierPayment(supplierId) {
+  const amount = Number($("pay-" + supplierId)?.value) || 0;
+  const method = $("paymethod-" + supplierId)?.value || "";
+  if (!amount) return toast("Enter payment amount", "error");
+  const r = await api("paySupplier", { supplier_id: supplierId, amount, method });
+  if (r.ok) { toast("Payment logged ✿", "success"); loadSuppliers(); }
+  else toast(r.error, "error");
+}
+
+// ── ADD SUPPLIER ──
+$("addSupplierBtn")?.addEventListener("click", async () => {
+  const name = $("newSupplierName").value.trim();
+  const cat  = $("newSupplierCat").value.trim();
+  if (!name) return toast("Enter supplier name", "error");
+  const r = await api("saveSupplier", { name, category: cat });
+  if (r.ok) {
+    toast(r.updated ? "Supplier updated ✿" : "Supplier added ✿", "success");
+    $("newSupplierName").value = ""; $("newSupplierCat").value = "";
+    await loadSupplierSearch();
+    if (document.querySelector('[data-tab="suppliers"]')?.classList.contains("active")) loadSuppliers();
+  } else toast(r.error, "error");
+});
+
+// ── AMI HISTORY ──
+async function loadAmiHistory() {
+  const r = await api("getSupplierDeliveries");
+  const list = $("amiHistoryList");
+  if (!r.ok || !r.deliveries?.length) { list.innerHTML = '<div class="empty">No deliveries logged yet ✿</div>'; return; }
+  list.innerHTML = r.deliveries.map(d => `
+    <div class="batch-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-weight:700;color:var(--ink)">${d.item_name}</div>
+        <span style="font-size:12px;font-weight:600;color:var(--pink-600)">×${d.qty}</span>
+      </div>
+      <div style="font-size:12px;color:var(--mid);margin-bottom:4px">${d.supplier_name} · ${d.category || ""}</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--soft)">
+        <span>Unit: $${Number(d.unit_cost).toFixed(2)} · Total: $${Number(d.total_cost).toFixed(2)}</span>
+        <span>${new Date(d.received_at).toLocaleDateString()}</span>
+      </div>
+      ${d.notes ? `<div style="font-size:11px;color:var(--soft);margin-top:4px;font-style:italic">${d.notes}</div>` : ""}
+    </div>`).join("");
 }
 
 // ── API ──
