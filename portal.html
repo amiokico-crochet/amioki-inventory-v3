@@ -575,13 +575,20 @@ let batchItems = [];
 let pieceRates = [];
 let allKnownItems = []; // contract items + piece rate items combined for search
 
-// ── SESSION RESTORE ──
-const saved = localStorage.getItem("amioki_portal_session");
-if (saved) {
-  try {
-    const s = JSON.parse(saved);
-    if (s.token && s.role) { token = s.token; selectedRole = s.role; $("roleLabel").textContent = s.label || s.role; showApp(); }
-  } catch (e) {}
+// ── SESSION RESTORE (role-specific keys — each device/role saves separately) ──
+const _lastRole = localStorage.getItem("amioki_portal_last_role");
+if (_lastRole) {
+  const _saved = localStorage.getItem("amioki_portal_session_" + _lastRole);
+  if (_saved) {
+    try {
+      const s = JSON.parse(_saved);
+      if (s.token && s.role) {
+        token = s.token; selectedRole = s.role;
+        $("roleLabel").textContent = s.label || s.role;
+        showApp();
+      }
+    } catch (e) {}
+  }
 }
 
 // ── LOGIN ──
@@ -605,7 +612,8 @@ async function attemptLogin() {
     const d = await r.json();
     if (!d.ok) throw new Error(d.error || "Login failed");
     token = d.token;
-    localStorage.setItem("amioki_portal_session", JSON.stringify({ token, role: d.role, label: d.label }));
+    localStorage.setItem("amioki_portal_session_" + d.role, JSON.stringify({ token, role: d.role, label: d.label }));
+    localStorage.setItem("amioki_portal_last_role", d.role);
     $("roleLabel").textContent = d.label;
     $("pwInput").value = "";
     showApp();
@@ -671,7 +679,10 @@ function showApp() {
 }
 
 $("logoutBtn").addEventListener("click", () => {
-  localStorage.removeItem("amioki_portal_session");
+  if (selectedRole) {
+    localStorage.removeItem("amioki_portal_session_" + selectedRole);
+    localStorage.removeItem("amioki_portal_last_role");
+  }
   token = null; selectedRole = null;
   $("app").classList.remove("active");
   $("loginScreen").style.display = "grid";
