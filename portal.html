@@ -7,7 +7,7 @@
 <title>Amioki Contractor Portal ✿</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Quicksand:wght@400;500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Quicksand:wght@400;500;600;700&family=Kalam:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>
 :root{
   --pink-50:#FFF5FA;--pink-100:#FFE5F0;--pink-200:#FFCCE0;--pink-300:#FFB6D9;
@@ -150,6 +150,9 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .qc-sig-line{border-bottom:2px solid var(--pink-300);margin-bottom:14px;padding-bottom:4px;font-size:13px;color:var(--mid)}
 .sig-canvas-wrap{border:2px solid var(--pink-200);border-radius:12px;overflow:hidden;background:white;position:relative}
 .sig-canvas-wrap::before{content:"Sign here";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;color:var(--pink-200);pointer-events:none;font-style:italic}
+.sig-mode-btn{padding:7px 16px;border-radius:10px;font-size:12px;font-weight:600;background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100);cursor:pointer;transition:all .2s}
+.sig-mode-btn:hover{background:var(--pink-100)}
+.sig-mode-btn.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;border-color:var(--pink-400);box-shadow:0 2px 8px rgba(255,141,192,.3)}
 .sig-canvas{width:100%;display:block;cursor:crosshair;touch-action:none;position:relative;z-index:1}
 .sig-clear-btn{margin-top:6px;padding:6px 14px;background:var(--pink-50);color:var(--mid);border:1px solid var(--pink-100);border-radius:8px;font-size:12px;font-weight:600}
 
@@ -426,12 +429,27 @@ input,select,textarea{font-family:inherit;font-size:15px}
               <input type="date" id="qcDate" style="width:100%;padding:9px 12px;border:2px solid var(--pink-200);border-radius:10px;font-size:13px;background:white">
             </div>
           </div>
-          <div style="font-size:11px;color:var(--mid);margin-bottom:6px;font-weight:600">SIGNATURE</div>
-          <div class="sig-canvas-wrap">
-            <canvas id="sigCanvas" class="sig-canvas" height="110"></canvas>
+          <div style="font-size:11px;color:var(--mid);margin-bottom:8px;font-weight:600">SIGNATURE</div>
+          <!-- Toggle draw vs type -->
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <button type="button" class="sig-mode-btn active" id="sigModeDraw" onclick="setSigMode('draw')">✏️ Draw</button>
+            <button type="button" class="sig-mode-btn" id="sigModeType" onclick="setSigMode('type')">⌨️ Type</button>
           </div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="sig-clear-btn" id="sigClear">Clear</button>
+          <!-- Draw mode -->
+          <div id="sigDrawWrap">
+            <div class="sig-canvas-wrap">
+              <canvas id="sigCanvas" class="sig-canvas" height="110"></canvas>
+            </div>
+            <button class="sig-clear-btn" id="sigClear" style="margin-top:6px">Clear</button>
+          </div>
+          <!-- Type mode -->
+          <div id="sigTypeWrap" style="display:none">
+            <input type="text" id="sigTypeInput" placeholder="Type your full name..."
+              style="width:100%;padding:10px 14px;border:2px solid var(--pink-200);border-radius:12px;font-size:14px;background:white;margin-bottom:10px">
+            <div id="sigTypePreview" style="background:white;border:2px solid var(--pink-200);border-radius:12px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+              <span id="sigTypeCursive" style="font-family:'Dancing Script',cursive;font-size:36px;color:#4A2540;letter-spacing:1px;padding:0 16px;text-align:center"></span>
+            </div>
+            <div style="font-size:11px;color:var(--soft);margin-top:6px;text-align:center;font-style:italic">Preview of your typed signature</div>
           </div>
         </div>
       </div>
@@ -941,10 +959,59 @@ async function loadQCBatchPicker() {
     }).join("");
 }
 
-// Signature canvas
+// ── SIGNATURE — draw or type ──
 const sigCanvas = $("sigCanvas");
 const ctx2d = sigCanvas.getContext("2d");
 let drawing = false;
+let sigMode = "draw"; // "draw" or "type"
+
+function setSigMode(mode) {
+  sigMode = mode;
+  $("sigModeDraw").classList.toggle("active", mode === "draw");
+  $("sigModeType").classList.toggle("active", mode === "type");
+  $("sigDrawWrap").style.display = mode === "draw" ? "block" : "none";
+  $("sigTypeWrap").style.display = mode === "type" ? "block" : "none";
+}
+
+// Live cursive preview
+$("sigTypeInput").addEventListener("input", () => {
+  $("sigTypeCursive").textContent = $("sigTypeInput").value;
+});
+
+// Auto-fill from name field
+$("qcName").addEventListener("input", () => {
+  if ($("sigTypeInput").value === "" || $("sigTypeInput").value === $("qcName").dataset.lastVal) {
+    $("sigTypeInput").value = $("qcName").value;
+    $("sigTypeCursive").textContent = $("qcName").value;
+  }
+  $("qcName").dataset.lastVal = $("qcName").value;
+});
+
+function getSignatureData() {
+  if (sigMode === "type") {
+    const name = $("sigTypeInput").value.trim();
+    if (!name) return null;
+    // Render typed signature to an offscreen canvas
+    const offscreen = document.createElement("canvas");
+    offscreen.width = 400; offscreen.height = 100;
+    const octx = offscreen.getContext("2d");
+    octx.fillStyle = "white";
+    octx.fillRect(0, 0, 400, 100);
+    octx.fillStyle = "#4A2540";
+    octx.font = "bold 52px 'Dancing Script', cursive";
+    octx.textAlign = "center";
+    octx.textBaseline = "middle";
+    octx.fillText(name, 200, 52);
+    return offscreen.toDataURL("image/png");
+  }
+  return sigCanvas.toDataURL("image/png");
+}
+
+function clearSignature() {
+  ctx2d.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  $("sigTypeInput").value = "";
+  $("sigTypeCursive").textContent = "";
+}
 
 function resizeSig() {
   const rect = sigCanvas.parentElement.getBoundingClientRect();
@@ -966,7 +1033,7 @@ sigCanvas.addEventListener("mouseleave", () => drawing = false);
 sigCanvas.addEventListener("touchstart", e => { e.preventDefault(); drawing = true; const p = getPos(e); ctx2d.beginPath(); ctx2d.moveTo(p.x, p.y); }, { passive: false });
 sigCanvas.addEventListener("touchmove", e => { e.preventDefault(); if (!drawing) return; ctx2d.strokeStyle = "#4A2540"; ctx2d.lineWidth = 2.5; ctx2d.lineCap = "round"; const p = getPos(e); ctx2d.lineTo(p.x, p.y); ctx2d.stroke(); }, { passive: false });
 sigCanvas.addEventListener("touchend", () => drawing = false);
-$("sigClear").addEventListener("click", () => ctx2d.clearRect(0, 0, sigCanvas.width, sigCanvas.height));
+$("sigClear").addEventListener("click", clearSignature);
 
 $("submitQCBtn").addEventListener("click", async () => {
   const logId = $("qcBatchSelect").value;
@@ -983,7 +1050,8 @@ $("submitQCBtn").addEventListener("click", async () => {
     if (!confirm(`Only ${checkedCount}/9 checks are initialed. Submit anyway?`)) return;
   }
 
-  const sigData = sigCanvas.toDataURL("image/png");
+  const sigData = getSignatureData();
+  if (!sigData) return toast("Please draw or type your signature", "error");
   const btn = $("submitQCBtn"); btn.disabled = true; btn.textContent = "Submitting...";
 
   try {
@@ -1004,7 +1072,7 @@ $("submitQCBtn").addEventListener("click", async () => {
         if (row.querySelector(".qc-stamp-text")) row.querySelector(".qc-stamp-text").textContent = "";
       }
     });
-    ctx2d.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    clearSignature();
     $("qcName").value = ""; $("qcInitials").value = "";
   } catch (err) { toast(err.message, "error"); }
   finally { btn.disabled = false; btn.textContent = "Submit Quality Check ✿"; }
