@@ -202,6 +202,9 @@ input,select,textarea{font-family:inherit;font-size:15px}
 
 /* CONTRACTS + BATCHES */
 .croch-chip{padding:6px 14px;border-radius:12px;font-size:12px;font-weight:600;background:white;color:var(--mid);border:2px solid var(--pink-100);transition:all .2s;cursor:pointer;white-space:nowrap}
+.croch-pill{padding:8px 14px;border-radius:12px;font-size:13px;font-weight:600;background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100);transition:all .2s;cursor:pointer}
+.croch-pill:hover{background:var(--pink-100)}
+.croch-pill.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;border-color:var(--pink-400);box-shadow:0 2px 8px rgba(255,141,192,.3)}
 .croch-chip:hover{background:var(--pink-50);border-color:var(--pink-200)}
 .croch-chip.active{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;border-color:var(--pink-400);box-shadow:0 2px 8px rgba(255,141,192,.3)}
 .crocheter-pill{padding:8px 16px;border-radius:14px;font-size:13px;font-weight:600;background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100);transition:all .2s;cursor:pointer}
@@ -473,6 +476,16 @@ input,select,textarea{font-family:inherit;font-size:15px}
     <div class="modal-handle"></div>
     <h2 class="modal-title" id="modalTitle">Add Item ✿</h2>
     <input type="hidden" id="fId">
+    <div class="field">
+      <label>Crocheter</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="crochetPills">
+        <button type="button" class="croch-pill active" data-val="Amioki">🌸 Amioki</button>
+        <button type="button" class="croch-pill" data-val="Ashley">🧵 Ashley</button>
+        <button type="button" class="croch-pill" data-val="Liz">🪡 Liz</button>
+        <button type="button" class="croch-pill" data-val="Sydni">🌷 Sydni</button>
+      </div>
+      <input type="hidden" id="fCrocheter" value="Amioki">
+    </div>
     <div class="field"><label>Item Name *</label><input type="text" id="fName" placeholder="e.g. Strawberry Frog"></div>
     <div class="field-row">
       <div class="field"><label>On Hand</label><input type="number" id="fOnHand" min="0" value="0"></div>
@@ -483,15 +496,6 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <div class="field"><label>Cost ($)</label><input type="number" id="fCost" min="0" step="0.01" value="0"></div>
     </div>
     <div class="field"><label>Category</label><input type="text" id="fCategory" placeholder="e.g. Regular, Limited Edition, Keychain"></div>
-    <div class="field">
-      <label>Crocheter</label>
-      <select id="fCrocheter">
-        <option value="Amioki">Amioki</option>
-        <option value="Ashley">Ashley</option>
-        <option value="Liz">Liz</option>
-        <option value="Sydni">Sydni</option>
-      </select>
-    </div>
     <div class="field"><label>Square Catalog ID (optional)</label><input type="text" id="fSquareId" placeholder="Auto-fills on first match"></div>
     <div class="modal-btns">
       <button class="btn btn-danger" id="btnArchive" style="display:none">Archive</button>
@@ -1097,6 +1101,15 @@ function stockStatus(i) {
 
 // Item modal
 $("fabAdd").addEventListener("click", openAddModal);
+
+// Crocheter pill selector in add/edit modal
+document.addEventListener("click", e => {
+  const pill = e.target.closest(".croch-pill");
+  if (!pill) return;
+  pill.closest("#crochetPills").querySelectorAll(".croch-pill").forEach(p => p.classList.remove("active"));
+  pill.classList.add("active");
+  $("fCrocheter").value = pill.dataset.val;
+});
 $("btnCancel").addEventListener("click", closeItemModal);
 $("itemModal").addEventListener("click", e => { if (e.target.id === "itemModal") closeItemModal(); });
 $("btnSave").addEventListener("click", saveItem);
@@ -1108,6 +1121,7 @@ function openAddModal() {
   $("fName").value = ""; $("fOnHand").value = 0; $("fMinStock").value = 0;
   $("fPrice").value = 0; $("fCost").value = 0; $("fCategory").value = ""; $("fSquareId").value = "";
   $("fCrocheter").value = "Amioki";
+  document.querySelectorAll(".croch-pill").forEach(p => p.classList.toggle("active", p.dataset.val === "Amioki"));
   $("btnDelete").style.display = "none"; $("btnArchive").style.display = "none";
   $("itemModal").classList.add("show");
   setTimeout(() => $("fName").focus(), 100);
@@ -1119,6 +1133,7 @@ function openEditModal(item) {
   $("fPrice").value = item.price; $("fCost").value = item.cost;
   $("fCategory").value = item.category; $("fSquareId").value = item.square_catalog_id || "";
   $("fCrocheter").value = item.crocheter;
+  document.querySelectorAll(".croch-pill").forEach(p => p.classList.toggle("active", p.dataset.val === item.crocheter));
   $("btnDelete").style.display = isMaster ? "block" : "none";
   $("btnArchive").style.display = isMaster ? "block" : "none";
   $("itemModal").classList.add("show");
@@ -1185,7 +1200,9 @@ async function handleResolve(data) {
   }
   if (kind === "create") {
     if (!confirm(`Create "${name}" as a new item? Starts at -${qty} on hand.`)) return;
-    const r = await api("resolveUnmatched", { id, choice: "create", crocheter: "Amioki" });
+    const crocheter = await pickCrocheter();
+    if (!crocheter) return;
+    const r = await api("resolveUnmatched", { id, choice: "create", crocheter });
     if (r.ok) { toast("Created ✿", "success"); loadUnmatched(); updateUnmatchedBadge(); loadAll(); }
     else toast(r.error, "error");
     return;
@@ -1209,7 +1226,9 @@ $("rmLinkBtn").addEventListener("click", async () => {
 $("rmCreateBtn").addEventListener("click", async () => {
   const id = $("rmId").value;
   if (!confirm("Create as new item?")) return;
-  const r = await api("resolveUnmatched", { id, choice: "create", crocheter: "Amioki" });
+  const crocheter = await pickCrocheter();
+  if (!crocheter) return;
+  const r = await api("resolveUnmatched", { id, choice: "create", crocheter });
   if (r.ok) { toast("Created ✿", "success"); $("resolveModal").classList.remove("show"); loadUnmatched(); updateUnmatchedBadge(); loadAll(); }
   else toast(r.error, "error");
 });
@@ -1240,6 +1259,33 @@ function esc(s) {
 
 // Auto-refresh every 60s
 setInterval(() => { if (token && currentTab === "inventory") loadAll(); }, 60000);
+
+// Crocheter picker prompt for unmatched creates
+function pickCrocheter() {
+  return new Promise(resolve => {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(74,37,64,.4);z-index:999;display:grid;place-items:center;padding:24px";
+    overlay.innerHTML = `
+      <div style="background:white;border-radius:24px;padding:24px;width:100%;max-width:340px;box-shadow:0 8px 40px rgba(255,107,171,.2);border:2px solid var(--pink-100)">
+        <div style="font-family:'Comfortaa',sans-serif;font-size:17px;font-weight:700;color:var(--pink-600);margin-bottom:6px">Who made this item?</div>
+        <div style="font-size:13px;color:var(--mid);margin-bottom:16px">Select the crocheter before creating.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+          <button class="pc-btn" data-val="Amioki" style="padding:12px 8px;border-radius:14px;border:2px solid var(--pink-100);background:var(--pink-50);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s">🌸 Amioki</button>
+          <button class="pc-btn" data-val="Ashley" style="padding:12px 8px;border-radius:14px;border:2px solid var(--pink-100);background:var(--pink-50);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s">🧵 Ashley</button>
+          <button class="pc-btn" data-val="Liz" style="padding:12px 8px;border-radius:14px;border:2px solid var(--pink-100);background:var(--pink-50);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s">🪡 Liz</button>
+          <button class="pc-btn" data-val="Sydni" style="padding:12px 8px;border-radius:14px;border:2px solid var(--pink-100);background:var(--pink-50);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s">🌷 Sydni</button>
+        </div>
+        <button id="pcCancel" style="width:100%;padding:10px;border-radius:12px;background:var(--pink-50);color:var(--mid);border:2px solid var(--pink-100);font-size:13px;font-weight:600;cursor:pointer">Cancel</button>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelectorAll(".pc-btn").forEach(btn => {
+      btn.addEventListener("mouseenter", () => btn.style.background = "var(--pink-100)");
+      btn.addEventListener("mouseleave", () => btn.style.background = "var(--pink-50)");
+      btn.addEventListener("click", () => { document.body.removeChild(overlay); resolve(btn.dataset.val); });
+    });
+    overlay.querySelector("#pcCancel").addEventListener("click", () => { document.body.removeChild(overlay); resolve(null); });
+  });
+}
 
 // ── CONTRACTS + BATCHES (v5) ──
 
