@@ -2146,7 +2146,11 @@ function renderRates() {
     return `<div class="rate-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div class="rate-name">${esc(rate.item_name)}</div>
-        <span class="rate-badge ${bClass}">${bText}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="rate-badge ${bClass}">${bText}</span>
+          <button class="g-btn" onclick="editRate(${JSON.stringify(rate).replace(/"/g,'&quot;')})"
+            style="background:var(--pink-50);color:var(--mid);border:1.5px solid var(--pink-100);padding:4px 10px;font-size:11px;border-radius:8px">✏️ Edit</button>
+        </div>
       </div>
       <div class="rate-grid">
         <div class="rate-cell"><div class="rv">$${(rate.sell_price||0).toFixed(2)}</div><div class="rl">Your Price</div></div>
@@ -2165,6 +2169,17 @@ function renderRates() {
   }).join("");
 }
 
+function editRate(rate) {
+  $("rItemName").value   = rate.item_name;
+  $("rTimeMin").value    = rate.time_min_lo;
+  $("rTimeMax").value    = rate.time_min_hi;
+  $("rSellPrice").value  = rate.sell_price;
+  $("rSaveBtn").textContent = "Update Rate Card ✿";
+  // Scroll the form into view
+  document.querySelector(".rate-add-form").scrollIntoView({ behavior: "smooth", block: "start" });
+  $("rItemName").focus();
+}
+
 $("rSaveBtn").addEventListener("click", async () => {
   const name  = $("rItemName").value.trim();
   const lo    = parseInt($("rTimeMin").value) || 0;
@@ -2179,6 +2194,7 @@ $("rSaveBtn").addEventListener("click", async () => {
   btn.disabled = false; btn.textContent = "Save to Rate Card ✿";
   if (!r.ok) return toast(r.error || "Failed", "error");
   $("rItemName").value = ""; $("rTimeMin").value = ""; $("rTimeMax").value = ""; $("rSellPrice").value = "";
+  $("rSaveBtn").textContent = "Save to Rate Card ✿";
   toast(`${name} saved ✿`, "success");
   loadRates();
 });
