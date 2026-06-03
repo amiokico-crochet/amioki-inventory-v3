@@ -228,6 +228,68 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .pb-pay{background:linear-gradient(135deg,var(--lavender),var(--pink-100));border-radius:12px;padding:12px 16px;text-align:center;margin:10px 0}
 .pb-pay-amount{font-family:'Comfortaa',sans-serif;font-size:24px;font-weight:700;color:var(--pink-600)}
 .pb-pay-label{font-size:11px;color:var(--mid)}
+
+/* ══ AMI GOALS ══ */
+.goal-card{background:white;border-radius:20px;padding:16px;border:2px solid var(--pink-100);box-shadow:var(--shadow);margin-bottom:12px;position:relative;overflow:hidden}
+.goal-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--pink-300),var(--pink-500))}
+.goal-card.g-completed::before{background:linear-gradient(90deg,#6BCF7F,#4AA860)}
+.goal-card.g-overdue::before{background:linear-gradient(90deg,var(--peach),#FF9B6B)}
+.goal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.goal-name{font-family:'Comfortaa',sans-serif;font-weight:700;font-size:15px;color:var(--ink)}
+.goal-due{font-size:11px;color:var(--soft);margin-top:2px}
+.g-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.g-badge.active{background:var(--pink-100);color:var(--pink-600)}
+.g-badge.completed{background:var(--mint);color:#2E6B47}
+.g-badge.overdue{background:var(--peach);color:#8B4513}
+.g-progress{background:var(--pink-100);border-radius:6px;height:9px;margin:10px 0 4px;overflow:hidden}
+.g-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--pink-300),var(--pink-500));transition:width .5s ease}
+.g-progress-fill.done{background:linear-gradient(90deg,#6BCF7F,#4AA860)}
+.g-pct{font-size:11px;color:var(--mid);text-align:right;margin-bottom:8px}
+.g-items{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.g-item-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--pink-50);border-radius:9px;font-size:13px}
+.g-item-name{font-weight:600;color:var(--ink);flex:1}
+.g-item-qty{color:var(--mid);font-size:12px;white-space:nowrap}
+.g-item-qty .gd{color:#4A9B6A;font-weight:700}
+.g-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.g-btn{padding:7px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .2s}
+.g-btn.log{background:linear-gradient(135deg,var(--pink-300),var(--pink-400));color:white;box-shadow:0 3px 10px rgba(255,141,192,.3)}
+.g-btn.log:hover{transform:translateY(-1px)}
+.g-btn.done{background:var(--mint);color:#2E6B47}
+.g-btn.del{background:#FFE5E5;color:#C24040}
+.goal-section-label{font-size:11px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 8px}
+/* Goal new/log form rows */
+.g-form-item-row{display:flex;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--pink-100)}
+.g-form-item-row:last-child{border-bottom:none}
+.g-form-item-name{flex:1;padding:8px 11px;border:2px solid var(--pink-100);border-radius:10px;background:var(--pink-50);font-size:13px}
+.g-form-item-name:focus{outline:none;border-color:var(--pink-400);background:white}
+.g-form-qty{width:70px;padding:8px 10px;border:2px solid var(--pink-100);border-radius:10px;background:var(--pink-50);text-align:center;font-weight:700;font-size:14px}
+.g-form-qty:focus{outline:none;border-color:var(--pink-400);background:white}
+/* Log modal time row */
+.g-time-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.g-time-name{font-size:12px;font-weight:600;color:var(--ink);width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-time-input{width:62px;padding:7px 8px;border:2px solid var(--pink-100);border-radius:9px;background:var(--pink-50);text-align:center;font-size:12px;font-weight:700}
+.g-time-input:focus{outline:none;border-color:var(--pink-400);background:white}
+/* Mini stats row */
+.g-mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.g-mini-stat{background:white;border-radius:14px;padding:12px;border:2px solid var(--pink-100);text-align:center;box-shadow:var(--shadow)}
+.g-mini-stat .val{font-family:'Comfortaa',sans-serif;font-weight:700;font-size:20px;color:var(--ink)}
+.g-mini-stat .lbl{font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+
+/* ══ RATE CARD ══ */
+.rate-card{background:white;border-radius:16px;padding:14px;border:2px solid var(--pink-100);box-shadow:var(--shadow);margin-bottom:10px}
+.rate-name{font-weight:700;font-size:14px;color:var(--ink);margin-bottom:8px}
+.rate-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:8px 0}
+.rate-cell{background:var(--pink-50);border-radius:10px;padding:8px 10px;text-align:center}
+.rate-cell .rv{font-family:'Comfortaa',sans-serif;font-weight:700;font-size:16px;color:var(--ink)}
+.rate-cell .rv.green{color:#4A9B6A}.rate-cell .rv.red{color:#C24040}
+.rate-cell .rl{font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+.rate-analysis{background:var(--pink-50);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--mid);margin-top:6px;line-height:1.8}
+.rate-analysis strong{color:var(--ink)}
+.rate-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-left:4px}
+.rate-badge.over{background:var(--mint);color:#2E6B47}
+.rate-badge.under{background:#FFE5E5;color:#C24040}
+.rate-badge.close{background:var(--lemon);color:#8B6914}
+.rate-add-form{background:var(--pink-50);border-radius:16px;padding:14px;border:2px dashed var(--pink-200);margin-bottom:14px}
 </style>
 </head>
 <body>
@@ -561,8 +623,83 @@ input,select,textarea{font-family:inherit;font-size:15px}
     <div class="tab-panel" id="panel-ami-history" style="display:none">
       <div id="amiHistoryList"><div class="loading">Loading...</div></div>
     </div>
-  </div>
-</div>
+
+    <!-- AMI: GOALS TAB -->
+    <div class="tab-panel" id="panel-goals" style="display:none">
+      <div class="g-mini-stats">
+        <div class="g-mini-stat"><div class="val" id="gStatActive">—</div><div class="lbl">Active</div></div>
+        <div class="g-mini-stat"><div class="val" id="gStatDone">—</div><div class="lbl">Done</div></div>
+        <div class="g-mini-stat"><div class="val" id="gStatMade">—</div><div class="lbl">Made</div></div>
+      </div>
+      <!-- New Goal Form -->
+      <div class="card" id="newGoalForm" style="margin-bottom:14px">
+        <div class="card-title">🎯 New Goal</div>
+        <div class="field">
+          <label>Goal Name</label>
+          <input type="text" id="gName" placeholder="e.g. CBF Prep, June Pokemon Drop...">
+        </div>
+        <div class="field">
+          <label>Deadline</label>
+          <input type="date" id="gDeadline">
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Items to Make</div>
+        <div id="gItemsList"></div>
+        <button class="btn btn-ghost" id="gAddItemBtn" style="margin-top:6px;font-size:13px;padding:9px">＋ Add Item</button>
+        <button class="btn btn-primary" id="gSaveBtn" style="margin-top:12px">Create Goal ✿</button>
+      </div>
+      <!-- Goals List -->
+      <div id="goalsList"><div class="loading">Loading goals</div></div>
+    </div>
+
+    <!-- AMI: RATE CARD TAB -->
+    <div class="tab-panel" id="panel-rates" style="display:none">
+      <p style="font-size:13px;color:var(--mid);margin-bottom:14px;line-height:1.6">Your personal rate card. Log time + sell price per item and see your effective hourly rate vs your <strong>$20/hr goal</strong> — after Square fees (2.6% + $0.15) and 6% VA sales tax.</p>
+      <!-- Add / Update form -->
+      <div class="rate-add-form" style="margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px">➕ Add / Update Item</div>
+        <div class="field">
+          <label>Item Name</label>
+          <input type="text" id="rItemName" placeholder="e.g. Kirby, Charmander...">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field" style="margin-bottom:0">
+            <label>Min Time (min)</label>
+            <input type="number" id="rTimeMin" min="1" max="240" placeholder="25">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Max Time (min)</label>
+            <input type="number" id="rTimeMax" min="1" max="240" placeholder="40">
+          </div>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label>Your Sell Price ($)</label>
+          <input type="number" id="rSellPrice" min="0" step="0.01" placeholder="12.50">
+        </div>
+        <button class="btn btn-primary" id="rSaveBtn" style="margin-top:4px">Save to Rate Card ✿</button>
+      </div>
+      <div id="ratesList"><div class="loading">Loading rates</div></div>
+    </div>
+
+    <!-- LOG BATCH MODAL (Goals) -->
+    <div id="gLogModal" style="display:none;position:fixed;inset:0;background:rgba(74,37,64,.45);z-index:200;place-items:center;padding:16px;backdrop-filter:blur(3px)" onclick="if(event.target===this)closeLogModal()">
+      <div style="background:white;border-radius:28px;padding:22px 18px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);border:2px solid var(--pink-100)">
+        <div style="font-family:'Comfortaa',sans-serif;font-size:18px;font-weight:700;color:var(--pink-600);margin-bottom:2px">✍️ Log Progress</div>
+        <div style="font-size:12px;color:var(--soft);margin-bottom:16px" id="gLogSub">Update what you've made ✿</div>
+        <input type="hidden" id="gLogGoalId">
+        <div id="gLogItems"></div>
+        <hr style="border:none;border-top:2px solid var(--pink-100);margin:14px 0">
+        <div style="font-size:12px;font-weight:700;color:var(--mid);margin-bottom:8px">⏱️ Time Tracking <span style="font-weight:400;color:var(--soft)">(optional — helps your rate card)</span></div>
+        <div id="gLogTimeRows"></div>
+        <div class="field" style="margin-top:8px">
+          <label>Notes</label>
+          <textarea id="gLogNotes" style="min-height:60px;resize:vertical" placeholder="Any notes on this session..."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn btn-ghost" onclick="closeLogModal()" style="flex:1;padding:11px">Cancel</button>
+          <button class="btn btn-primary" id="gLogSubmitBtn" style="flex:2;padding:11px">Log & Update Inventory ✿</button>
+        </div>
+      </div>
+    </div>
 
 <div id="toast" class="toast"></div>
 
@@ -628,7 +765,7 @@ function showApp() {
   $("qcDate").value = new Date().toISOString().split("T")[0];
 
   if (selectedRole === "ami") {
-    const amiPanels = ["receive","suppliers","batches","inventory","ami-history"];
+    const amiPanels = ["receive","suppliers","batches","inventory","goals","rates","ami-history"];
 
     // Hide all crocheter panels
     ["contract","log","qc","history","batches"].forEach(id => {
@@ -648,6 +785,8 @@ function showApp() {
       <button class="tab" data-tab="suppliers">🏪 Suppliers</button>
       <button class="tab" data-tab="batches">✅ Approve</button>
       <button class="tab" data-tab="inventory">🧶 Inventory</button>
+      <button class="tab" data-tab="goals">🎯 Goals</button>
+      <button class="tab" data-tab="rates">💰 Rate Card</button>
       <button class="tab" data-tab="ami-history">📅 History</button>`;
 
     // Bind tab clicks using display toggling (not classList.active on panels)
@@ -667,10 +806,13 @@ function showApp() {
         if (t.dataset.tab === "inventory")   loadPortalInventory();
         if (t.dataset.tab === "suppliers")   loadSuppliers();
         if (t.dataset.tab === "ami-history") loadAmiHistory();
+        if (t.dataset.tab === "goals")       loadGoals();
+        if (t.dataset.tab === "rates")       loadRates();
       });
     });
 
     loadAmiSupplierSetup();
+    loadAmiItems();
   } else {
     // Crocheters get normal tabs
     loadContract();
@@ -1522,6 +1664,344 @@ async function deleteAmiHistoryBatch(logId) {
   if (r.ok) { toast("Batch deleted ✿", "success"); loadAmiHistory(); }
   else toast(r.error || "Delete failed", "error");
 }
+
+// ════════════════════════════════════════════════════════
+// 🎯 AMI GOALS
+// ════════════════════════════════════════════════════════
+
+const SQUARE_PCT   = 0.026;
+const SQUARE_FIXED = 0.15;
+const SALES_TAX    = 0.06;
+const TARGET_HR    = 20;
+
+let allGoals = [];
+let allRates = [];
+let amiItems = []; // Amioki inventory items for autocomplete
+let gLogGoal = null; // goal being logged
+
+// ── Load Amioki inventory items for autocomplete ──
+async function loadAmiItems() {
+  const r = await api("getInventory");
+  if (r.ok) amiItems = (r.items || []).filter(i => i.crocheter === "Amioki");
+}
+
+async function loadGoals() {
+  $("goalsList").innerHTML = '<div class="loading">Loading goals</div>';
+  const r = await api("getAmiGoals");
+  if (!r.ok) { $("goalsList").innerHTML = `<div class="empty">${r.error}</div>`; return; }
+  allGoals = r.goals || [];
+  renderGoals();
+  // Update mini stats
+  const active = allGoals.filter(g => g.status === "active").length;
+  const done   = allGoals.filter(g => g.status === "completed").length;
+  const made   = allGoals.reduce((s, g) => s + (g.items||[]).reduce((a, i) => a + (i.qty_done||0), 0), 0);
+  $("gStatActive").textContent = active;
+  $("gStatDone").textContent   = done;
+  $("gStatMade").textContent   = made;
+}
+
+function renderGoals() {
+  const active    = allGoals.filter(g => g.status === "active" || g.status === "overdue");
+  const completed = allGoals.filter(g => g.status === "completed");
+  if (!allGoals.length) {
+    $("goalsList").innerHTML = `<div class="empty">No goals yet!<br>Set one above to start tracking 🌸</div>`;
+    return;
+  }
+  let html = "";
+  if (active.length)    html += `<div class="goal-section-label">🎯 Active Goals</div>` + active.map(goalCardHtml).join("");
+  if (completed.length) html += `<div class="goal-section-label">✅ Completed</div>` + completed.map(goalCardHtml).join("");
+  $("goalsList").innerHTML = html;
+}
+
+function goalCardHtml(g) {
+  const items = g.items || [];
+  const totalNeed = items.reduce((s, i) => s + (i.qty_needed||0), 0);
+  const totalDone = items.reduce((s, i) => s + (i.qty_done||0), 0);
+  const pct = totalNeed > 0 ? Math.min(100, Math.round((totalDone/totalNeed)*100)) : 0;
+  const isDone = g.status === "completed";
+
+  let daysStr = "";
+  if (g.deadline) {
+    const days = Math.ceil((new Date(g.deadline).setHours(23,59,59) - Date.now()) / 86400000);
+    if (isDone)        daysStr = "Completed ✓";
+    else if (days < 0) daysStr = `⚠️ ${Math.abs(days)}d overdue`;
+    else if (days === 0) daysStr = "⚡ Due today!";
+    else if (days <= 3)  daysStr = `🔥 ${days}d left`;
+    else                 daysStr = `📅 ${new Date(g.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"America/New_York"})} · ${days}d left`;
+  }
+
+  const statusClass = isDone ? "g-completed" : (g.status === "overdue" ? "g-overdue" : "");
+  const badgeClass  = isDone ? "completed" : (g.status === "overdue" ? "overdue" : "active");
+
+  const itemRows = items.map(i => {
+    const ip = i.qty_needed > 0 ? Math.min(100, Math.round((i.qty_done/i.qty_needed)*100)) : 0;
+    return `<div class="g-item-row">
+      <span class="g-item-name">${esc(i.item_name)}</span>
+      <span class="g-item-qty"><span class="gd">${i.qty_done||0}</span> / ${i.qty_needed} (${ip}%)</span>
+    </div>`;
+  }).join("");
+
+  return `<div class="goal-card ${statusClass}">
+    <div class="goal-head">
+      <div>
+        <div class="goal-name">${esc(g.name)}</div>
+        <div class="goal-due">${daysStr}</div>
+      </div>
+      <span class="g-badge ${badgeClass}">${isDone ? "✓ Done" : g.status === "overdue" ? "Overdue" : "Active"}</span>
+    </div>
+    <div class="g-progress"><div class="g-progress-fill ${isDone?"done":""}" style="width:${pct}%"></div></div>
+    <div class="g-pct">${totalDone} / ${totalNeed} · ${pct}%</div>
+    <div class="g-items">${itemRows}</div>
+    ${!isDone ? `<div class="g-actions">
+      <button class="g-btn log" onclick="openLogModal(${g.id})">✍️ Log Progress</button>
+      <button class="g-btn done" onclick="completeGoal(${g.id})">Mark Done</button>
+      <button class="g-btn del" onclick="deleteGoal(${g.id})">Delete</button>
+    </div>` : `<div class="g-actions"><button class="g-btn del" onclick="deleteGoal(${g.id})">Delete</button></div>`}
+  </div>`;
+}
+
+// ── New Goal Form ──
+let gItemCount = 0;
+
+function buildAmiItemDatalist() {
+  const listId = "amiItemsDL";
+  if (!$("amiItemsDL")) {
+    const dl = document.createElement("datalist");
+    dl.id = listId;
+    document.body.appendChild(dl);
+  }
+  $("amiItemsDL").innerHTML = amiItems.map(i => `<option value="${esc(i.name)}">`).join("");
+  return listId;
+}
+
+function addGoalItemRow(name="", qty="") {
+  gItemCount++;
+  const dlId = buildAmiItemDatalist();
+  const row = document.createElement("div");
+  row.className = "g-form-item-row";
+  row.id = `grow_${gItemCount}`;
+  row.innerHTML = `
+    <input type="text" list="${dlId}" class="g-form-item-name goal-item-name-inp" placeholder="Item name" value="${esc(name)}">
+    <input type="number" class="g-form-qty goal-item-qty-inp" placeholder="Qty" min="1" value="${esc(qty)}">
+    <button onclick="this.parentElement.remove()" style="color:var(--soft);font-size:18px;padding:4px 8px;flex-shrink:0">✕</button>`;
+  $("gItemsList").appendChild(row);
+}
+
+$("gAddItemBtn").addEventListener("click", () => addGoalItemRow());
+
+// Pre-populate with one row
+addGoalItemRow();
+
+$("gSaveBtn").addEventListener("click", async () => {
+  const name     = $("gName").value.trim();
+  const deadline = $("gDeadline").value;
+  if (!name) return toast("Goal needs a name ✿", "error");
+
+  const rows = $("gItemsList").querySelectorAll(".g-form-item-row");
+  const items = [];
+  rows.forEach(row => {
+    const n = row.querySelector(".goal-item-name-inp")?.value.trim();
+    const q = parseInt(row.querySelector(".goal-item-qty-inp")?.value) || 0;
+    if (n && q > 0) items.push({ item_name: n, qty_needed: q });
+  });
+  if (!items.length) return toast("Add at least one item ✿", "error");
+
+  const btn = $("gSaveBtn");
+  btn.disabled = true; btn.textContent = "Creating...";
+  const r = await api("createAmiGoal", { name, deadline: deadline||"", items: JSON.stringify(items) });
+  btn.disabled = false; btn.textContent = "Create Goal ✿";
+  if (!r.ok) return toast(r.error || "Failed", "error");
+
+  // Reset form
+  $("gName").value = ""; $("gDeadline").value = ""; $("gItemsList").innerHTML = "";
+  gItemCount = 0; addGoalItemRow();
+  toast(`Goal "${name}" created ✿`, "success");
+  loadGoals();
+});
+
+async function completeGoal(id) {
+  const r = await api("completeAmiGoal", { goal_id: id });
+  if (r.ok) { toast("Goal marked complete ✿", "success"); loadGoals(); }
+  else toast(r.error, "error");
+}
+
+async function deleteGoal(id) {
+  if (!confirm("Delete this goal? Cannot be undone.")) return;
+  const r = await api("deleteAmiGoal", { goal_id: id });
+  if (r.ok) { toast("Deleted ✿", "success"); loadGoals(); }
+  else toast(r.error, "error");
+}
+
+// ── Log Batch Modal ──
+function openLogModal(goalId) {
+  gLogGoal = allGoals.find(g => String(g.id) === String(goalId));
+  if (!gLogGoal) return;
+
+  $("gLogGoalId").value = goalId;
+  $("gLogSub").textContent = `Logging for: ${gLogGoal.name} ✿`;
+  $("gLogNotes").value = "";
+
+  // Item qty rows
+  const items = gLogGoal.items || [];
+  $("gLogItems").innerHTML = items.map(i => {
+    const rem = Math.max(0, (i.qty_needed||0) - (i.qty_done||0));
+    return `<div class="g-form-item-row" data-goal-item="${i.id}">
+      <div class="g-item-name" style="flex:1">
+        ${esc(i.item_name)}
+        <div style="font-size:10px;color:var(--soft)">${i.qty_done||0} done · ${rem} left</div>
+      </div>
+      <input type="number" class="g-form-qty glog-qty-inp" data-item="${i.id}" min="0" value="0" placeholder="0">
+    </div>`;
+  }).join("");
+
+  // Time rows with learned defaults from rate card
+  $("gLogTimeRows").innerHTML = items.map(i => {
+    const rate = allRates.find(r => r.item_name.toLowerCase() === i.item_name.toLowerCase());
+    const hint = rate ? `avg ${Math.round((rate.time_min_lo+rate.time_min_hi)/2)} min` : "first time?";
+    return `<div class="g-time-row">
+      <div class="g-time-name">${esc(i.item_name)}</div>
+      <input type="number" class="g-time-input glog-time-lo" data-item="${i.id}" placeholder="min" min="1" max="240"
+        value="${rate ? rate.time_min_lo : ""}" title="Min time">
+      <span style="font-size:11px;color:var(--soft)">–</span>
+      <input type="number" class="g-time-input glog-time-hi" data-item="${i.id}" placeholder="max" min="1" max="240"
+        value="${rate ? rate.time_min_hi : ""}" title="Max time">
+      <span style="font-size:11px;color:var(--soft)">min · ${hint}</span>
+    </div>`;
+  }).join("");
+
+  const modal = $("gLogModal");
+  modal.style.display = "grid";
+}
+
+function closeLogModal() {
+  $("gLogModal").style.display = "none";
+  gLogGoal = null;
+}
+
+$("gLogSubmitBtn").addEventListener("click", async () => {
+  const goalId = $("gLogGoalId").value;
+  const notes  = $("gLogNotes").value.trim();
+
+  // Collect qty
+  const items = [];
+  $("gLogItems").querySelectorAll(".glog-qty-inp").forEach(inp => {
+    const qty = parseInt(inp.value) || 0;
+    if (qty > 0) items.push({ goal_item_id: inp.dataset.item, qty_done: qty });
+  });
+  if (!items.length) return toast("Log at least 1 item ✿", "error");
+
+  // Collect time data
+  const timeMap = {};
+  $("gLogTimeRows").querySelectorAll(".glog-time-lo").forEach(inp => {
+    const v = parseInt(inp.value); if (v > 0) { if (!timeMap[inp.dataset.item]) timeMap[inp.dataset.item] = {}; timeMap[inp.dataset.item].lo = v; }
+  });
+  $("gLogTimeRows").querySelectorAll(".glog-time-hi").forEach(inp => {
+    const v = parseInt(inp.value); if (v > 0) { if (!timeMap[inp.dataset.item]) timeMap[inp.dataset.item] = {}; timeMap[inp.dataset.item].hi = v; }
+  });
+
+  const timeUpdates = [];
+  Object.entries(timeMap).forEach(([itemId, times]) => {
+    const gi = (gLogGoal?.items||[]).find(i => String(i.id) === String(itemId));
+    if (gi && (times.lo || times.hi)) {
+      timeUpdates.push({ item_name: gi.item_name, time_min_lo: times.lo||times.hi, time_min_hi: times.hi||times.lo });
+    }
+  });
+
+  const btn = $("gLogSubmitBtn");
+  btn.disabled = true; btn.textContent = "Logging...";
+  const r = await api("logAmiGoalBatch", {
+    goal_id: goalId,
+    items: JSON.stringify(items),
+    time_updates: JSON.stringify(timeUpdates),
+    notes
+  });
+  btn.disabled = false; btn.textContent = "Log & Update Inventory ✿";
+  if (!r.ok) return toast(r.error || "Failed", "error");
+  closeLogModal();
+  toast(`✿ Logged! ${r.inv_updated} item${r.inv_updated !== 1 ? "s" : ""} updated in inventory`, "success");
+  loadGoals();
+  loadRates();
+});
+
+// ════════════════════════════════════════════════════════
+// 💰 RATE CARD
+// ════════════════════════════════════════════════════════
+
+function netRevenue(price) {
+  return (price * (1 - SQUARE_PCT) - SQUARE_FIXED) * (1 - SALES_TAX);
+}
+function suggestedPrice(avgMin) {
+  const targetPerItem = (avgMin / 60) * TARGET_HR;
+  return (targetPerItem / (1 - SALES_TAX) + SQUARE_FIXED) / (1 - SQUARE_PCT);
+}
+function effectiveHourly(price, avgMin) {
+  if (!avgMin || !price) return 0;
+  return netRevenue(price) / (avgMin / 60);
+}
+
+async function loadRates() {
+  $("ratesList").innerHTML = '<div class="loading">Loading rates</div>';
+  const r = await api("getAmiRates");
+  if (!r.ok) { $("ratesList").innerHTML = `<div class="empty">${r.error}</div>`; return; }
+  allRates = r.rates || [];
+  renderRates();
+}
+
+function renderRates() {
+  if (!allRates.length) {
+    $("ratesList").innerHTML = `<div class="empty">No items yet!<br>Add your first item above 🌸</div>`;
+    return;
+  }
+  $("ratesList").innerHTML = allRates.map(rate => {
+    const avgMin  = (rate.time_min_lo + rate.time_min_hi) / 2;
+    const effHr   = effectiveHourly(rate.sell_price, avgMin);
+    const suggPx  = suggestedPrice(avgMin);
+    const gap     = effHr - TARGET_HR;
+    let bClass = "close", bText = "~$20/hr";
+    if (gap >= 1)       { bClass = "over";  bText = `+$${gap.toFixed(2)}/hr 🎉`; }
+    else if (gap <= -1) { bClass = "under"; bText = `-$${Math.abs(gap).toFixed(2)}/hr`; }
+    const timeStr = rate.time_min_lo === rate.time_min_hi
+      ? `${rate.time_min_lo} min`
+      : `${rate.time_min_lo}–${rate.time_min_hi} min`;
+    return `<div class="rate-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="rate-name">${esc(rate.item_name)}</div>
+        <span class="rate-badge ${bClass}">${bText}</span>
+      </div>
+      <div class="rate-grid">
+        <div class="rate-cell"><div class="rv">$${(rate.sell_price||0).toFixed(2)}</div><div class="rl">Your Price</div></div>
+        <div class="rate-cell"><div class="rv ${effHr >= TARGET_HR ? "green" : "red"}">$${effHr.toFixed(2)}</div><div class="rl">Eff. $/hr</div></div>
+        <div class="rate-cell"><div class="rv">$${suggPx.toFixed(2)}</div><div class="rl">$20/hr Price</div></div>
+      </div>
+      <div class="rate-analysis">
+        ⏱️ <strong>${timeStr}</strong> avg ·
+        ${effHr >= TARGET_HR
+          ? `You're <strong>$${gap.toFixed(2)}/hr over</strong> your goal 🌸`
+          : `Raise to <strong>$${suggPx.toFixed(2)}</strong> to hit $20/hr`}
+        <br>After Square + 6% VA tax · net ≈ <strong>$${netRevenue(rate.sell_price||0).toFixed(2)}</strong>/item
+        ${rate.logs_count > 0 ? `<br>📊 Based on <strong>${rate.logs_count}</strong> logged session${rate.logs_count !== 1 ? "s" : ""}` : ""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+$("rSaveBtn").addEventListener("click", async () => {
+  const name  = $("rItemName").value.trim();
+  const lo    = parseInt($("rTimeMin").value) || 0;
+  const hi    = parseInt($("rTimeMax").value) || 0;
+  const price = parseFloat($("rSellPrice").value) || 0;
+  if (!name)  return toast("Item name required ✿", "error");
+  if (!lo)    return toast("Min time required ✿", "error");
+  if (!price) return toast("Sell price required ✿", "error");
+  const btn = $("rSaveBtn");
+  btn.disabled = true; btn.textContent = "Saving...";
+  const r = await api("saveAmiRate", { item_name: name, time_min_lo: lo, time_min_hi: hi||lo, sell_price: price });
+  btn.disabled = false; btn.textContent = "Save to Rate Card ✿";
+  if (!r.ok) return toast(r.error || "Failed", "error");
+  $("rItemName").value = ""; $("rTimeMin").value = ""; $("rTimeMax").value = ""; $("rSellPrice").value = "";
+  toast(`${name} saved ✿`, "success");
+  loadRates();
+});
 
 // ── API ──
 async function api(action, params = {}) {
