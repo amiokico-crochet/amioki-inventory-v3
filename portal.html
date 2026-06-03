@@ -290,6 +290,28 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .rate-badge.under{background:#FFE5E5;color:#C24040}
 .rate-badge.close{background:var(--lemon);color:#8B6914}
 .rate-add-form{background:var(--pink-50);border-radius:16px;padding:14px;border:2px dashed var(--pink-200);margin-bottom:14px}
+
+/* ══ NAVI PLANNER ══ */
+.g-planner{margin-top:10px;border-radius:14px;overflow:hidden;border:2px solid var(--pink-100)}
+.g-planner-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--pink-50)}
+.g-planner-stat{padding:10px 8px;text-align:center;border-right:1px solid var(--pink-100)}
+.g-planner-stat:last-child{border-right:none}
+.g-planner-stat .pv{font-family:'Comfortaa',sans-serif;font-weight:700;font-size:15px;color:var(--ink)}
+.g-planner-stat .pl{font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+.g-navi{padding:12px 14px;font-size:12px;line-height:1.7;color:var(--ink)}
+.g-navi.on-track{background:linear-gradient(135deg,#F0FFF6,var(--mint))}
+.g-navi.tight{background:linear-gradient(135deg,#FFFDF0,var(--lemon))}
+.g-navi.danger{background:linear-gradient(135deg,#FFF5FA,var(--pink-100))}
+.g-navi.no-deadline{background:var(--pink-50)}
+.g-navi-head{font-weight:700;font-size:13px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.g-navi-suggestion{margin-top:8px;padding:8px 10px;background:rgba(255,255,255,.7);border-radius:10px;font-size:11px;line-height:1.6;color:var(--mid)}
+.g-navi-suggestion strong{color:var(--ink)}
+/* Daily pace setting */
+.g-pace-bar{background:white;border-radius:14px;padding:11px 14px;border:2px solid var(--pink-100);box-shadow:var(--shadow);margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.g-pace-label{font-size:12px;font-weight:700;color:var(--mid);white-space:nowrap}
+.g-pace-input{width:64px;padding:7px 10px;border:2px solid var(--pink-200);border-radius:10px;background:var(--pink-50);text-align:center;font-weight:700;font-size:14px;color:var(--ink)}
+.g-pace-input:focus{outline:none;border-color:var(--pink-400);background:white}
+.g-pace-hint{font-size:11px;color:var(--soft);flex:1}
 </style>
 </head>
 <body>
@@ -630,6 +652,13 @@ input,select,textarea{font-family:inherit;font-size:15px}
         <div class="g-mini-stat"><div class="val" id="gStatActive">—</div><div class="lbl">Active</div></div>
         <div class="g-mini-stat"><div class="val" id="gStatDone">—</div><div class="lbl">Done</div></div>
         <div class="g-mini-stat"><div class="val" id="gStatMade">—</div><div class="lbl">Made</div></div>
+      </div>
+      <!-- Daily pace setting -->
+      <div class="g-pace-bar">
+        <span class="g-pace-label">⏱️ My daily hours</span>
+        <input type="number" class="g-pace-input" id="gDailyHours" min="0.5" max="12" step="0.5" value="3.5">
+        <span class="g-pace-hint">hrs/day · used for finish date estimates</span>
+        <button class="g-btn log" style="font-size:11px;padding:6px 12px;white-space:nowrap" onclick="saveDailyHours()">Save ✿</button>
       </div>
       <!-- New Goal Form -->
       <div class="card" id="newGoalForm" style="margin-bottom:14px">
@@ -1687,6 +1716,8 @@ async function loadAmiItems() {
 
 async function loadGoals() {
   $("goalsList").innerHTML = '<div class="loading">Loading goals</div>';
+  // Restore saved daily hours setting
+  $("gDailyHours").value = getDailyHours();
   const r = await api("getAmiGoals");
   if (!r.ok) { $("goalsList").innerHTML = `<div class="empty">${r.error}</div>`; return; }
   allGoals = r.goals || [];
@@ -1714,32 +1745,157 @@ function renderGoals() {
 }
 
 function goalCardHtml(g) {
-  const items = g.items || [];
+  const items   = g.items || [];
+  const isDone  = g.status === "completed";
+
   const totalNeed = items.reduce((s, i) => s + (i.qty_needed||0), 0);
   const totalDone = items.reduce((s, i) => s + (i.qty_done||0), 0);
-  const pct = totalNeed > 0 ? Math.min(100, Math.round((totalDone/totalNeed)*100)) : 0;
-  const isDone = g.status === "completed";
+  const pct       = totalNeed > 0 ? Math.min(100, Math.round((totalDone/totalNeed)*100)) : 0;
 
+  // ── Deadline display ──
+  let daysUntilDeadline = null;
   let daysStr = "";
   if (g.deadline) {
-    const days = Math.ceil((new Date(g.deadline).setHours(23,59,59) - Date.now()) / 86400000);
-    if (isDone)        daysStr = "Completed ✓";
-    else if (days < 0) daysStr = `⚠️ ${Math.abs(days)}d overdue`;
-    else if (days === 0) daysStr = "⚡ Due today!";
-    else if (days <= 3)  daysStr = `🔥 ${days}d left`;
-    else                 daysStr = `📅 ${new Date(g.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"America/New_York"})} · ${days}d left`;
+    daysUntilDeadline = Math.ceil((new Date(g.deadline).setHours(23,59,59) - Date.now()) / 86400000);
+    if (isDone)                      daysStr = "Completed ✓";
+    else if (daysUntilDeadline < 0)  daysStr = `⚠️ ${Math.abs(daysUntilDeadline)}d overdue`;
+    else if (daysUntilDeadline === 0) daysStr = "⚡ Due today!";
+    else if (daysUntilDeadline <= 3)  daysStr = `🔥 ${daysUntilDeadline}d left`;
+    else daysStr = `📅 ${new Date(g.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"America/New_York"})} · ${daysUntilDeadline}d left`;
   }
 
   const statusClass = isDone ? "g-completed" : (g.status === "overdue" ? "g-overdue" : "");
-  const badgeClass  = isDone ? "completed" : (g.status === "overdue" ? "overdue" : "active");
+  const badgeClass  = isDone ? "completed"   : (g.status === "overdue" ? "overdue"   : "active");
 
+  // ── Item rows (with per-item time from rate card) ──
   const itemRows = items.map(i => {
-    const ip = i.qty_needed > 0 ? Math.min(100, Math.round((i.qty_done/i.qty_needed)*100)) : 0;
+    const ip   = i.qty_needed > 0 ? Math.min(100, Math.round((i.qty_done/i.qty_needed)*100)) : 0;
+    const rate = allRates.find(r => r.item_name.toLowerCase() === i.item_name.toLowerCase());
+    const avgMin = rate ? Math.round((rate.time_min_lo + rate.time_min_hi) / 2) : null;
+    const remQty = Math.max(0, (i.qty_needed||0) - (i.qty_done||0));
+    const remMins = avgMin !== null ? remQty * avgMin : null;
+    const timeHint = avgMin !== null
+      ? `~${fmtMins(remMins)} left`
+      : `<span style="color:var(--peach);font-size:10px">no rate data</span>`;
     return `<div class="g-item-row">
       <span class="g-item-name">${esc(i.item_name)}</span>
-      <span class="g-item-qty"><span class="gd">${i.qty_done||0}</span> / ${i.qty_needed} (${ip}%)</span>
+      <span class="g-item-qty">
+        <span class="gd">${i.qty_done||0}</span> / ${i.qty_needed}
+        <span style="color:var(--soft);margin-left:5px;font-size:10px">${timeHint}</span>
+      </span>
     </div>`;
   }).join("");
+
+  // ── Navi planner (active goals only) ──
+  let plannerHtml = "";
+  if (!isDone) {
+    const dailyHrs  = getDailyHours();
+    const dailyMins = dailyHrs * 60;
+
+    // Total remaining mins across all items (only those with rate data)
+    let totalRemMins   = 0;
+    let unknownItems   = [];
+    let itemsWithTimes = [];
+
+    items.forEach(i => {
+      const remQty = Math.max(0, (i.qty_needed||0) - (i.qty_done||0));
+      if (remQty <= 0) return;
+      const rate   = allRates.find(r => r.item_name.toLowerCase() === i.item_name.toLowerCase());
+      const avgMin = rate ? Math.round((rate.time_min_lo + rate.time_min_hi) / 2) : null;
+      if (avgMin !== null) {
+        const mins = remQty * avgMin;
+        totalRemMins += mins;
+        itemsWithTimes.push({ ...i, remQty, avgMin, totalMins: mins });
+      } else {
+        unknownItems.push(i.item_name);
+      }
+    });
+
+    const totalRemItems = items.reduce((s, i) => s + Math.max(0,(i.qty_needed||0)-(i.qty_done||0)), 0);
+    const daysNeeded    = dailyMins > 0 ? Math.ceil(totalRemMins / dailyMins) : null;
+    const projFinish    = daysNeeded !== null
+      ? new Date(Date.now() + daysNeeded * 86400000).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"America/New_York"})
+      : null;
+
+    // Stats row
+    const statsHtml = `<div class="g-planner-stats">
+      <div class="g-planner-stat">
+        <div class="pv">${totalRemItems}</div><div class="pl">Items left</div>
+      </div>
+      <div class="g-planner-stat">
+        <div class="pv">${totalRemMins > 0 ? fmtMins(totalRemMins) : "—"}</div><div class="pl">Time left</div>
+      </div>
+      <div class="g-planner-stat">
+        <div class="pv">${projFinish || "—"}</div><div class="pl">Est. finish</div>
+      </div>
+    </div>`;
+
+    // Navi message
+    let naviClass = "no-deadline", naviHead = "", naviBody = "", naviSuggestion = "";
+
+    if (daysNeeded === null || totalRemItems === 0) {
+      naviHead = "🌸 All done or no time data yet!";
+      naviClass = "on-track";
+    } else if (!g.deadline) {
+      // No deadline — just show projection neutrally
+      naviHead = `🧚 At ${dailyHrs}hrs/day, you'll finish in about ${daysNeeded} day${daysNeeded !== 1 ? "s" : ""}`;
+      naviClass = "no-deadline";
+      if (unknownItems.length) naviBody = `<br><span style="color:var(--soft);font-size:11px">⚠️ No rate data for: ${unknownItems.map(esc).join(", ")} — add them to your rate card for better estimates</span>`;
+    } else {
+      const daysLeft = daysUntilDeadline;
+      const buffer   = daysLeft - daysNeeded;
+
+      if (buffer >= 2) {
+        naviClass = "on-track";
+        naviHead  = `✅ You're on track! Finishing ${projFinish} — ${buffer}d to spare 🌸`;
+      } else if (buffer >= 0) {
+        naviClass = "tight";
+        naviHead  = `🧚 HEY! LISTEN! It's tight — finishing ${projFinish}, right on the deadline.`;
+        naviBody  = `You have basically zero buffer. One slow day and you're late.`;
+      } else {
+        // Won't make it — build suggestions
+        naviClass = "danger";
+        const daysShort = Math.abs(buffer);
+        naviHead  = `🧚 HEY! LISTEN! At ${dailyHrs}hrs/day you'll finish ${projFinish} — ${daysShort}d late!`;
+        naviBody  = `You need to save ~${fmtMins(daysShort * dailyMins)} total.`;
+
+        // Sort by biggest time sink
+        const biggestSinks = [...itemsWithTimes].sort((a,b) => b.totalMins - a.totalMins);
+        const minsNeeded   = daysShort * dailyMins;
+
+        // Find the single item that saves the most time if reduced/swapped
+        // Strategy: reduce the biggest time-sink item qty by 1 and see how much that saves
+        if (biggestSinks.length > 0) {
+          const sink = biggestSinks[0];
+          const savingPerItem = sink.avgMin;
+          const canSave = sink.remQty > 1
+            ? `Cutting 1 ${esc(sink.item_name)} saves ${fmtMins(savingPerItem)}.`
+            : `Removing ${esc(sink.item_name)} saves ${fmtMins(sink.totalMins)}.`;
+
+          // Find fastest item for a swap suggestion
+          const fastest = [...itemsWithTimes].sort((a,b) => a.avgMin - b.avgMin)[0];
+          const swapSuggestion = fastest && fastest.item_name !== sink.item_name
+            ? ` Or swap it for more <strong>${esc(fastest.item_name)}</strong> (~${fastest.avgMin}min each).`
+            : "";
+
+          naviSuggestion = `💡 <strong>${esc(sink.item_name)}</strong> is your biggest time sink (~${fmtMins(sink.totalMins)} total). ${canSave}${swapSuggestion}`;
+        }
+      }
+
+      if (unknownItems.length) {
+        naviBody += `${naviBody ? "<br>" : ""}<span style="color:var(--soft);font-size:11px">⚠️ No rate data for: ${unknownItems.map(esc).join(", ")}</span>`;
+      }
+    }
+
+    plannerHtml = `<div class="g-planner">
+      ${statsHtml}
+      <div class="g-navi ${naviClass}">
+        <div class="g-navi-head">${naviHead}</div>
+        ${naviBody ? `<div>${naviBody}</div>` : ""}
+        ${naviSuggestion ? `<div class="g-navi-suggestion">${naviSuggestion}</div>` : ""}
+      </div>
+    </div>`;
+  }
 
   return `<div class="goal-card ${statusClass}">
     <div class="goal-head">
@@ -1752,12 +1908,36 @@ function goalCardHtml(g) {
     <div class="g-progress"><div class="g-progress-fill ${isDone?"done":""}" style="width:${pct}%"></div></div>
     <div class="g-pct">${totalDone} / ${totalNeed} · ${pct}%</div>
     <div class="g-items">${itemRows}</div>
+    ${plannerHtml}
     ${!isDone ? `<div class="g-actions">
       <button class="g-btn log" onclick="openLogModal(${g.id})">✍️ Log Progress</button>
       <button class="g-btn done" onclick="completeGoal(${g.id})">Mark Done</button>
       <button class="g-btn del" onclick="deleteGoal(${g.id})">Delete</button>
     </div>` : `<div class="g-actions"><button class="g-btn del" onclick="deleteGoal(${g.id})">Delete</button></div>`}
   </div>`;
+}
+
+// ── Daily hours helpers ──
+function getDailyHours() {
+  const stored = parseFloat(localStorage.getItem("amioki_daily_hours"));
+  return (!isNaN(stored) && stored > 0) ? stored : 3.5;
+}
+
+function saveDailyHours() {
+  const val = parseFloat($("gDailyHours").value);
+  if (isNaN(val) || val <= 0) return toast("Enter a valid number of hours ✿", "error");
+  localStorage.setItem("amioki_daily_hours", val);
+  toast(`Daily pace set to ${val}hrs ✿`, "success");
+  renderGoals(); // re-render all goal cards with new pace
+}
+
+function fmtMins(mins) {
+  if (!mins || mins <= 0) return "0m";
+  const h = Math.floor(mins / 60);
+  const m = Math.round(mins % 60);
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
 }
 
 // ── New Goal Form ──
