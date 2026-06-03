@@ -678,8 +678,8 @@ async function loadSales() {
   list.innerHTML = r.sales.map(s => {
     const t = (s.type || "sale").toLowerCase();
     const date = new Date(s.timestamp);
-    const ds = date.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " " +
-               date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    const ds = date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) + " " +
+               date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
     const icon = t === "refund" ? "↩️" : (t === "adjust" || t === "manual") ? "✍️" : "🌸";
     const qstr = s.qty > 0 ? `+${s.qty}` : s.qty;
     return `<div class="sale-row ${t}">
@@ -698,7 +698,7 @@ async function loadUnmatched() {
   if (!r.ok) { list.innerHTML = `<div class="empty">${r.error}</div>`; return; }
   if (!r.unmatched?.length) { list.innerHTML = '<div class="empty">No unmatched sales 🌸</div>'; return; }
   list.innerHTML = r.unmatched.map(u => {
-    const ds = new Date(u.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    const ds = new Date(u.timestamp).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
     return `<div class="unmatched-card">
       <div class="um-name">${esc(u.square_name)} × ${u.qty}</div>
       <div class="um-meta">${ds}${u.square_catalog_id ? " · " + esc(u.square_catalog_id) : ""}</div>
