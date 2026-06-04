@@ -402,8 +402,8 @@ async function adjustStock(env, params, ctx, who) {
   if (!role.isMaster && current.crocheter !== role.filter) return { ok: false, error: "Not your item" };
   const newQty = Math.max(0, current.on_hand + delta);
   await env.DB.batch([
-    env.DB.prepare("UPDATE items SET on_hand = ?, updated_at = ? WHERE id = ?")
-      .bind(newQty, new Date().toISOString(), id),
+    env.DB.prepare("UPDATE items SET on_hand=?, cost=CASE WHEN cost IS NULL OR cost=0 THEN ? ELSE cost END, updated_at=? WHERE id=?")
+  .bind(newQty, item.piece_rate || 0, now, invItem.id),
     env.DB.prepare(`INSERT INTO sales_log (item_id, item_name, qty, type, note) VALUES (?, ?, ?, ?, ?)`)
       .bind(id, current.name, delta, delta > 0 ? "adjust" : "manual", note)
   ]);
