@@ -1357,7 +1357,11 @@ async function logProduction(env, params, who, ctx) {
     await env.DB.prepare(
       "SELECT total_rate FROM piece_rates WHERE crocheter = ? AND item_name LIKE ? COLLATE NOCASE"
     ).bind(crochetersName, `%${item.item_name.split(" ")[0]}%`).first();
-    const pieceRate = rate?.total_rate || 0;
+    const contractRate = contractItems.find(ci =>
+  ci.item_name.toLowerCase().includes(item.item_name.toLowerCase()) ||
+  item.item_name.toLowerCase().includes(ci.item_name.toLowerCase())
+)?.piece_rate || 0;
+const pieceRate = rate?.total_rate || contractRate || 0;
     payEstimated += pieceRate * qty;
     const contractItem = contractItems.find(ci =>
       ci.item_name.toLowerCase().includes(item.item_name.toLowerCase()) ||
