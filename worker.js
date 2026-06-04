@@ -109,6 +109,13 @@ export default {
       if (action === "getAmiGoalHistory") return json(await getAmiGoalHistory(env, who));
       if (action === "getAmiRates")       return json({ ok: true, rates: await getAmiRates(env) });
       if (action === "saveAmiRate")       return json(await saveAmiRate(env, url.searchParams));
+      
+      // ── SUPPLIERS (ami + master) ──
+      if (action === "getSuppliers")          return json({ ok: true, suppliers: await getSuppliers(env) });
+      if (action === "saveSupplier")          return json(await saveSupplier(env, url.searchParams, ctx));
+      if (action === "receiveSupplierOrder")  return json(await receiveSupplierOrder(env, url.searchParams, ctx));
+      if (action === "getSupplierDeliveries") return json({ ok: true, deliveries: await getSupplierDeliveries(env, url.searchParams) });
+      if (action === "paySupplier")           return json(await paySupplier(env, url.searchParams, ctx));
 
       // ── MASTER-only actions ──
       if (!role.isMaster) return json({ ok: false, error: "Master only" }, 403);
