@@ -794,7 +794,7 @@ function showApp() {
   $("qcDate").value = new Date().toISOString().split("T")[0];
 
   if (selectedRole === "ami") {
-    const amiPanels = ["receive","suppliers","batches","inventory","goals","rates","ami-history"];
+    const amiPanels = ["receive","suppliers","batches","inventory","goals","rates","ami-history","materials","candy"];
 
     // Hide all crocheter panels
     ["contract","log","qc","history","batches"].forEach(id => {
@@ -816,7 +816,9 @@ function showApp() {
       <button class="tab" data-tab="inventory">🧶 Inventory</button>
       <button class="tab" data-tab="goals">🎯 Goals</button>
       <button class="tab" data-tab="rates">💰 Rate Card</button>
-      <button class="tab" data-tab="ami-history">📅 History</button>`;
+      <button class="tab" data-tab="ami-history">📅 History</button>
+      <button class="tab" data-tab="materials">🧶 Supplies</button>
+      <button class="tab" data-tab="candy">🍬 Candy</button>`;
 
     // Bind tab clicks using display toggling (not classList.active on panels)
     document.querySelectorAll(".tab").forEach(t => {
