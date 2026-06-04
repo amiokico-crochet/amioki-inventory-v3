@@ -292,6 +292,8 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <button class="tab master-only" data-tab="notifications" style="display:none">Alerts</button>
       <button class="tab master-only" data-tab="contracts" style="display:none">Contracts</button>
       <button class="tab master-only" data-tab="batches" style="display:none">Batches <span class="badge" id="batchBadge" style="display:none">0</span></button>
+      <button class="tab master-only" data-tab="materials" style="display:none">🧶 Supplies</button>
+      <button class="tab master-only" data-tab="candy" style="display:none">🍬 Candy</button>
     </div>
 
     <!-- INVENTORY -->
@@ -628,6 +630,8 @@ document.querySelectorAll(".tab").forEach(t => {
     if (currentTab === "notifications") loadNotifications();
     if (currentTab === "contracts")     loadContracts();
     if (currentTab === "batches")       loadBatches();
+    if (currentTab === "materials")     loadMaterials();
+    if (currentTab === "candy")         loadCandy();
   });
 });
 
