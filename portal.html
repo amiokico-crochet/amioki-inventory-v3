@@ -398,7 +398,125 @@ input,select,textarea{font-family:inherit;font-size:15px}
         <button class="btn btn-primary" id="submitBatchBtn" style="margin-top:6px">Submit Batch ✿</button>
       </div>
     </div>
+// ── MATERIALS ──
+async function loadMaterials() {
+  const r = await api("getMaterials");
+  if (!r.ok) { $("materialsContent").innerHTML = `<div class="empty">${r.error}</div>`; return; }
+  if (!r.materials.length) {
+    $("materialsContent").innerHTML = '<div class="empty">No materials yet — add one below ✿</div>';
+  } else {
+    $("materialsContent").innerHTML = `<div style="display:grid;gap:8px">${
+      r.materials.map(m => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--pink-50);border-radius:12px;border:1.5px solid var(--pink-100)">
+          <div>
+            <div style="font-weight:700;font-size:14px;color:var(--ink)">${esc(m.name)}</div>
+            <div style="font-size:11px;color:var(--mid)">${esc(m.category)} · ${esc(m.unit)} · avg $${Number(m.avg_cost).toFixed(3)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:'Comfortaa',sans-serif;font-size:18px;font-weight:700;color:var(--ink)">${m.on_hand}</div>
+            <div style="font-size:11px;color:var(--mid)">$${Number(m.avg_cost * m.on_hand).toFixed(2)} value</div>
+          </div>
+        </div>`).join("")
+    }</div>`;
+  }
+  const opts = r.materials.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join("");
+  $("matBatchItem").innerHTML  = '<option value="">— select item —</option>' + opts;
+  $("matDeductItem").innerHTML = '<option value="">— select item —</option>' + opts;
+}
 
+$("matAddBtn").addEventListener("click", async () => {
+  const name = $("matName").value.trim();
+  if (!name) return toast("Name required", "error");
+  const r = await api("addMaterial", {
+    name, category: $("matCategory").value,
+    unit: $("matUnit").value.trim() || "each",
+    supplier_name: $("matSupplier").value.trim()
+  });
+  if (!r.ok) return toast(r.error, "error");
+  toast("Added ✿", "success");
+  $("matName").value = ""; $("matSupplier").value = "";
+  loadMaterials();
+});
+
+$("matReceiveBtn").addEventListener("click", async () => {
+  const itemId = $("matBatchItem").value;
+  const qty    = $("matBatchQty").value;
+  const cost   = $("matBatchCost").value;
+  if (!itemId || !qty || !cost) return toast("Fill in item, qty, and cost", "error");
+  const r = await api("receiveMaterialBatch", {
+    table_ref: "materials", item_id: itemId, qty, unit_cost: cost,
+    supplier_name: $("matBatchSupplier").value.trim()
+  });
+  if (!r.ok) return toast(r.error, "error");
+  toast(`Received! Avg cost now $${Number(r.newAvg).toFixed(3)} ✿`, "success");
+  $("matBatchQty").value = ""; $("matBatchCost").value = ""; $("matBatchSupplier").value = "";
+  loadMaterials();
+});
+
+$("matDeductBtn").addEventListener("click", async () => {
+  const itemId = $("matDeductItem").value;
+  const qty    = $("matDeductQty").value;
+  if (!itemId || !qty) return toast("Pick an item and qty", "error");
+  const r = await api("deductMaterial", {
+    table_ref: "materials", item_id: itemId, qty,
+    note: $("matDeductNote").value.trim()
+  });
+  if (!r.ok) return toast(r.error, "error");
+  toast("Deducted ✿", "success");
+  $("matDeductQty").value = ""; $("matDeductNote").value = "";
+  loadMaterials();
+});
+
+// ── CANDY ──
+async function loadCandy() {
+  const r = await api("getCandy");
+  if (!r.ok) { $("candyContent").innerHTML = `<div class="empty">${r.error}</div>`; return; }
+  const flavEmoji = { "Sweet Dreams": "☁️", "Sourly Sweet Dreams": "🍋", "Enchanting Dreams": "🫐" };
+  $("candyContent").innerHTML = `<div style="display:grid;gap:8px">${
+    r.candy.map(c => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--pink-50);border-radius:12px;border:1.5px solid var(--pink-100)">
+        <div>
+          <div style="font-weight:700;font-size:14px;color:var(--ink)">${flavEmoji[c.name] || "🍬"} ${esc(c.name)}</div>
+          <div style="font-size:11px;color:var(--mid)">${esc(c.flavor_tag)} · avg $${Number(c.avg_cost).toFixed(3)}/unit</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Comfortaa',sans-serif;font-size:18px;font-weight:700;color:var(--ink)">${c.on_hand}</div>
+          <div style="font-size:11px;color:var(--mid)">$${Number(c.avg_cost * c.on_hand).toFixed(2)} value</div>
+        </div>
+      </div>`).join("")
+  }</div>`;
+  const opts = r.candy.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  $("candyBatchItem").innerHTML  = '<option value="">— select flavor —</option>' + opts;
+  $("candyDeductItem").innerHTML = '<option value="">— select flavor —</option>' + opts;
+}
+
+$("candyReceiveBtn").addEventListener("click", async () => {
+  const itemId = $("candyBatchItem").value;
+  const qty    = $("candyBatchQty").value;
+  const cost   = $("candyBatchCost").value;
+  if (!itemId || !qty || !cost) return toast("Fill in flavor, qty, and cost", "error");
+  const r = await api("receiveMaterialBatch", {
+    table_ref: "candy", item_id: itemId, qty, unit_cost: cost
+  });
+  if (!r.ok) return toast(r.error, "error");
+  toast(`Received! Avg cost now $${Number(r.newAvg).toFixed(3)} ✿`, "success");
+  $("candyBatchQty").value = ""; $("candyBatchCost").value = "";
+  loadCandy();
+});
+
+$("candyDeductBtn").addEventListener("click", async () => {
+  const itemId = $("candyDeductItem").value;
+  const qty    = $("candyDeductQty").value;
+  if (!itemId || !qty) return toast("Pick a flavor and qty", "error");
+  const r = await api("deductMaterial", {
+    table_ref: "candy", item_id: itemId, qty,
+    note: $("candyDeductNote").value.trim()
+  });
+  if (!r.ok) return toast(r.error, "error");
+  toast("Deducted ✿", "success");
+  $("candyDeductQty").value = ""; $("candyDeductNote").value = "";
+  loadCandy();
+});
     <!-- QC TAB -->
     <div class="tab-panel" id="panel-qc">
       <!-- Batch selector -->
