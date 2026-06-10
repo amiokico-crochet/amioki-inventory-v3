@@ -81,6 +81,20 @@ export default {
       if (action === "getClassSessions")  return json({ ok: true, sessions: await getClassSessions(env) });
       if (action === "getClassCounts")    return json({ ok: true, counts:   await getClassCounts(env) });
       if (action === "getClassLog")       return json({ ok: true, log:      await getClassLog(env, url.searchParams) });
+      
+      // ── BOOKING / SCHEDULE reads (public — no auth required for getSchedule) ──
+      if (action === "getSchedule")        return json({ ok: true, sessions: await getPublicSchedule(env) });
+      if (action === "getVenueTemplates")  return json({ ok: true, templates: await getVenueTemplates(env) });
+      if (action === "getEnrollments")     return json({ ok: true, enrollments: await getEnrollments(env, url.searchParams) });
+      if (action === "getPrivateBookings") return json({ ok: true, bookings: await getPrivateBookings(env, url.searchParams) });
+      if (action === "getEnrollmentCount") return json({ ok: true, counts: await getEnrollmentCounts(env, url.searchParams) });
+
+      // ── PUBLIC enrollment (no auth — called from booking.html) ──
+      if (action === "enrollPublic")   return json(await enrollPublic(env, url.searchParams, ctx));
+      if (action === "bookPrivate")    return json(await bookPrivate(env, url.searchParams, ctx));
+      if (action === "squareBookingWebhook") {
+        return await handleBookingWebhook(request, env, ctx);
+      }
 
       // ── CROCHETER actions ──
       if (action === "getPieceRates")  return json({ ok: true, rates: await getPieceRates(env, url.searchParams.get("crocheter")) });
@@ -120,6 +134,17 @@ export default {
       if (action === "startClassSession")  return json(await startClassSession(env, url.searchParams, ctx));
       if (action === "cancelClassSession") return json(await cancelClassSession(env, url.searchParams, ctx));
       if (action === "approveClassCount")  return json(await approveClassCount(env, url.searchParams, ctx, who));
+      
+      // ── SCHEDULE management (ami + master) ──
+      if (action === "saveScheduleSession")   return json(await saveScheduleSession(env, url.searchParams, ctx));
+      if (action === "deleteScheduleSession") return json(await deleteScheduleSession(env, url.searchParams));
+      if (action === "updateSessionStatus")   return json(await updateSessionStatus(env, url.searchParams));
+      if (action === "saveVenueTemplate")     return json(await saveVenueTemplate(env, url.searchParams));
+      if (action === "deleteVenueTemplate")   return json(await deleteVenueTemplate(env, url.searchParams));
+      if (action === "importEmailSession")    return json(await importEmailSession(env, url.searchParams, ctx));
+      if (action === "sendBalanceReminders")  return json(await sendBalanceReminders(env, ctx));
+      if (action === "releaseUnpaidSeats")    return json(await releaseUnpaidSeats(env, ctx));
+      if (action === "refundDeposit")         return json(await refundDeposit(env, url.searchParams, ctx));
       if (action === "rejectClassCount")   return json(await rejectClassCount(env, url.searchParams, who));
 
       // ── AMI GOALS + RATE CARD (ami + master) ──
@@ -2469,4 +2494,925 @@ async function rejectClassCount(env, params, who) {
   await env.DB.prepare("UPDATE class_counts SET status='rejected', approved_by=?, approved_at=? WHERE id=? AND status='pending'")
     .bind(who, new Date().toISOString(), id).run();
   return { ok: true };
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🌸 BOOKING SYSTEM — schedule, enrollment, Square checkout
+// ═══════════════════════════════════════════════════════════
+
+const SQUARE_API = "https://connect.squareup.com/v2";
+const SQUARE_VERSION = "2024-01-18";
+const LOCATION_ID = "LMEZ7EHK5PFR6";
+const PUBLIC_CLASS_AMOUNT = 5500;   // $55.00 in cents
+const PRIVATE_DEPOSIT_AMOUNT = 10000; // $100.00 in cents
+const CLASS_MIN = 3;
+const CLASS_CAP = 7;
+const BALANCE_DUE_HOURS = 48;
+const ABANDONED_REMINDER_HOURS = 2;
+
+function squareHeaders(env) {
+  return {
+    "Content-Type": "application/json",
+    "Square-Version": SQUARE_VERSION,
+    "Authorization": `Bearer ${env.SQUARE_TOKEN}`
+  };
+}
+
+function idempotencyKey() {
+  return crypto.randomUUID();
+}
+
+// ── READS ──────────────────────────────────────────────────
+
+async function getPublicSchedule(env) {
+  const { results } = await env.DB.prepare(`
+    SELECT cs.*, 
+      COUNT(CASE WHEN ce.payment_status = 'paid' THEN 1 END) as paid_count,
+      COUNT(CASE WHEN ce.payment_status != 'cancelled' THEN 1 END) as enrolled_count,
+      MAX(CASE WHEN pb.status NOT IN ('cancelled','pending_payment') THEN 1 ELSE 0 END) as is_private
+    FROM class_schedule cs
+    LEFT JOIN class_enrollments ce ON ce.session_id = cs.id
+    LEFT JOIN private_bookings pb ON pb.session_id = cs.id
+    WHERE cs.status = 'active' AND cs.session_date >= date('now')
+    GROUP BY cs.id
+    ORDER BY cs.session_date ASC
+  `).all();
+  return results;
+}
+
+async function getVenueTemplates(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM venue_templates ORDER BY venue_name"
+  ).all();
+  return results;
+}
+
+async function getEnrollments(env, params) {
+  const session_id = params.get("session_id");
+  const stmt = session_id
+    ? env.DB.prepare("SELECT * FROM class_enrollments WHERE session_id = ? ORDER BY enrolled_at DESC").bind(session_id)
+    : env.DB.prepare("SELECT * FROM class_enrollments ORDER BY enrolled_at DESC LIMIT 100");
+  const { results } = await stmt.all();
+  return results;
+}
+
+async function getPrivateBookings(env, params) {
+  const status = params.get("status") || null;
+  const stmt = status
+    ? env.DB.prepare("SELECT * FROM private_bookings WHERE status = ? ORDER BY session_date ASC").bind(status)
+    : env.DB.prepare("SELECT * FROM private_bookings ORDER BY session_date DESC LIMIT 60");
+  const { results } = await stmt.all();
+  return results;
+}
+
+async function getEnrollmentCounts(env, params) {
+  const session_id = params.get("session_id");
+  if (!session_id) {
+    const { results } = await env.DB.prepare(`
+      SELECT session_id,
+        COUNT(*) as total,
+        COUNT(CASE WHEN payment_status='paid' THEN 1 END) as paid,
+        COUNT(CASE WHEN payment_status='pending' THEN 1 END) as pending
+      FROM class_enrollments
+      WHERE payment_status != 'cancelled'
+      GROUP BY session_id
+    `).all();
+    return results;
+  }
+  const row = await env.DB.prepare(`
+    SELECT session_id,
+      COUNT(*) as total,
+      COUNT(CASE WHEN payment_status='paid' THEN 1 END) as paid,
+      COUNT(CASE WHEN payment_status='pending' THEN 1 END) as pending
+    FROM class_enrollments
+    WHERE session_id = ? AND payment_status != 'cancelled'
+  `).bind(session_id).first();
+  return row;
+}
+
+// ── PUBLIC ENROLLMENT ──────────────────────────────────────
+
+async function enrollPublic(env, params, ctx) {
+  const session_id  = Number(params.get("session_id"));
+  const first_name  = (params.get("first_name") || "").trim();
+  const last_name   = (params.get("last_name")  || "").trim();
+  const email       = (params.get("email")      || "").trim().toLowerCase();
+  const candy_addon = params.get("candy_addon") || "none";
+
+  if (!session_id)  return { ok: false, error: "session_id required" };
+  if (!first_name)  return { ok: false, error: "First name required" };
+  if (!last_name)   return { ok: false, error: "Last name required" };
+  if (!email)       return { ok: false, error: "Email required" };
+
+  // Load session
+  const session = await env.DB.prepare(
+    "SELECT * FROM class_schedule WHERE id = ? AND status = 'active'"
+  ).bind(session_id).first();
+  if (!session) return { ok: false, error: "Session not found or not active" };
+
+  // Check private lock
+  const privateLock = await env.DB.prepare(
+    "SELECT id FROM private_bookings WHERE session_id = ? AND status NOT IN ('cancelled','pending_payment')"
+  ).bind(session_id).first();
+  if (privateLock) return { ok: false, error: "This date is reserved for a private workshop" };
+
+  // Check cap
+  const counts = await getEnrollmentCounts(env, new URLSearchParams({ session_id }));
+  if ((counts?.total || 0) >= CLASS_CAP) return { ok: false, error: "This session is full" };
+
+  // Check duplicate
+  const dup = await env.DB.prepare(
+    "SELECT id FROM class_enrollments WHERE session_id = ? AND email = ? AND payment_status != 'cancelled'"
+  ).bind(session_id, email).first();
+  if (dup) return { ok: false, error: "This email is already registered for this session" };
+
+  const now = new Date().toISOString();
+  const alreadyMinimum = (counts?.paid || 0) >= CLASS_MIN;
+
+  // Calculate balance due date (48hr before class, or immediate if < 72hr away)
+  const classDate = new Date(session.session_date + "T" + (session.start_time || "10:00") + ":00");
+  const hoursUntilClass = (classDate - new Date()) / 36e5;
+  const balanceDueDate = hoursUntilClass <= 72
+    ? now
+    : new Date(classDate - 48 * 36e5).toISOString();
+
+  let paymentLink = null;
+  let paymentLinkId = null;
+  let paymentStatus = "pending";
+
+  if (alreadyMinimum) {
+    // Class already confirmed — generate Square payment link immediately
+    const sq = await createSquarePaymentLink(env, {
+      amount: PUBLIC_CLASS_AMOUNT,
+      title: "Rock Solid Foundation: Pet Rock Workshop",
+      description: `${session.session_date} · ${session.start_time} · ${session.location_display || "Greenbrier Library"}`,
+      reference: `enroll_${session_id}_${email}`,
+      redirect_url: env.BOOKING_SUCCESS_URL || "https://amioki.co"
+    });
+    if (sq.ok) {
+      paymentLink = sq.url;
+      paymentLinkId = sq.id;
+    }
+  }
+
+  // Insert enrollment
+  const r = await env.DB.prepare(`
+    INSERT INTO class_enrollments
+      (session_id, session_date, first_name, last_name, email,
+       kit_type, candy_addon, payment_status, payment_link, payment_link_id,
+       amount_due, balance_due_date, enrolled_at)
+    VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?)
+  `).bind(
+    session_id, session.session_date, first_name, last_name, email,
+    "class_set", candy_addon, paymentStatus, paymentLink, paymentLinkId,
+    PUBLIC_CLASS_AMOUNT, balanceDueDate, now
+  ).run();
+
+  const enrollmentId = r.meta.last_row_id;
+
+  // Check if THIS enrollment just hit the minimum
+  const newCounts = await getEnrollmentCounts(env, new URLSearchParams({ session_id }));
+  const justHitMinimum = !alreadyMinimum && (newCounts?.total || 0) >= CLASS_MIN;
+
+  if (justHitMinimum) {
+    ctx.waitUntil(fireMinimumReached(env, session_id, session, ctx));
+  }
+
+  // Send confirmation email
+  ctx.waitUntil(sendEnrollmentConfirmation(env, {
+    enrollmentId, first_name, last_name, email,
+    session, alreadyMinimum, justHitMinimum,
+    paymentLink, candy_addon
+  }));
+
+  // Schedule abandoned reminder if we gave them a payment link
+  if (paymentLink) {
+    ctx.waitUntil(scheduleAbandonedReminder(env, enrollmentId, email, first_name, paymentLink, ctx));
+  }
+
+  return {
+    ok: true,
+    enrollment_id: enrollmentId,
+    already_minimum: alreadyMinimum,
+    just_hit_minimum: justHitMinimum,
+    payment_link: paymentLink,
+    waitlisted: false
+  };
+}
+
+async function fireMinimumReached(env, session_id, session, ctx) {
+  // Get all pending enrollments for this session
+  const { results: pending } = await env.DB.prepare(
+    "SELECT * FROM class_enrollments WHERE session_id = ? AND payment_status = 'pending'"
+  ).bind(session_id).all();
+
+  for (const enrollment of pending) {
+    // Generate Square link for each
+    const sq = await createSquarePaymentLink(env, {
+      amount: PUBLIC_CLASS_AMOUNT,
+      title: "Rock Solid Foundation: Pet Rock Workshop",
+      description: `${session.session_date} · ${session.start_time} · ${session.location_display || "Greenbrier Library"}`,
+      reference: `enroll_${session_id}_${enrollment.email}`,
+      redirect_url: env.BOOKING_SUCCESS_URL || "https://amioki.co"
+    });
+
+    if (sq.ok) {
+      await env.DB.prepare(
+        "UPDATE class_enrollments SET payment_link=?, payment_link_id=? WHERE id=?"
+      ).bind(sq.url, sq.id, enrollment.id).run();
+
+      // Send payment link email
+      await sendEmail(env, {
+        to: enrollment.email,
+        subject: "🌸 Your Amioki class is confirmed — time to pay!",
+        html: minimumReachedEmail(enrollment.first_name, session, sq.url)
+      });
+
+      await logEmail(env, enrollment.email, "minimum_reached", String(enrollment.id));
+
+      // Schedule abandoned reminder
+      ctx.waitUntil(scheduleAbandonedReminder(
+        env, enrollment.id, enrollment.email,
+        enrollment.first_name, sq.url, ctx
+      ));
+    }
+  }
+}
+
+// ── PRIVATE BOOKING ────────────────────────────────────────
+
+async function bookPrivate(env, params, ctx) {
+  const session_id   = Number(params.get("session_id"));
+  const group_name   = (params.get("group_name")    || "").trim();
+  const contact_name = (params.get("contact_name")  || "").trim();
+  const contact_email= (params.get("contact_email") || "").trim().toLowerCase();
+  const attendees    = params.get("attendees") || "[]";
+  const cancel_ack   = params.get("cancel_policy_acknowledged") === "1";
+
+  if (!session_id)    return { ok: false, error: "session_id required" };
+  if (!group_name)    return { ok: false, error: "Group name required" };
+  if (!contact_name)  return { ok: false, error: "Contact name required" };
+  if (!contact_email) return { ok: false, error: "Contact email required" };
+  if (!cancel_ack)    return { ok: false, error: "Please acknowledge the cancellation policy" };
+
+  let attendeeList;
+  try { attendeeList = JSON.parse(attendees); } catch(e) { return { ok: false, error: "Bad attendee data" }; }
+  if (!Array.isArray(attendeeList) || attendeeList.length < 1) return { ok: false, error: "At least one attendee required" };
+
+  const group_size = attendeeList.length;
+  if (group_size > CLASS_CAP) return { ok: false, error: `Maximum ${CLASS_CAP} attendees` };
+
+  // Load session
+  const session = await env.DB.prepare(
+    "SELECT * FROM class_schedule WHERE id = ? AND status = 'active'"
+  ).bind(session_id).first();
+  if (!session) return { ok: false, error: "Session not found or not active" };
+
+  // Check if already taken
+  const taken = await env.DB.prepare(
+    "SELECT id FROM private_bookings WHERE session_id = ? AND status NOT IN ('cancelled','pending_payment')"
+  ).bind(session_id).first();
+  if (taken) return { ok: false, error: "This date is already reserved" };
+
+  const existing = await env.DB.prepare(
+    "SELECT id FROM class_enrollments WHERE session_id = ? AND payment_status != 'cancelled'"
+  ).bind(session_id).first();
+  if (existing) return { ok: false, error: "This date already has public enrollments — contact us to book privately" };
+
+  // Calculate balance
+  const perPerson = PUBLIC_CLASS_AMOUNT;
+  const totalAmount = perPerson * group_size;
+  const balanceAmount = totalAmount - PRIVATE_DEPOSIT_AMOUNT;
+  const classDate = new Date(session.session_date + "T" + (session.start_time || "10:00") + ":00");
+  const balanceDueDate = new Date(classDate - 48 * 36e5).toISOString();
+
+  // Create Square deposit payment link
+  const sq = await createSquarePaymentLink(env, {
+    amount: PRIVATE_DEPOSIT_AMOUNT,
+    title: `Private Workshop Deposit — ${group_name}`,
+    description: `${session.session_date} · ${session.start_time} · ${session.location_display || "Greenbrier Library"} · ${group_size} attendees · $100 deposit (non-refundable within 48hrs)`,
+    reference: `private_deposit_${session_id}_${contact_email}`,
+    redirect_url: env.BOOKING_SUCCESS_URL || "https://amioki.co"
+  });
+
+  if (!sq.ok) return { ok: false, error: "Could not create payment link — try again" };
+
+  const now = new Date().toISOString();
+  const r = await env.DB.prepare(`
+    INSERT INTO private_bookings
+      (session_id, session_date, start_time, venue_id, venue_name, location_display,
+       group_name, contact_name, contact_email, attendees_json, group_size,
+       deposit_amount, deposit_status, balance_amount, balance_status,
+       square_deposit_link, square_deposit_link_id,
+       balance_due_date, cancel_policy_acknowledged, status, created_at, updated_at)
+    VALUES (?,?,?,?,?,?, ?,?,?,?,?, ?,?,?,?, ?,?, ?,?,?,?,?)
+  `).bind(
+    session_id, session.session_date, session.start_time,
+    session.venue_id || null, session.venue_name || "", session.location_display || "",
+    group_name, contact_name, contact_email, attendees, group_size,
+    PRIVATE_DEPOSIT_AMOUNT, "pending", balanceAmount, "pending",
+    sq.url, sq.id,
+    balanceDueDate, 1, "pending_payment", now, now
+  ).run();
+
+  const bookingId = r.meta.last_row_id;
+
+  // Send confirmation email with deposit link
+  ctx.waitUntil(sendEmail(env, {
+    to: contact_email,
+    subject: `🌸 ${group_name} — complete your deposit to lock in your date!`,
+    html: privateDepositEmail(contact_name, group_name, session, sq.url, group_size, balanceDueDate)
+  }));
+  ctx.waitUntil(logEmail(env, contact_email, "private_deposit_link", String(bookingId)));
+
+  // Schedule abandoned reminder
+  ctx.waitUntil(scheduleAbandonedReminder(env, bookingId, contact_email, contact_name, sq.url, ctx, true));
+
+  return {
+    ok: true,
+    booking_id: bookingId,
+    deposit_link: sq.url,
+    balance_amount: balanceAmount,
+    balance_due_date: balanceDueDate
+  };
+}
+
+// ── SQUARE PAYMENT LINK CREATOR ────────────────────────────
+
+async function createSquarePaymentLink(env, { amount, title, description, reference, redirect_url }) {
+  try {
+    const body = {
+      idempotency_key: idempotencyKey(),
+      order: {
+        location_id: LOCATION_ID,
+        line_items: [{
+          name: title,
+          quantity: "1",
+          base_price_money: { amount, currency: "USD" },
+          note: description
+        }],
+        reference_id: reference
+      },
+      payment_note: description,
+      checkout_options: {
+        redirect_url,
+        ask_for_shipping_address: false
+      }
+    };
+
+    const r = await fetch(`${SQUARE_API}/online-checkout/payment-links`, {
+      method: "POST",
+      headers: squareHeaders(env),
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (d.errors?.length) {
+      console.error("Square error:", JSON.stringify(d.errors));
+      return { ok: false, error: d.errors[0].detail };
+    }
+    return {
+      ok: true,
+      url: d.payment_link?.url,
+      id: d.payment_link?.id,
+      order_id: d.related_resources?.orders?.[0]?.id
+    };
+  } catch (err) {
+    console.error("createSquarePaymentLink error:", err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
+// ── SQUARE BOOKING WEBHOOK ─────────────────────────────────
+
+async function handleBookingWebhook(request, env, ctx) {
+  try {
+    const body = await request.json();
+    const eventType = body.type || "";
+
+    if (eventType === "payment.completed" || eventType === "payment.updated") {
+      const payment = body.data?.object?.payment;
+      if (!payment) return new Response("OK");
+
+      const orderId = payment.order_id;
+      if (!orderId) return new Response("OK");
+
+      // Fetch the order to get reference_id
+      const or = await fetch(`${SQUARE_API}/orders/${orderId}`, {
+        headers: squareHeaders(env)
+      });
+      const od = await or.json();
+      const ref = od.order?.reference_id || "";
+
+      if (ref.startsWith("enroll_")) {
+        await handleEnrollmentPayment(env, ref, payment, ctx);
+      } else if (ref.startsWith("private_deposit_")) {
+        await handlePrivateDepositPayment(env, ref, payment, ctx);
+      } else if (ref.startsWith("private_balance_")) {
+        await handlePrivateBalancePayment(env, ref, payment, ctx);
+      }
+    }
+    return new Response("OK");
+  } catch (err) {
+    console.error("Booking webhook error:", err.message);
+    return new Response("OK");
+  }
+}
+
+async function handleEnrollmentPayment(env, ref, payment, ctx) {
+  // ref = "enroll_{session_id}_{email}"
+  const parts = ref.split("_");
+  const session_id = Number(parts[1]);
+  const email = parts.slice(2).join("_");
+
+  const enrollment = await env.DB.prepare(
+    "SELECT * FROM class_enrollments WHERE session_id = ? AND email = ? AND payment_status != 'cancelled'"
+  ).bind(session_id, email).first();
+  if (!enrollment) return;
+
+  const now = new Date().toISOString();
+  await env.DB.prepare(
+    "UPDATE class_enrollments SET payment_status='paid', square_payment_id=?, amount_paid=?, paid_at=? WHERE id=?"
+  ).bind(payment.id, payment.amount_money?.amount || PUBLIC_CLASS_AMOUNT, now, enrollment.id).run();
+
+  // Send receipt
+  const session = await env.DB.prepare("SELECT * FROM class_schedule WHERE id=?").bind(session_id).first();
+  if (session) {
+    ctx.waitUntil(sendEmail(env, {
+      to: enrollment.email,
+      subject: "🪨 You're in! Amioki Pet Rock Workshop — see you there!",
+      html: enrollmentReceiptEmail(enrollment.first_name, session)
+    }));
+    ctx.waitUntil(logEmail(env, enrollment.email, "enrollment_receipt", String(enrollment.id)));
+  }
+}
+
+async function handlePrivateDepositPayment(env, ref, payment, ctx) {
+  const parts = ref.split("_");
+  const session_id = Number(parts[2]);
+  const contact_email = parts.slice(3).join("_");
+
+  const booking = await env.DB.prepare(
+    "SELECT * FROM private_bookings WHERE session_id=? AND contact_email=? AND status='pending_payment'"
+  ).bind(session_id, contact_email).first();
+  if (!booking) return;
+
+  const now = new Date().toISOString();
+
+  // Lock the session date
+  await env.DB.batch([
+    env.DB.prepare(
+      "UPDATE private_bookings SET deposit_status='paid', square_deposit_payment_id=?, status='confirmed', updated_at=? WHERE id=?"
+    ).bind(payment.id, now, booking.id),
+    env.DB.prepare(
+      "UPDATE class_schedule SET status='private_locked', updated_at=? WHERE id=?"
+    ).bind(now, session_id)
+  ]);
+
+  // Create balance payment link
+  const session = await env.DB.prepare("SELECT * FROM class_schedule WHERE id=?").bind(session_id).first();
+  if (session && booking.balance_amount > 0) {
+    const sq = await createSquarePaymentLink(env, {
+      amount: booking.balance_amount,
+      title: `Private Workshop Balance — ${booking.group_name}`,
+      description: `${session.session_date} · ${booking.group_size} attendees · remaining balance`,
+      reference: `private_balance_${session_id}_${contact_email}`,
+      redirect_url: env.BOOKING_SUCCESS_URL || "https://amioki.co"
+    });
+    if (sq.ok) {
+      await env.DB.prepare(
+        "UPDATE private_bookings SET square_balance_link=?, square_balance_order_id=? WHERE id=?"
+      ).bind(sq.url, sq.order_id, booking.id).run();
+
+      ctx.waitUntil(sendEmail(env, {
+        to: booking.contact_email,
+        subject: `🌸 ${booking.group_name} — deposit received, your date is locked!`,
+        html: privateConfirmedEmail(booking, session, sq.url)
+      }));
+      ctx.waitUntil(logEmail(env, booking.contact_email, "private_confirmed", String(booking.id)));
+    }
+  }
+}
+
+async function handlePrivateBalancePayment(env, ref, payment, ctx) {
+  const parts = ref.split("_");
+  const session_id = Number(parts[2]);
+  const contact_email = parts.slice(3).join("_");
+
+  const booking = await env.DB.prepare(
+    "SELECT * FROM private_bookings WHERE session_id=? AND contact_email=?"
+  ).bind(session_id, contact_email).first();
+  if (!booking) return;
+
+  await env.DB.prepare(
+    "UPDATE private_bookings SET balance_status='paid', square_balance_payment_id=?, updated_at=? WHERE id=?"
+  ).bind(payment.id, new Date().toISOString(), booking.id).run();
+
+  const session = await env.DB.prepare("SELECT * FROM class_schedule WHERE id=?").bind(session_id).first();
+  ctx.waitUntil(sendEmail(env, {
+    to: booking.contact_email,
+    subject: `✅ ${booking.group_name} — fully paid, see you at class!`,
+    html: privateFullyPaidEmail(booking, session)
+  }));
+  ctx.waitUntil(logEmail(env, booking.contact_email, "private_fully_paid", String(booking.id)));
+}
+
+// ── ABANDONED REMINDER ─────────────────────────────────────
+
+async function scheduleAbandonedReminder(env, id, email, firstName, paymentLink, ctx, isPrivate = false) {
+  // Wait 2 hours then check if still unpaid
+  await new Promise(r => setTimeout(r, ABANDONED_REMINDER_HOURS * 60 * 60 * 1000));
+  const table = isPrivate ? "private_bookings" : "class_enrollments";
+  const statusField = isPrivate ? "deposit_status" : "payment_status";
+  const row = await env.DB.prepare(
+    `SELECT ${statusField}, reminder_sent FROM ${table} WHERE id=?`
+  ).bind(id).first();
+  if (!row) return;
+  if (row[statusField] === "paid" || row.reminder_sent) return;
+
+  await env.DB.prepare(
+    `UPDATE ${table} SET reminder_sent=1, reminder_sent_at=? WHERE id=?`
+  ).bind(new Date().toISOString(), id).run();
+
+  await sendEmail(env, {
+    to: email,
+    subject: "🌸 Did you mean to finish signing up for Amioki class?",
+    html: abandonedReminderEmail(firstName, paymentLink, isPrivate)
+  });
+  await logEmail(env, email, "abandoned_reminder", String(id));
+}
+
+// ── SCHEDULE MANAGEMENT ────────────────────────────────────
+
+async function saveScheduleSession(env, params, ctx) {
+  const id = Number(params.get("id")) || 0;
+  const session_date     = params.get("session_date") || "";
+  const start_time       = params.get("start_time") || "";
+  const end_time         = params.get("end_time") || "";
+  const venue_id         = Number(params.get("venue_id")) || null;
+  const venue_name       = params.get("venue_name") || "";
+  const location_display = params.get("location_display") || "";
+  const status           = params.get("status") || "pending_review";
+  const source           = params.get("source") || "manual";
+  const notes            = params.get("notes") || "";
+
+  if (!session_date) return { ok: false, error: "Date required" };
+  if (!start_time)   return { ok: false, error: "Start time required" };
+
+  const now = new Date().toISOString();
+  if (id) {
+    await env.DB.prepare(`
+      UPDATE class_schedule SET session_date=?,start_time=?,end_time=?,venue_id=?,
+        venue_name=?,location_display=?,status=?,notes=?,updated_at=? WHERE id=?
+    `).bind(session_date,start_time,end_time,venue_id,venue_name,location_display,status,notes,now,id).run();
+    return { ok: true, id };
+  }
+  const r = await env.DB.prepare(`
+    INSERT INTO class_schedule (session_date,start_time,end_time,venue_id,venue_name,
+      location_display,status,source,notes)
+    VALUES (?,?,?,?,?,?,?,?,?)
+  `).bind(session_date,start_time,end_time,venue_id,venue_name,location_display,status,source,notes).run();
+  ctx.waitUntil(auditLog(env, { action:"add_schedule_session", item:session_date, qty:1, note:venue_name }));
+  return { ok: true, id: r.meta.last_row_id };
+}
+
+async function deleteScheduleSession(env, params) {
+  const id = Number(params.get("id"));
+  if (!id) return { ok: false, error: "ID required" };
+  const enrollments = await env.DB.prepare(
+    "SELECT COUNT(*) as cnt FROM class_enrollments WHERE session_id=? AND payment_status='paid'"
+  ).bind(id).first();
+  if ((enrollments?.cnt || 0) > 0) return { ok: false, error: "Cannot delete — paid enrollments exist" };
+  await env.DB.prepare("DELETE FROM class_schedule WHERE id=?").bind(id).run();
+  return { ok: true };
+}
+
+async function updateSessionStatus(env, params) {
+  const id     = Number(params.get("id"));
+  const status = params.get("status") || "";
+  if (!id || !status) return { ok: false, error: "id and status required" };
+  await env.DB.prepare("UPDATE class_schedule SET status=?, updated_at=? WHERE id=?")
+    .bind(status, new Date().toISOString(), id).run();
+  return { ok: true };
+}
+
+// ── VENUE TEMPLATES ────────────────────────────────────────
+
+async function saveVenueTemplate(env, params) {
+  const id               = Number(params.get("id")) || 0;
+  const venue_name       = (params.get("venue_name") || "").trim();
+  const location_display = (params.get("location_display") || "").trim();
+  const address          = params.get("address") || "";
+  const subject_pattern  = params.get("subject_pattern") || "";
+  const body_sample      = params.get("body_sample") || "";
+  const notes            = params.get("notes") || "";
+
+  if (!venue_name)       return { ok: false, error: "Venue name required" };
+  if (!location_display) return { ok: false, error: "Display name required" };
+
+  const now = new Date().toISOString();
+  if (id) {
+    await env.DB.prepare(`
+      UPDATE venue_templates SET venue_name=?,location_display=?,address=?,
+        subject_pattern=?,body_sample=?,notes=?,updated_at=? WHERE id=?
+    `).bind(venue_name,location_display,address,subject_pattern,body_sample,notes,now,id).run();
+    return { ok: true, id };
+  }
+  try {
+    const r = await env.DB.prepare(`
+      INSERT INTO venue_templates (venue_name,location_display,address,subject_pattern,body_sample,notes)
+      VALUES (?,?,?,?,?,?)
+    `).bind(venue_name,location_display,address,subject_pattern,body_sample,notes).run();
+    return { ok: true, id: r.meta.last_row_id };
+  } catch(err) {
+    if (String(err.message).includes("UNIQUE")) return { ok: false, error: `"${venue_name}" already exists` };
+    throw err;
+  }
+}
+
+async function deleteVenueTemplate(env, params) {
+  const id = Number(params.get("id"));
+  if (!id) return { ok: false, error: "ID required" };
+  await env.DB.prepare("DELETE FROM venue_templates WHERE id=?").bind(id).run();
+  return { ok: true };
+}
+
+async function importEmailSession(env, params, ctx) {
+  // Called by GAS after parsing a confirmation email
+  const session_date     = params.get("session_date") || "";
+  const start_time       = params.get("start_time") || "";
+  const end_time         = params.get("end_time") || "";
+  const venue_name       = params.get("venue_name") || "";
+  const location_display = params.get("location_display") || "";
+  const source           = "email_import";
+
+  if (!session_date || !start_time || !venue_name)
+    return { ok: false, error: "date, start_time, venue_name required" };
+
+  // Deduplicate
+  const existing = await env.DB.prepare(
+    "SELECT id FROM class_schedule WHERE session_date=? AND venue_name=?"
+  ).bind(session_date, venue_name).first();
+  if (existing) return { ok: true, id: existing.id, duplicate: true };
+
+  const r = await env.DB.prepare(`
+    INSERT INTO class_schedule (session_date,start_time,end_time,venue_name,location_display,status,source)
+    VALUES (?,?,?,?,?,'pending_review',?)
+  `).bind(session_date,start_time,end_time,venue_name,location_display,source).run();
+
+  ctx.waitUntil(auditLog(env, { action:"email_import_session", item:session_date, qty:1, note:venue_name }));
+  return { ok: true, id: r.meta.last_row_id, duplicate: false };
+}
+
+// ── BALANCE REMINDERS + SEAT RELEASE (called by GAS cron) ──
+
+async function sendBalanceReminders(env, ctx) {
+  const now = new Date().toISOString();
+  // Find paid enrollments where balance is due in next 6 hours and reminder not sent
+  const { results } = await env.DB.prepare(`
+    SELECT ce.*, cs.session_date, cs.start_time, cs.location_display
+    FROM class_enrollments ce
+    JOIN class_schedule cs ON cs.id = ce.session_id
+    WHERE ce.payment_status = 'pending'
+      AND ce.payment_link IS NOT NULL
+      AND ce.balance_due_date <= datetime('now', '+6 hours')
+      AND ce.reminder_sent = 0
+  `).all();
+
+  for (const e of results) {
+    await sendEmail(env, {
+      to: e.email,
+      subject: "⏰ Balance due soon — Amioki Pet Rock Workshop",
+      html: balanceDueEmail(e.first_name, e, e.payment_link)
+    });
+    await env.DB.prepare(
+      "UPDATE class_enrollments SET reminder_sent=1, reminder_sent_at=? WHERE id=?"
+    ).bind(now, e.id).run();
+    await logEmail(env, e.email, "balance_reminder", String(e.id));
+  }
+
+  // Private balance reminders
+  const { results: privates } = await env.DB.prepare(`
+    SELECT * FROM private_bookings
+    WHERE status='confirmed'
+      AND balance_status='pending'
+      AND square_balance_link IS NOT NULL
+      AND balance_due_date <= datetime('now', '+6 hours')
+      AND reminder_sent = 0
+  `).all();
+
+  for (const b of privates) {
+    await sendEmail(env, {
+      to: b.contact_email,
+      subject: `⏰ Balance due soon — ${b.group_name} Private Workshop`,
+      html: balanceDueEmail(b.contact_name, b, b.square_balance_link)
+    });
+    await env.DB.prepare(
+      "UPDATE private_bookings SET reminder_sent=1, reminder_sent_at=? WHERE id=?"
+    ).bind(now, b.id).run();
+    await logEmail(env, b.contact_email, "balance_reminder_private", String(b.id));
+  }
+
+  return { ok: true, sent: results.length + privates.length };
+}
+
+async function releaseUnpaidSeats(env, ctx) {
+  const { results } = await env.DB.prepare(`
+    SELECT * FROM class_enrollments
+    WHERE payment_status='pending'
+      AND balance_due_date < datetime('now')
+      AND payment_link IS NOT NULL
+  `).all();
+
+  for (const e of results) {
+    await env.DB.prepare(
+      "UPDATE class_enrollments SET payment_status='cancelled', notes='Auto-released: payment deadline passed' WHERE id=?"
+    ).bind(e.id).run();
+    await sendEmail(env, {
+      to: e.email,
+      subject: "😢 Your Amioki class spot was released",
+      html: seatReleasedEmail(e.first_name)
+    });
+    await logEmail(env, e.email, "seat_released", String(e.id));
+  }
+  return { ok: true, released: results.length };
+}
+
+async function refundDeposit(env, params, ctx) {
+  const booking_id = Number(params.get("booking_id"));
+  if (!booking_id) return { ok: false, error: "booking_id required" };
+  const booking = await env.DB.prepare("SELECT * FROM private_bookings WHERE id=?").bind(booking_id).first();
+  if (!booking) return { ok: false, error: "Booking not found" };
+
+  const classDate = new Date(booking.session_date + "T" + (booking.start_time || "10:00") + ":00");
+  const hoursUntil = (classDate - new Date()) / 36e5;
+  const isRefundable = hoursUntil >= 48;
+
+  await env.DB.prepare(
+    "UPDATE private_bookings SET status='cancelled', updated_at=? WHERE id=?"
+  ).bind(new Date().toISOString(), booking_id).run();
+  await env.DB.prepare(
+    "UPDATE class_schedule SET status='active', updated_at=? WHERE id=?"
+  ).bind(new Date().toISOString(), booking.session_id).run();
+
+  return {
+    ok: true,
+    refundable: isRefundable,
+    message: isRefundable
+      ? "Booking cancelled — deposit is refundable (48hr+ notice)"
+      : "Booking cancelled — deposit is non-refundable (less than 48hr notice)"
+  };
+}
+
+// ── EMAIL HELPERS ──────────────────────────────────────────
+
+async function sendEmail(env, { to, subject, html }) {
+  if (!env.MAILCHANNELS_API_KEY && !env.SENDGRID_API_KEY) {
+    console.log(`[EMAIL SKIPPED - no provider] To: ${to} | Subject: ${subject}`);
+    return;
+  }
+  try {
+    // MailChannels (if configured)
+    if (env.MAILCHANNELS_API_KEY) {
+      await fetch("https://api.mailchannels.net/tx/v1/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: to }] }],
+          from: { email: "hello@amioki.co", name: "Amioki Classes 🌸" },
+          subject,
+          content: [{ type: "text/html", value: html }]
+        })
+      });
+      return;
+    }
+    // SendGrid fallback
+    if (env.SENDGRID_API_KEY) {
+      await fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${env.SENDGRID_API_KEY}`
+        },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: to }] }],
+          from: { email: "hello@amioki.co", name: "Amioki Classes 🌸" },
+          subject,
+          content: [{ type: "text/html", value: html }]
+        })
+      });
+    }
+  } catch (err) {
+    console.error("sendEmail error:", err.message);
+  }
+}
+
+async function logEmail(env, recipient, email_type, reference_id) {
+  try {
+    await env.DB.prepare(
+      "INSERT INTO email_log (recipient, email_type, reference_id) VALUES (?,?,?)"
+    ).bind(recipient, email_type, reference_id).run();
+  } catch(e) {}
+}
+
+// ── EMAIL TEMPLATES ────────────────────────────────────────
+
+const emailBase = (content) => `
+<div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;background:#FFF5FA;border-radius:20px;overflow:hidden;border:2px solid #FFB6D9">
+  <div style="background:linear-gradient(135deg,#FF8DC0,#E91E63);padding:28px 24px;text-align:center">
+    <div style="font-size:32px;margin-bottom:6px">🧶</div>
+    <div style="font-family:'Georgia',serif;font-size:22px;font-weight:700;color:white">Amioki Classes</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:4px">✿ Cute crochet, piece of cake ✿</div>
+  </div>
+  <div style="padding:28px 24px">${content}</div>
+  <div style="background:#FFE5F0;padding:16px 24px;text-align:center;font-size:12px;color:#8B5A75">
+    Questions? <a href="mailto:hello@amioki.co" style="color:#E91E63">hello@amioki.co</a> · Greenbrier Library, Chesapeake VA
+  </div>
+</div>`;
+
+function minimumReachedEmail(firstName, session, paymentLink) {
+  return emailBase(`
+    <h2 style="color:#E91E63;margin:0 0 8px">Great news, ${firstName}! 🎉</h2>
+    <p style="color:#4A2540">Your class just hit the minimum — it's officially happening!</p>
+    <div style="background:white;border-radius:14px;padding:16px;border:1.5px solid #FFB6D9;margin:16px 0">
+      <div style="font-weight:700;color:#E91E63">🪨 Rock Solid Foundation: Pet Rock Workshop</div>
+      <div style="color:#8B5A75;font-size:14px;margin-top:4px">${session.session_date} · ${session.start_time} · ${session.location_display || "Greenbrier Library"}</div>
+    </div>
+    <p style="color:#4A2540;font-size:14px">Complete your payment to lock in your spot — full balance due <strong>48 hours before class</strong>.</p>
+    <a href="${paymentLink}" style="display:block;background:linear-gradient(135deg,#FF8DC0,#E91E63);color:white;text-align:center;padding:14px;border-radius:14px;font-weight:700;text-decoration:none;margin:16px 0">Pay Now — $55 ✿</a>
+    <p style="font-size:12px;color:#B894A8;text-align:center">Spots are first-come, first-served after payment 🌸</p>`);
+}
+
+function enrollmentReceiptEmail(firstName, session) {
+  return emailBase(`
+    <h2 style="color:#E91E63;margin:0 0 8px">You're in, ${firstName}! 🪨✨</h2>
+    <p style="color:#4A2540">Your spot is confirmed and paid. We can't wait to see you!</p>
+    <div style="background:white;border-radius:14px;padding:16px;border:1.5px solid #FFB6D9;margin:16px 0">
+      <div style="font-weight:700;color:#E91E63">🪨 Rock Solid Foundation: Pet Rock Workshop</div>
+      <div style="color:#8B5A75;font-size:14px;margin-top:4px">${session.session_date} · ${session.start_time}</div>
+      <div style="color:#8B5A75;font-size:14px">${session.location_display || "Greenbrier Library, Chesapeake VA"}</div>
+    </div>
+    <p style="color:#4A2540;font-size:14px">No experience needed — just show up and we'll handle the rest! 🌸</p>`);
+}
+
+function privateDepositEmail(contactName, groupName, session, depositLink, groupSize, balanceDueDate) {
+  return emailBase(`
+    <h2 style="color:#E91E63;margin:0 0 8px">Almost there, ${contactName}! 🌸</h2>
+    <p style="color:#4A2540">Complete your $100 deposit to lock in <strong>${groupName}'s</strong> private date.</p>
+    <div style="background:white;border-radius:14px;padding:16px;border:1.5px solid #FFB6D9;margin:16px 0">
+      <div style="font-weight:700;color:#E91E63">🪨 Private Workshop — ${groupName}</div>
+      <div style="color:#8B5A75;font-size:14px;margin-top:4px">${session.session_date} · ${session.start_time} · ${groupSize} attendees</div>
+      <div style="color:#8B5A75;font-size:14px">${session.location_display || "Greenbrier Library"}</div>
+    </div>
+    <div style="background:#FFF9C4;border-radius:12px;padding:12px 16px;border:1.5px solid #F9A825;margin-bottom:16px;font-size:13px;color:#4A2540">
+      ⚠️ <strong>Cancellation policy:</strong> The $100 deposit is non-refundable if cancelled within 48 hours of your class date. Full balance due 48 hours before class.
+    </div>
+    <a href="${depositLink}" style="display:block;background:linear-gradient(135deg,#FF8DC0,#E91E63);color:white;text-align:center;padding:14px;border-radius:14px;font-weight:700;text-decoration:none;margin:16px 0">Pay $100 Deposit ✿</a>`);
+}
+
+function privateConfirmedEmail(booking, session, balanceLink) {
+  return emailBase(`
+    <h2 style="color:#E91E63;margin:0 0 8px">Your date is locked, ${booking.contact_name}! 🎉</h2>
+    <p style="color:#4A2540"><strong>${booking.group_name}</strong>'s private workshop is confirmed.</p>
+    <div style="background:white;border-radius:14px;padding:16px;border:1.5px solid #FFB6D9;margin:16px 0">
+      <div style="font-weight:700;color:#E91E63">🪨 Private Workshop — ${booking.group_name}</div>
+      <div style="color:#8B5A75;font-size:14px;margin-top:4px">${session.session_date} · ${session.start_time}</div>
+      <div style="color:#8B5A75;font-size:14px">${session.location_display || "Greenbrier Library"}</div>
+      <div style="color:#8B5A75;font-size:14px">${booking.group_size} attendees</div>
+    </div>
+    <p style="color:#4A2540;font-size:14px">Remaining balance of <strong>$${(booking.balance_amount / 100).toFixed(2)}</strong> is due by <strong>${new Date(booking.balance_due_date).toLocaleDateString()}</strong>.</p>
+    <a href="${balanceLink}" style="display:block;background:linear-gradient(135deg,#FF8DC0,#E91E63);color:white;text-align:center;padding:14px;border-radius:14px;font-weight:700;text-decoration:none;margin:16px 0">Pay Remaining Balance ✿</a>`);
+}
+
+function privateFullyPaidEmail(booking, session) {
+  return emailBase(`
+    <h2 style="color:#E91E63;margin:0 0 8px">All paid up! See you soon ✨</h2>
+    <p style="color:#4A2540"><strong>${booking.group_name}</strong> is fully confirmed and paid.</p>
+    <div style="background:white;border-radius:14px;padding:16px;border:1.5px solid #FFB6D9;margin:16px 0">
+      <div style="font-weight:700;color:#E91E63">🪨 Private Workshop — ${booking.group_name}</div>
+      <div style="color:#8B5A75;font-size:14px;margin-top:4px">${session.session_date} · ${session.start_time}</div>
+      <div style="color:#8B5A75;font-size:14px">${session.location_display || "Greenbrier Library"}</div>
+    </div>
+    <p style="color:#4A2540;font-size:14px">No experience needed — just bring your group and we handle everything. See you there! 🌸</p>`);
+}
+
+function abandonedReminderEmail(firstName, paymentLink, isPrivate) {
+  return emailBase(`
+    <h2 style="color:#E91E63;margin:0 0 8px">Hey ${firstName} — did you get interrupted? 🌸</h2>
+    <p style="color:#4A2540">You started ${isPrivate ? "a private booking" : "signing up"} for an Amioki crochet class but didn't finish. Your spot isn't locked until payment goes through!</p>
+    <a href="${paymentLink}" style="display:block;background:linear-gradient(135deg,#FF8DC0,#E91E63);color:white;text-align:center;padding:14px;border-radius:14px;font-weight:700;text-decoration:none;margin:16px 0">Complete Your ${isPrivate ? "Deposit" : "Payment"} ✿</a>
+    <p style="font-size:12px;color:#B894A8;text-align:center">If you changed your mind, no worries — just ignore this. 🌸</p>`);
+}
+
+function balanceDueEmail(firstName, record, paymentLink) {
+  return emailBase(`
+    <h2 style="color:#E91E63;margin:0 0 8px">Balance due soon, ${firstName}! ⏰</h2>
+    <p style="color:#4A2540">Your full balance is due <strong>48 hours before class</strong>. Don't lose your spot!</p>
+    <a href="${paymentLink}" style="display:block;background:linear-gradient(135deg,#FF8DC0,#E91E63);color:white;text-align:center;padding:14px;border-radius:14px;font-weight:700;text-decoration:none;margin:16px 0">Pay Balance Now ✿</a>`);
+}
+
+function seatReleasedEmail(firstName) {
+  return emailBase(`
+    <h2 style="color:#E91E63;margin:0 0 8px">Your spot was released, ${firstName} 😢</h2>
+    <p style="color:#4A2540">Unfortunately your payment deadline passed and your spot has been released to the waitlist.</p>
+    <p style="color:#4A2540;font-size:14px">If you'd still like to join, head back to the calendar and sign up again — we'd love to have you! 🌸</p>`);
 }
