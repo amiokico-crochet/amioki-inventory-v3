@@ -88,6 +88,10 @@ export default {
       if (action === "getMyBatches")   return json({ ok: true, batches: await getMyBatches(env, who) });
       if (action === "submitQC")       return json(await submitQC(env, url.searchParams, who));
       if (action === "getQC")          return json({ ok: true, qc: await getQC(env, url.searchParams) });
+      if (action === "submitClassCount") {
+        if (!["sydni", "ami", "master"].includes(who)) return json({ ok: false, error: "Not allowed" }, 403);
+        return json(await submitClassCount(env, url.searchParams, who));
+      }
 
       if (action === "getContracts") {
         return json(role.isMaster
@@ -106,6 +110,17 @@ export default {
       if (action === "resolveUnmatched") return json(await resolveUnmatched(env, url.searchParams, ctx, who));
       if (action === "updatePieceRate")  return json(await updatePieceRate(env, url.searchParams));
       if (action === "manualDelivery")   return json(await manualDelivery(env, url.searchParams, ctx));
+      
+      // ── CLASS INVENTORY writes (ami + master) ──
+      if (action === "saveClass")          return json(await saveClass(env, url.searchParams));
+      if (action === "deleteClass")        return json(await deleteClass(env, url.searchParams));
+      if (action === "addClassItem")       return json(await addClassItem(env, url.searchParams, ctx));
+      if (action === "setItemClassFlag")   return json(await setItemClassFlag(env, url.searchParams));
+      if (action === "logClassSession")    return json(await logClassSession(env, url.searchParams, who));
+      if (action === "startClassSession")  return json(await startClassSession(env, url.searchParams, ctx));
+      if (action === "cancelClassSession") return json(await cancelClassSession(env, url.searchParams, ctx));
+      if (action === "approveClassCount")  return json(await approveClassCount(env, url.searchParams, ctx, who));
+      if (action === "rejectClassCount")   return json(await rejectClassCount(env, url.searchParams, who));
 
       // ── AMI GOALS + RATE CARD (ami + master) ──
       if (action === "getAmiGoals")       return json(await getAmiGoals(env, who));
@@ -2230,4 +2245,228 @@ function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status, headers: { "Content-Type": "application/json", ...CORS }
   });
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🌷 CLASS INVENTORY — classes, sessions, counts
+// ═══════════════════════════════════════════════════════════
+
+function safeJson(s, fallback) {
+  try { return s ? JSON.parse(s) : fallback; } catch (e) { return fallback; }
+}
+
+async function getClassInventory(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM items WHERE is_class = 1 AND archived = 0 ORDER BY name"
+  ).all();
+  return results.map(rowToItem);
+}
+
+async function getClasses(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM classes WHERE active = 1 ORDER BY name"
+  ).all();
+  return results.map(c => ({ ...c, recipe: safeJson(c.recipe_json, []) }));
+}
+
+async function getClassSessions(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM class_sessions ORDER BY session_date DESC, id DESC LIMIT 100"
+  ).all();
+  return results.map(s => ({ ...s, deducted_items: safeJson(s.deducted_json, []) }));
+}
+
+async function getClassCounts(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM class_counts ORDER BY id DESC LIMIT 60"
+  ).all();
+  return results.map(c => ({ ...c, counts: safeJson(c.counts_json, []) }));
+}
+
+async function getClassLog(env, params) {
+  const limit = Math.min(Number(params.get("limit")) || 80, 300);
+  const { results } = await env.DB.prepare(
+    `SELECT sl.* FROM sales_log sl
+     JOIN items i ON sl.item_id = i.id
+     WHERE i.is_class = 1
+     ORDER BY sl.timestamp DESC LIMIT ?`
+  ).bind(limit).all();
+  return results;
+}
+
+async function saveClass(env, params) {
+  const id = Number(params.get("id")) || 0;
+  const name = (params.get("name") || "").trim();
+  const notes = params.get("notes") || "";
+  const recipe_json = params.get("recipe_json") || "[]";
+  if (!name) return { ok: false, error: "Class name required" };
+  try { JSON.parse(recipe_json); } catch (e) { return { ok: false, error: "Bad recipe data" }; }
+  if (id) {
+    await env.DB.prepare("UPDATE classes SET name=?, notes=?, recipe_json=? WHERE id=?")
+      .bind(name, notes, recipe_json, id).run();
+    return { ok: true, id };
+  }
+  try {
+    const r = await env.DB.prepare("INSERT INTO classes (name, notes, recipe_json) VALUES (?,?,?)")
+      .bind(name, notes, recipe_json).run();
+    return { ok: true, id: r.meta.last_row_id };
+  } catch (err) {
+    if (String(err.message).includes("UNIQUE")) return { ok: false, error: `"${name}" already exists` };
+    throw err;
+  }
+}
+
+async function deleteClass(env, params) {
+  const id = Number(params.get("id"));
+  if (!id) return { ok: false, error: "ID required" };
+  await env.DB.prepare("UPDATE classes SET active = 0 WHERE id = ?").bind(id).run();
+  return { ok: true };
+}
+
+async function addClassItem(env, params, ctx) {
+  const name = (params.get("name") || "").trim();
+  if (!name) return { ok: false, error: "Name required" };
+  const on_hand = Math.max(0, Number(params.get("on_hand")) || 0);
+  const min_stock = Math.max(0, Number(params.get("min_stock")) || 0);
+  const existing = await env.DB.prepare("SELECT id FROM items WHERE name = ? COLLATE NOCASE").bind(name).first();
+  if (existing) {
+    await env.DB.prepare("UPDATE items SET is_class = 1 WHERE id = ?").bind(existing.id).run();
+    return { ok: true, id: existing.id, flagged: true };
+  }
+  const r = await env.DB.prepare(
+    "INSERT INTO items (name, crocheter, on_hand, min_stock, is_class) VALUES (?, 'Class', ?, ?, 1)"
+  ).bind(name, on_hand, min_stock).run();
+  ctx.waitUntil(auditLog(env, { action: "add_class_item", item: name, qty: on_hand, note: "Class stock" }));
+  return { ok: true, id: r.meta.last_row_id };
+}
+
+async function setItemClassFlag(env, params) {
+  const id = Number(params.get("item_id"));
+  const flag = params.get("is_class") === "1" ? 1 : 0;
+  if (!id) return { ok: false, error: "item_id required" };
+  await env.DB.prepare("UPDATE items SET is_class = ? WHERE id = ?").bind(flag, id).run();
+  return { ok: true };
+}
+
+async function logClassSession(env, params, who) {
+  const class_id = Number(params.get("class_id"));
+  const session_date = params.get("session_date") || new Date().toISOString().split("T")[0];
+  const num_students = Math.max(0, Number(params.get("num_students")) || 0);
+  const note = params.get("note") || "";
+  if (!class_id) return { ok: false, error: "class_id required" };
+  const cls = await env.DB.prepare("SELECT * FROM classes WHERE id = ?").bind(class_id).first();
+  if (!cls) return { ok: false, error: "Class not found" };
+  const r = await env.DB.prepare(
+    `INSERT INTO class_sessions (class_id, class_name, session_date, num_students, status, note, created_by)
+     VALUES (?,?,?,?,'scheduled',?,?)`
+  ).bind(class_id, cls.name, session_date, num_students, note, who || "").run();
+  return { ok: true, id: r.meta.last_row_id };
+}
+
+async function startClassSession(env, params, ctx) {
+  const id = Number(params.get("id"));
+  if (!id) return { ok: false, error: "session id required" };
+  const s = await env.DB.prepare("SELECT * FROM class_sessions WHERE id = ?").bind(id).first();
+  if (!s) return { ok: false, error: "Session not found" };
+  if (s.deducted) return { ok: false, error: "Already deducted" };
+  const cls = await env.DB.prepare("SELECT * FROM classes WHERE id = ?").bind(s.class_id).first();
+  const recipe = safeJson(cls && cls.recipe_json, []);
+  if (!recipe.length) return { ok: false, error: "Class has no recipe" };
+  const now = new Date().toISOString();
+  const deducted = [];
+  const stmts = [];
+  for (const line of recipe) {
+    const item = await env.DB.prepare("SELECT * FROM items WHERE id = ?").bind(line.item_id).first();
+    if (!item) continue;
+    const total = (line.per === "session") ? Number(line.qty) : Number(line.qty) * s.num_students;
+    if (total <= 0) continue;
+    const newQty = Math.max(0, item.on_hand - total);
+    stmts.push(env.DB.prepare("UPDATE items SET on_hand=?, updated_at=? WHERE id=?").bind(newQty, now, item.id));
+    stmts.push(env.DB.prepare("INSERT INTO sales_log (item_id, item_name, qty, type, note) VALUES (?,?,?,?,?)")
+      .bind(item.id, item.name, -total, "class", `${s.class_name} · ${s.session_date} · ${s.num_students} students`));
+    deducted.push({ item_id: item.id, name: item.name, qty_deducted: total });
+  }
+  stmts.push(env.DB.prepare("UPDATE class_sessions SET status='started', deducted=1, deducted_json=?, started_at=? WHERE id=?")
+    .bind(JSON.stringify(deducted), now, id));
+  await env.DB.batch(stmts);
+  ctx.waitUntil(auditLog(env, { action: "class_session_start", item: s.class_name, qty: s.num_students, note: "Inventory deducted" }));
+  return { ok: true, deducted };
+}
+
+async function cancelClassSession(env, params, ctx) {
+  const id = Number(params.get("id"));
+  if (!id) return { ok: false, error: "session id required" };
+  const s = await env.DB.prepare("SELECT * FROM class_sessions WHERE id = ?").bind(id).first();
+  if (!s) return { ok: false, error: "Session not found" };
+  const now = new Date().toISOString();
+  const stmts = [];
+  if (s.deducted) {
+    const lines = safeJson(s.deducted_json, []);
+    for (const l of lines) {
+      const item = await env.DB.prepare("SELECT on_hand FROM items WHERE id = ?").bind(l.item_id).first();
+      if (!item) continue;
+      stmts.push(env.DB.prepare("UPDATE items SET on_hand=?, updated_at=? WHERE id=?")
+        .bind(item.on_hand + Number(l.qty_deducted), now, l.item_id));
+      stmts.push(env.DB.prepare("INSERT INTO sales_log (item_id, item_name, qty, type, note) VALUES (?,?,?,?,?)")
+        .bind(l.item_id, l.name, Number(l.qty_deducted), "class", `Cancelled: ${s.class_name} · ${s.session_date}`));
+    }
+  }
+  stmts.push(env.DB.prepare("UPDATE class_sessions SET status='cancelled', deducted=0, cancelled_at=? WHERE id=?")
+    .bind(now, id));
+  await env.DB.batch(stmts);
+  return { ok: true };
+}
+
+async function submitClassCount(env, params, who) {
+  const note = params.get("note") || "";
+  const signature = (params.get("signature") || "").trim();
+  const count_date = params.get("count_date") || new Date().toISOString().split("T")[0];
+  let counts;
+  try { counts = JSON.parse(params.get("counts") || "[]"); } catch (e) { return { ok: false, error: "Bad count data" }; }
+  if (!signature) return { ok: false, error: "Signature required" };
+  if (!Array.isArray(counts) || !counts.length) return { ok: false, error: "No counts entered" };
+  const enriched = [];
+  for (const c of counts) {
+    const item = await env.DB.prepare("SELECT id, name, on_hand FROM items WHERE id = ?").bind(c.item_id).first();
+    if (!item) continue;
+    enriched.push({ item_id: item.id, name: item.name, counted_qty: Number(c.counted_qty), prev_on_hand: item.on_hand });
+  }
+  const r = await env.DB.prepare(
+    `INSERT INTO class_counts (counted_by, count_date, note, signature, status, counts_json)
+     VALUES (?,?,?,?, 'pending', ?)`
+  ).bind(who, count_date, note, signature, JSON.stringify(enriched)).run();
+  return { ok: true, id: r.meta.last_row_id };
+}
+
+async function approveClassCount(env, params, ctx, who) {
+  const id = Number(params.get("id"));
+  if (!id) return { ok: false, error: "count id required" };
+  const c = await env.DB.prepare("SELECT * FROM class_counts WHERE id = ?").bind(id).first();
+  if (!c) return { ok: false, error: "Count not found" };
+  if (c.status !== "pending") return { ok: false, error: "Already " + c.status };
+  const lines = safeJson(c.counts_json, []);
+  const now = new Date().toISOString();
+  const stmts = [];
+  for (const l of lines) {
+    const delta = Number(l.counted_qty) - Number(l.prev_on_hand);
+    stmts.push(env.DB.prepare("UPDATE items SET on_hand=?, updated_at=? WHERE id=?")
+      .bind(Number(l.counted_qty), now, l.item_id));
+    if (delta !== 0) {
+      stmts.push(env.DB.prepare("INSERT INTO sales_log (item_id, item_name, qty, type, note) VALUES (?,?,?,?,?)")
+        .bind(l.item_id, l.name, delta, "count_adjust", `Count by ${c.counted_by} · ${c.count_date}`));
+    }
+  }
+  stmts.push(env.DB.prepare("UPDATE class_counts SET status='approved', approved_by=?, approved_at=? WHERE id=?")
+    .bind(who, now, id));
+  await env.DB.batch(stmts);
+  ctx.waitUntil(auditLog(env, { action: "class_count_approved", item: "Class count #" + id, qty: lines.length, note: "by " + c.counted_by }));
+  return { ok: true };
+}
+
+async function rejectClassCount(env, params, who) {
+  const id = Number(params.get("id"));
+  if (!id) return { ok: false, error: "count id required" };
+  await env.DB.prepare("UPDATE class_counts SET status='rejected', approved_by=?, approved_at=? WHERE id=? AND status='pending'")
+    .bind(who, new Date().toISOString(), id).run();
+  return { ok: true };
 }
