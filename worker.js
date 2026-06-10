@@ -74,6 +74,13 @@ export default {
       if (action === "getSalesLog")    return json({ ok: true, sales:   await getSalesLog(env, who, url.searchParams) });
       if (action === "getMyProfile")   return json({ ok: true, profile: await getProfile(env, who) });
       if (action === "updateMyProfile") return json(await updateProfile(env, who, url.searchParams));
+      
+      // ── CLASS INVENTORY reads ──
+      if (action === "getClassInventory") return json({ ok: true, items:    await getClassInventory(env) });
+      if (action === "getClasses")        return json({ ok: true, classes:  await getClasses(env) });
+      if (action === "getClassSessions")  return json({ ok: true, sessions: await getClassSessions(env) });
+      if (action === "getClassCounts")    return json({ ok: true, counts:   await getClassCounts(env) });
+      if (action === "getClassLog")       return json({ ok: true, log:      await getClassLog(env, url.searchParams) });
 
       // ── CROCHETER actions ──
       if (action === "getPieceRates")  return json({ ok: true, rates: await getPieceRates(env, url.searchParams.get("crocheter")) });
