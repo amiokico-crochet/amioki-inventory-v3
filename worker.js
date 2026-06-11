@@ -2377,15 +2377,16 @@ async function logClassSession(env, params, who) {
   const class_id = Number(params.get("class_id"));
   const session_date = params.get("session_date") || new Date().toISOString().split("T")[0];
   const session_time = params.get("session_time") || "";
+  const end_time = params.get("end_time") || "";
   const num_students = Math.max(0, Number(params.get("num_students")) || 0);
   const note = params.get("note") || "";
   if (!class_id) return { ok: false, error: "class_id required" };
   const cls = await env.DB.prepare("SELECT * FROM classes WHERE id = ?").bind(class_id).first();
   if (!cls) return { ok: false, error: "Class not found" };
   const r = await env.DB.prepare(
-    `INSERT INTO class_sessions (class_id, class_name, session_date, session_time, num_students, status, note, created_by)
-     VALUES (?,?,?,?,?,'scheduled',?,?)`
-  ).bind(class_id, cls.name, session_date, session_time, num_students, note, who || "").run();
+    `INSERT INTO class_sessions (class_id, class_name, session_date, session_time, end_time, num_students, status, note, created_by)
+     VALUES (?,?,?,?,?,?,'scheduled',?,?)`
+  ).bind(class_id, cls.name, session_date, session_time, end_time, num_students, note, who || "").run();
   return { ok: true, id: r.meta.last_row_id };
 }
 
