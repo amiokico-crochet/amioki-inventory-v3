@@ -348,7 +348,8 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <button class="tab active" data-tab="contract">📋 Contract</button>
       <button class="tab" data-tab="log">📦 Log Batch</button>
       <button class="tab" data-tab="qc">✅ Quality Check</button>
-      <button class="tab" data-tab="history">📅 History</button>
+      <button class="tab" data-tab="ami-history">📅 History</button>
+      <button class="tab" data-tab="schedule">🗓️ Schedule</button>`;
     </div>
 
     <!-- CONTRACT TAB -->
@@ -880,7 +881,7 @@ function showApp() {
   $("qcDate").value = new Date().toISOString().split("T")[0];
 
   if (selectedRole === "ami") {
-    const amiPanels = ["receive","suppliers","batches","inventory","goals","rates","ami-history","materials","candy"];
+    const amiPanels = ["receive","suppliers","batches","inventory","goals","rates","ami-history","schedule"];
 
     // Hide all crocheter panels
     ["contract","log","qc","history","batches"].forEach(id => {
