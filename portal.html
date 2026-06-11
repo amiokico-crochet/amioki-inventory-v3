@@ -732,7 +732,74 @@ input,select,textarea{font-family:inherit;font-size:15px}
     <div class="tab-panel" id="panel-ami-history" style="display:none">
       <div id="amiHistoryList"><div class="loading">Loading...</div></div>
     </div>
+    <!-- SCHEDULE TAB (Ami only) -->
+    <div class="tab-panel" id="panel-schedule" style="display:none">
 
+      <!-- VENUE TEMPLATES -->
+      <div class="card">
+        <div class="card-title">📍 Venue Templates</div>
+        <p style="font-size:12px;color:var(--mid);margin-bottom:12px">Add each venue once. Paste a real confirmation email — the system extracts the subject pattern automatically. GAS uses this to detect future bookings.</p>
+        <div id="venueFormWrap">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Venue Name (internal)</label><input type="text" id="vtName" placeholder="e.g. Greenbrier Library"></div>
+            <div class="field"><label>Display Name (public)</label><input type="text" id="vtDisplay" placeholder="e.g. Greenbrier Library, Chesapeake VA"></div>
+          </div>
+          <div class="field"><label>Address (optional)</label><input type="text" id="vtAddress" placeholder="900 Greenbrier Pkwy, Chesapeake, VA 23320"></div>
+          <div class="field"><label>Notes (optional)</label><input type="text" id="vtNotes" placeholder="e.g. 4hr max, must book 2 weeks ahead"></div>
+          <div class="field">
+            <label>📧 Paste a confirmation email (subject line first, then body)</label>
+            <textarea id="vtRawEmail" style="min-height:130px;resize:vertical;font-size:13px;line-height:1.6" placeholder="Paste the full confirmation email here. Put the subject line on the first line.&#10;&#10;Example:&#10;Room Reservation Confirmed&#10;&#10;Your reservation at Greenbrier Library has been confirmed for June 25, 2026 from 10:00 AM to 2:00 PM..."></textarea>
+            <div style="font-size:11px;color:var(--soft);margin-top:4px">💡 GAS will use this sample to recognize and parse future confirmation emails from this venue automatically.</div>
+          </div>
+          <div id="vtParsePreview" style="display:none;background:var(--mint);border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px;border:1.5px solid #A5D6A7">
+            <div style="font-weight:700;color:#2E6B47;margin-bottom:6px">✓ Detected from email:</div>
+            <div id="vtPreviewContent"></div>
+          </div>
+          <div id="vtParseError" style="display:none;background:#FFE5E5;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#C24040;border:1.5px solid #FFCDD2"></div>
+          <input type="hidden" id="vtSubject">
+          <input type="hidden" id="vtEditId">
+          <div class="row" style="gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="previewVenueParse()" style="width:auto">🔍 Preview Parse</button>
+            <button class="btn btn-primary" id="vtSaveBtn" onclick="saveVenueTemplate()" style="flex:1">Save Venue ✿</button>
+          </div>
+        </div>
+        <div id="venueList" style="margin-top:14px"></div>
+      </div>
+
+      <!-- ADD / EDIT SESSION -->
+      <div class="card">
+        <div class="card-title" id="sessFormTitle">🗓️ Add Session</div>
+        <p style="font-size:12px;color:var(--mid);margin-bottom:12px">Manually add a class date or edit an existing one. Email-imported sessions appear below as Pending Review.</p>
+        <div class="row">
+          <div class="field" style="flex:1"><label>Date</label><input type="date" id="sfDate"></div>
+          <div class="field" style="flex:1"><label>Start Time</label><input type="time" id="sfStart"></div>
+          <div class="field" style="flex:1"><label>End Time</label><input type="time" id="sfEnd"></div>
+        </div>
+        <div class="field"><label>Venue</label>
+          <select id="sfVenue" onchange="syncVenueDisplay()">
+            <option value="">— Select venue —</option>
+          </select>
+        </div>
+        <div class="field"><label>Location Display (auto-filled)</label><input type="text" id="sfDisplay" placeholder="Greenbrier Library, Chesapeake VA"></div>
+        <div class="field"><label>Status</label>
+          <select id="sfStatus">
+            <option value="active">Active — visible on calendar</option>
+            <option value="pending_review">Pending Review</option>
+            <option value="hidden">Hidden</option>
+          </select>
+        </div>
+        <div class="field"><label>Notes (internal)</label><input type="text" id="sfNotes" placeholder="Optional"></div>
+        <input type="hidden" id="sfEditId">
+        <div class="row" style="gap:8px">
+          <button class="btn btn-primary" id="sfSaveBtn" onclick="saveSession()" style="flex:1">Save Session ✿</button>
+          <button class="btn btn-ghost" onclick="resetSessionForm()" style="width:auto">Clear</button>
+        </div>
+      </div>
+
+      <!-- SESSION LIST -->
+      <div id="scheduleList"><div class="loading">Loading...</div></div>
+
+    </div>
     <!-- AMI: GOALS TAB -->
     <div class="tab-panel" id="panel-goals" style="display:none">
       <div class="g-mini-stats">
@@ -904,6 +971,7 @@ function showApp() {
       <button class="tab" data-tab="goals">🎯 Goals</button>
       <button class="tab" data-tab="rates">💰 Rate Card</button>
       <button class="tab" data-tab="ami-history">📅 History</button>
+      <button class="tab" data-tab="schedule">🗓️ Schedule</button>`;
       <button class="tab" data-tab="materials">🧶 Supplies</button>
       <button class="tab" data-tab="candy">🍬 Candy</button>`;
 
@@ -924,6 +992,7 @@ function showApp() {
         if (t.dataset.tab === "inventory")   loadPortalInventory();
         if (t.dataset.tab === "suppliers")   loadSuppliers();
         if (t.dataset.tab === "ami-history") loadAmiHistory();
+        if (t.dataset.tab === "schedule")    loadScheduleTab();
         if (t.dataset.tab === "goals")       loadGoals();
         if (t.dataset.tab === "rates")       loadRates();
         if (t.dataset.tab === "materials")   loadMaterials();
@@ -2428,6 +2497,263 @@ let toastTimer;
 function toast(msg, kind = "") {
   const t = $("toast"); t.textContent = msg; t.className = "toast show " + kind;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = "toast " + kind, 3000);
+}
+  // ══════════════════════════════════════════════
+// 🗓️ SCHEDULE TAB
+// ══════════════════════════════════════════════
+
+let venueCache = [], scheduleCache = [];
+
+async function loadScheduleTab() {
+  await Promise.all([loadVenues(), loadScheduleSessions()]);
+}
+
+// ── VENUES ──
+
+async function loadVenues() {
+  const r = await api("getVenueTemplates");
+  venueCache = r.templates || [];
+  renderVenueList();
+  populateVenueDropdown();
+}
+
+function renderVenueList() {
+  const c = $("venueList");
+  if (!venueCache.length) { c.innerHTML = '<div class="empty">No venues yet — add one above ✿</div>'; return; }
+  c.innerHTML = venueCache.map(v => `
+    <div class="inv-row" style="flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px">
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+        <div>
+          <div class="inv-name">${esc(v.venue_name)}</div>
+          <div class="inv-sub">${esc(v.location_display)}${v.address ? ' · ' + esc(v.address) : ''}</div>
+          ${v.subject_pattern ? `<div class="inv-sub">📧 Subject pattern: "${esc(v.subject_pattern)}"</div>` : ''}
+          ${v.notes ? `<div class="inv-sub">📝 ${esc(v.notes)}</div>` : ''}
+          <div class="inv-sub" style="color:${v.body_sample ? '#2E6B47' : '#E65100'}">${v.body_sample ? '✓ Sample email stored' : '⚠ No sample email yet'}</div>
+        </div>
+        <div class="row" style="gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="editVenue(${v.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteVenue(${v.id})">Del</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function populateVenueDropdown() {
+  $("sfVenue").innerHTML = '<option value="">— Select venue —</option>' +
+    venueCache.map(v => `<option value="${v.id}" data-display="${esc(v.location_display)}">${esc(v.venue_name)}</option>`).join('');
+}
+
+function syncVenueDisplay() {
+  const sel = $("sfVenue").selectedOptions[0];
+  if (sel && sel.dataset.display) $("sfDisplay").value = sel.dataset.display;
+}
+
+function previewVenueParse() {
+  const raw = $("vtRawEmail").value.trim();
+  if (!raw) return toast("Paste an email first", "error");
+  const parsed = clientParseEmail(raw);
+  const preview = $("vtParsePreview"), errBox = $("vtParseError");
+  if (parsed.subject) {
+    $("vtSubject").value = parsed.subject;
+    $("vtPreviewContent").innerHTML = `
+      <div><strong>Subject pattern:</strong> ${esc(parsed.subject)}</div>
+      ${parsed.date    ? `<div><strong>Sample date found:</strong> ${esc(parsed.date)}</div>` : '<div style="color:#E65100">⚠ No date detected — GAS will still try to parse future emails</div>'}
+      ${parsed.time    ? `<div><strong>Sample time found:</strong> ${esc(parsed.time)}</div>` : ''}
+      ${parsed.endTime ? `<div><strong>End time:</strong> ${esc(parsed.endTime)}</div>` : ''}`;
+    preview.style.display = "block"; errBox.style.display = "none";
+    toast("Parsed ✿", "success");
+  } else {
+    errBox.textContent = "Could not extract a subject line. Make sure the first line is the email subject.";
+    errBox.style.display = "block"; preview.style.display = "none";
+  }
+}
+
+function clientParseEmail(raw) {
+  const lines = raw.split("\n");
+  let subject = "";
+  for (const line of lines) {
+    const t = line.trim();
+    if (/^subject:/i.test(t)) { subject = t.replace(/^subject:\s*/i,"").trim(); break; }
+  }
+  if (!subject) { for (const line of lines) { if (line.trim()) { subject = line.trim(); break; } } }
+  const datePatterns = [
+    /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/,
+    /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})/i,
+    /(\d{1,2})\/(\d{1,2})\/(\d{4})/,
+    /(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})/i,
+  ];
+  let date = null;
+  for (const pat of datePatterns) { const m = raw.match(pat); if (m) { date = m[0]; break; } }
+  let time = null, endTime = null;
+  const tr = raw.match(/(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))\s*[-–to]+\s*(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/i);
+  if (tr) { time = tr[1]; endTime = tr[2]; }
+  else { const st = raw.match(/(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/i); if (st) time = st[1]; }
+  return { subject, date, time, endTime, body: raw };
+}
+
+async function saveVenueTemplate() {
+  const name    = $("vtName").value.trim();
+  const display = $("vtDisplay").value.trim();
+  const raw     = $("vtRawEmail").value.trim();
+  if (!name)    return toast("Venue name required", "error");
+  if (!display) return toast("Display name required", "error");
+  if (!raw)     return toast("Paste a confirmation email first", "error");
+  const parsed = clientParseEmail(raw);
+  if (parsed.subject) $("vtSubject").value = parsed.subject;
+  const btn = $("vtSaveBtn"); btn.disabled = true;
+  const params = {
+    venue_name: name, location_display: display,
+    address: $("vtAddress").value.trim(),
+    subject_pattern: $("vtSubject").value.trim() || parsed.subject || "",
+    body_sample: raw,
+    notes: $("vtNotes").value.trim()
+  };
+  if ($("vtEditId").value) params.id = $("vtEditId").value;
+  const r = await api("saveVenueTemplate", params);
+  btn.disabled = false;
+  if (r.ok) { toast("Venue saved ✿", "success"); resetVenueForm(); loadVenues(); }
+  else toast(r.error || "Failed", "error");
+}
+
+function editVenue(id) {
+  const v = venueCache.find(x => x.id === id); if (!v) return;
+  $("vtEditId").value   = v.id;    $("vtName").value    = v.venue_name;
+  $("vtDisplay").value  = v.location_display; $("vtAddress").value = v.address || '';
+  $("vtRawEmail").value = v.body_sample || ''; $("vtSubject").value = v.subject_pattern || '';
+  $("vtNotes").value    = v.notes || '';
+  $("vtParsePreview").style.display = "none"; $("vtParseError").style.display = "none";
+  $("vtSaveBtn").textContent = "Update Venue ✿";
+  $("vtName").scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+async function deleteVenue(id) {
+  if (!confirm("Remove this venue?")) return;
+  const r = await api("deleteVenueTemplate", { id });
+  if (r.ok) { toast("Removed ✿", "success"); loadVenues(); }
+  else toast(r.error || "Failed", "error");
+}
+
+function resetVenueForm() {
+  ["vtEditId","vtName","vtDisplay","vtAddress","vtRawEmail","vtSubject","vtNotes"].forEach(i => { const el=$(i); if(el) el.value=''; });
+  $("vtParsePreview").style.display = "none"; $("vtParseError").style.display = "none";
+  $("vtSaveBtn").textContent = "Save Venue ✿";
+}
+
+// ── SESSIONS ──
+
+async function loadScheduleSessions() {
+  const r = await api("getSchedule");
+  scheduleCache = r.sessions || [];
+  renderScheduleList();
+}
+
+function renderScheduleList() {
+  const c = $("scheduleList");
+  if (!scheduleCache.length) { c.innerHTML = '<div class="empty">No sessions yet — add one above ✿</div>'; return; }
+  const pending = scheduleCache.filter(s => s.status === 'pending_review');
+  const active  = scheduleCache.filter(s => s.status === 'active');
+  const locked  = scheduleCache.filter(s => s.status === 'private_locked');
+  const hidden  = scheduleCache.filter(s => s.status === 'hidden');
+  const grp = (title, color, list) => {
+    if (!list.length) return '';
+    return `<div class="group-label" style="color:${color}">${title}</div>` +
+      list.map(s => {
+        const enrolled = s.enrolled_count || 0, paid = s.paid_count || 0;
+        const isPrivate = s.status === 'private_locked';
+        return `<div class="card" style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:start;gap:8px">
+            <div>
+              <div class="inv-name">${esc(s.session_date)} · ${esc(s.start_time)}${s.end_time ? ' – '+esc(s.end_time) : ''}</div>
+              <div class="inv-sub">📍 ${esc(s.location_display || s.venue_name || '—')}</div>
+              <div class="inv-sub">${isPrivate ? '🔒 Private booking' : `👥 ${enrolled} enrolled · ${paid} paid`}${s.source==='email_import'?' · 📧 email import':''}</div>
+              ${s.notes ? `<div class="inv-sub">📝 ${esc(s.notes)}</div>` : ''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0">
+              ${s.status === 'pending_review'
+                ? `<button class="btn btn-primary btn-sm" onclick="approveSession(${s.id})">✓ Approve</button>
+                   <button class="btn btn-danger btn-sm" onclick="deleteSession(${s.id})">Delete</button>`
+                : `<button class="btn btn-ghost btn-sm" onclick="editSession(${s.id})">Edit</button>
+                   ${!isPrivate ? `<button class="btn btn-danger btn-sm" onclick="deleteSession(${s.id})">Del</button>` : ''}`}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+            ${s.status !== 'active'          ? `<button class="btn btn-ghost btn-sm" onclick="setSessionStatus(${s.id},'active')">Set Active</button>` : ''}
+            ${s.status !== 'hidden'          ? `<button class="btn btn-ghost btn-sm" onclick="setSessionStatus(${s.id},'hidden')">Hide</button>` : ''}
+            ${s.status !== 'pending_review'  ? `<button class="btn btn-ghost btn-sm" onclick="setSessionStatus(${s.id},'pending_review')">Set Pending</button>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+  };
+  c.innerHTML =
+    grp("📬 Pending Review", "#8B6914", pending) +
+    grp("✅ Active", "var(--pink-600)", active) +
+    grp("🔒 Private Locked", "#6A1B9A", locked) +
+    grp("👁 Hidden", "#9E9E9E", hidden);
+}
+
+async function approveSession(id) {
+  const r = await api("updateSessionStatus", { id, status:"active" });
+  if (r.ok) { toast("Approved ✿","success"); loadScheduleSessions(); }
+  else toast(r.error||"Failed","error");
+}
+
+async function setSessionStatus(id, status) {
+  const r = await api("updateSessionStatus", { id, status });
+  if (r.ok) { toast("Updated ✿","success"); loadScheduleSessions(); }
+  else toast(r.error||"Failed","error");
+}
+
+async function deleteSession(id) {
+  if (!confirm("Delete this session? Cannot delete if paid enrollments exist.")) return;
+  const r = await api("deleteScheduleSession", { id });
+  if (r.ok) { toast("Deleted ✿","success"); loadScheduleSessions(); }
+  else toast(r.error||"Failed","error");
+}
+
+function editSession(id) {
+  const s = scheduleCache.find(x => x.id === id); if (!s) return;
+  $("sfEditId").value  = s.id;    $("sfDate").value    = s.session_date;
+  $("sfStart").value   = s.start_time; $("sfEnd").value = s.end_time || '';
+  $("sfDisplay").value = s.location_display || ''; $("sfStatus").value = s.status;
+  $("sfNotes").value   = s.notes || '';
+  const vMatch = venueCache.find(v => v.venue_name === s.venue_name);
+  if (vMatch) $("sfVenue").value = vMatch.id;
+  $("sessFormTitle").textContent = "✏️ Edit Session";
+  $("sfSaveBtn").textContent = "Update Session ✿";
+  $("sfDate").scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+async function saveSession() {
+  const date  = $("sfDate").value;
+  const start = $("sfStart").value;
+  if (!date)  return toast("Date required","error");
+  if (!start) return toast("Start time required","error");
+  const venueId = $("sfVenue").value;
+  const venue   = venueCache.find(v => v.id === Number(venueId));
+  const btn = $("sfSaveBtn"); btn.disabled = true;
+  const params = {
+    session_date:     date,
+    start_time:       start,
+    end_time:         $("sfEnd").value,
+    venue_id:         venueId || '',
+    venue_name:       venue ? venue.venue_name : '',
+    location_display: $("sfDisplay").value.trim() || (venue ? venue.location_display : ''),
+    status:           $("sfStatus").value,
+    notes:            $("sfNotes").value.trim(),
+    source:           'manual'
+  };
+  if ($("sfEditId").value) params.id = $("sfEditId").value;
+  const r = await api("saveScheduleSession", params);
+  btn.disabled = false;
+  if (r.ok) { toast("Session saved ✿","success"); resetSessionForm(); loadScheduleSessions(); }
+  else toast(r.error||"Failed","error");
+}
+
+function resetSessionForm() {
+  ["sfEditId","sfDate","sfStart","sfEnd","sfDisplay","sfNotes"].forEach(i => { const el=$(i); if(el) el.value=''; });
+  $("sfVenue").value = ''; $("sfStatus").value = 'active';
+  $("sessFormTitle").textContent = "🗓️ Add Session";
+  $("sfSaveBtn").textContent = "Save Session ✿";
 }
 </script>
 </body>
