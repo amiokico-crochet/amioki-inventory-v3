@@ -183,8 +183,13 @@ input,select,textarea{font-family:inherit;font-size:15px}
         <div class="card-title">🗓️ Log a Class Session</div>
         <div class="field"><label>Class</label><select id="sessClass"></select></div>
         <div class="row">
+         <div class="row">
           <div class="field" style="flex:1"><label>Date</label><input type="date" id="sessDate"></div>
-          <div class="field" style="flex:1"><label># Students</label><input type="number" id="sessStudents" value="3" min="0"></div>
+          <div class="field" style="flex:1"><label>Time</label><input type="time" id="sessTime"></div>
+        </div>
+        <div class="field">
+          <label># Students</label><input type="number" id="sessStudents" value="3" min="0">
+        </div>
         </div>
         <div class="field"><label>Note (optional)</label><input type="text" id="sessNote" placeholder="Private / F&F / etc."></div>
         <button class="btn btn-primary" id="logSessBtn">Add Session (no deduction yet) ✿</button>
