@@ -136,10 +136,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
         <p style="font-size:12px;color:var(--mid);margin-bottom:10px">Type the exact item name. If it already exists in inventory it gets flagged as class stock; otherwise a new class item is created.</p>
         <div class="field"><label>Item Name</label><input type="text" id="ciName" placeholder="e.g. Pet Rock Kit, 4mm Hook, Ke-Ki Skein"></div>
         <div class="row">
-          <div class="field" style="flex:1"><label>Date</label><input type="date" id="sessDate"></div>
-          <div class="field" style="flex:1"><label>Start Time</label><input type="time" id="sessTime"></div>
-          <div class="field" style="flex:1"><label>End Time</label><input type="time" id="sessEndTime"></div>
-        </div>
+          <div class="field" style="flex:1"><label>On Hand</label><input type="number" id="ciQty" value="0" min="0"></div>
           <div class="field" style="flex:1"><label>Low-stock alert at</label><input type="number" id="ciMin" value="0" min="0"></div>
         </div>
         <button class="btn btn-primary" id="ciAddBtn">Add to Class Inventory ✿</button>
@@ -188,7 +185,8 @@ input,select,textarea{font-family:inherit;font-size:15px}
         <div class="row">
          <div class="row">
           <div class="field" style="flex:1"><label>Date</label><input type="date" id="sessDate"></div>
-          <div class="field" style="flex:1"><label>Time</label><input type="time" id="sessTime"></div>
+          <div class="field" style="flex:1"><label>Start Time</label><input type="time" id="sessTime"></div>
+          <div class="field" style="flex:1"><label>End Time</label><input type="time" id="sessEndTime"></div>
         </div>
         <div class="field">
           <label># Students</label><input type="number" id="sessStudents" value="3" min="0">
@@ -417,7 +415,6 @@ async function fillSessClassDropdown(){
 $("logSessBtn").addEventListener("click",async()=>{
   const class_id=$("sessClass").value; if(!class_id) return toast("Create a class first","error");
   const btn=$("logSessBtn"); btn.disabled=true;
-  const session_time = params.get("session_time") || "";
   const r=await api("logClassSession",{class_id,session_date:$("sessDate").value,session_time:$("sessTime").value||"",end_time:$("sessEndTime").value||"",num_students:Number($("sessStudents").value)||0,note:$("sessNote").value.trim()});
   btn.disabled=false;
   if(r.ok){ toast("Session added ✿","success"); $("sessNote").value=""; loadSessions(); } else toast(r.error||"Failed","error");
