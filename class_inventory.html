@@ -414,7 +414,7 @@ async function fillSessClassDropdown(){
 $("logSessBtn").addEventListener("click",async()=>{
   const class_id=$("sessClass").value; if(!class_id) return toast("Create a class first","error");
   const btn=$("logSessBtn"); btn.disabled=true;
-  const r=await api("logClassSession",{class_id,session_date:$("sessDate").value,num_students:Number($("sessStudents").value)||0,note:$("sessNote").value.trim()});
+  const r=await api("logClassSession",{class_id,session_date:$("sessDate").value,session_time:$("sessTime").value||"",num_students:Number($("sessStudents").value)||0,note:$("sessNote").value.trim()});
   btn.disabled=false;
   if(r.ok){ toast("Session added ✿","success"); $("sessNote").value=""; loadSessions(); } else toast(r.error||"Failed","error");
 });
