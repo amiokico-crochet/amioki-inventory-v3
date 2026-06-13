@@ -629,9 +629,10 @@ async function deductOrUnmatch(env, lineItem, qty, paymentId, type, ctx) {
 
   const item = await matchItem(env, lineItem.catalog_object_id, lineItem.name);
   if (!item) {
+    const unitPriceCents = lineItem.base_price_money?.amount ?? lineItem.gross_sales_money?.amount ?? 0;
     await env.DB.prepare(
-      `INSERT INTO unmatched_sales (square_name, square_catalog_id, qty, square_payment_id) VALUES (?, ?, ?, ?)`
-    ).bind(lineItem.name || "", lineItem.catalog_object_id || "", qty, paymentId).run();
+      `INSERT INTO unmatched_sales (square_name, square_catalog_id, qty, square_payment_id, unit_price) VALUES (?, ?, ?, ?, ?)`
+    ).bind(lineItem.name || "", lineItem.catalog_object_id || "", qty, paymentId, unitPriceCents).run();
     await auditLog(env, {
       action: "unmatched", item: lineItem.name || "(unknown)", qty,
       note: `No match. ID: ${lineItem.catalog_object_id || "none"}`
