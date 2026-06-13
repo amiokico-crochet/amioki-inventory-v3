@@ -2403,7 +2403,6 @@ async function logClassSession(env, params, who) {
 
   return { ok: true, id: sessionId };
 }
-}
 
 async function startClassSession(env, params, ctx) {
   const id = Number(params.get("id"));
