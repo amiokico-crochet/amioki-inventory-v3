@@ -791,7 +791,7 @@ async function loadUnmatched() {
   list.innerHTML = r.unmatched.map(u => {
     const ds = new Date(u.timestamp).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
     return `<div class="unmatched-card">
-      <div class="um-name">${esc(u.square_name)} × ${u.qty}</div>
+      <div class="um-name">${esc(u.square_name)} × ${u.qty}${u.unit_price ? ` · $${(u.unit_price / 100).toFixed(2)}` : ''}</div>
       <div class="um-meta">${ds}${u.square_catalog_id ? " · " + esc(u.square_catalog_id) : ""}</div>
       <div class="um-actions">
         <button class="um-mini-btn" data-resolve="link" data-id="${u.id}" data-name="${esc(u.square_name)}" data-qty="${u.qty}">🔗 Link</button>
