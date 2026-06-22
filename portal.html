@@ -864,6 +864,28 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <div id="ratesList"><div class="loading">Loading rates</div></div>
     </div>
 
+    <!-- EDIT GOAL MODAL -->
+    <div id="gEditModal" style="display:none;position:fixed;inset:0;background:rgba(74,37,64,.45);z-index:200;place-items:center;padding:16px;backdrop-filter:blur(3px)" onclick="if(event.target===this)closeEditGoalModal()">
+      <div style="background:white;border-radius:28px;padding:22px 18px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);border:2px solid var(--pink-100)">
+        <div style="font-family:'Comfortaa',sans-serif;font-size:18px;font-weight:700;color:var(--pink-600);margin-bottom:2px">✏️ Edit Goal</div>
+        <div style="font-size:12px;color:var(--soft);margin-bottom:16px">Update name, deadline, or items ✿</div>
+        <input type="hidden" id="gEditGoalId">
+        <div class="field">
+          <label>Goal Name</label>
+          <input type="text" id="gEditName" placeholder="e.g. Cherry Blossom Prep">
+        </div>
+        <div class="field">
+          <label>Deadline (optional)</label>
+          <input type="date" id="gEditDeadline">
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--mid);margin:14px 0 6px">Items</div>
+        <div id="gEditItemsList"></div>
+        <button class="btn btn-ghost" id="gEditAddItemBtn" style="margin-top:8px;width:100%">+ Add Item</button>
+        <button class="btn btn-primary" id="gEditSaveBtn" style="margin-top:16px;width:100%">Save Changes ✿</button>
+        <button class="btn btn-ghost" onclick="closeEditGoalModal()" style="margin-top:8px;width:100%">Cancel</button>
+      </div>
+    </div>
+
     <!-- LOG BATCH MODAL (Goals) -->
     <div id="gLogModal" style="display:none;position:fixed;inset:0;background:rgba(74,37,64,.45);z-index:200;place-items:center;padding:16px;backdrop-filter:blur(3px)" onclick="if(event.target===this)closeLogModal()">
       <div style="background:white;border-radius:28px;padding:22px 18px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);border:2px solid var(--pink-100)">
@@ -2164,6 +2186,75 @@ async function completeGoal(id) {
   if (r.ok) { toast("Goal marked complete ✿", "success"); loadGoals(); }
   else toast(r.error, "error");
 }
+
+// ── Edit Goal Modal ──
+let gEditGoal = null;
+
+function addEditItemRow(item) {
+  const dlId = buildAmiItemDatalist();
+  const hasProgress = (item?.qty_done || 0) > 0;
+  const row = document.createElement("div");
+  row.className = "g-form-item-row";
+  row.dataset.goalItemId = item?.id || "";
+  row.innerHTML = `
+    <input type="text" list="${dlId}" class="g-form-item-name gedit-item-name-inp" placeholder="Item name"
+      value="${esc(item?.item_name || "")}" ${hasProgress ? "readonly style=\"background:var(--pink-100)\"" : ""}>
+    <input type="number" class="g-form-qty gedit-item-qty-inp" placeholder="Qty" min="1" value="${esc(item?.qty_needed ?? "")}">
+    ${hasProgress
+      ? `<span style="font-size:10px;color:var(--soft);width:60px;text-align:center">${item.qty_done} done<br>locked</span>`
+      : `<button onclick="this.parentElement.remove()" style="color:var(--soft);font-size:18px;padding:4px 8px;flex-shrink:0">✕</button>`}`;
+  $("gEditItemsList").appendChild(row);
+}
+
+function openEditGoalModal(goalId) {
+  gEditGoal = allGoals.find(g => String(g.id) === String(goalId));
+  if (!gEditGoal) return;
+
+  $("gEditGoalId").value = goalId;
+  $("gEditName").value = gEditGoal.name || "";
+  $("gEditDeadline").value = gEditGoal.deadline ? gEditGoal.deadline.slice(0, 10) : "";
+  $("gEditItemsList").innerHTML = "";
+
+  const items = gEditGoal.items || [];
+  items.forEach(i => addEditItemRow(i));
+  if (!items.length) addEditItemRow(null);
+
+  $("gEditModal").style.display = "grid";
+}
+
+function closeEditGoalModal() {
+  $("gEditModal").style.display = "none";
+  gEditGoal = null;
+}
+
+$("gEditAddItemBtn").addEventListener("click", () => addEditItemRow(null));
+
+$("gEditSaveBtn").addEventListener("click", async () => {
+  const goalId   = $("gEditGoalId").value;
+  const name     = $("gEditName").value.trim();
+  const deadline = $("gEditDeadline").value;
+  if (!name) return toast("Goal needs a name ✿", "error");
+
+  const rows = $("gEditItemsList").querySelectorAll(".g-form-item-row");
+  const items = [];
+  rows.forEach(row => {
+    const n = row.querySelector(".gedit-item-name-inp")?.value.trim();
+    const q = parseInt(row.querySelector(".gedit-item-qty-inp")?.value) || 0;
+    const goalItemId = row.dataset.goalItemId || null;
+    if (n && q > 0) items.push({ goal_item_id: goalItemId, item_name: n, qty_needed: q });
+  });
+  if (!items.length) return toast("Add at least one item ✿", "error");
+
+  const btn = $("gEditSaveBtn");
+  btn.disabled = true; btn.textContent = "Saving...";
+  const r = await api("editAmiGoal", { goal_id: goalId, name, deadline: deadline||"", items: JSON.stringify(items) });
+  btn.disabled = false; btn.textContent = "Save Changes ✿";
+  if (!r.ok) return toast(r.error || "Failed", "error");
+
+  closeEditGoalModal();
+  toast(`Goal "${name}" updated ✿${r.goal_complete ? " — now complete! 🎉" : ""}`, "success");
+  loadGoals();
+});
 
 async function deleteGoal(id) {
   if (!confirm("Delete this goal? Cannot be undone.")) return;
