@@ -150,6 +150,7 @@ export default {
       // ── AMI GOALS + RATE CARD (ami + master) ──
       if (action === "getAmiGoals")       return json(await getAmiGoals(env, who));
       if (action === "createAmiGoal")     return json(await createAmiGoal(env, url.searchParams, who));
+      if (action === "editAmiGoal")       return json(await editAmiGoal(env, url.searchParams));
       if (action === "logAmiGoalBatch")   return json(await logAmiGoalBatch(env, url.searchParams, who, ctx));
       if (action === "completeAmiGoal")   return json(await completeAmiGoal(env, url.searchParams));
       if (action === "deleteAmiGoal")     return json(await deleteAmiGoal(env, url.searchParams));
@@ -2063,6 +2064,81 @@ async function createAmiGoal(env, params, who) {
     ).bind(goalId, item.item_name, item.qty_needed).run();
   }
   return { ok: true, goalId };
+}
+
+async function editAmiGoal(env, params) {
+  const goalId    = Number(params.get("goal_id"));
+  const name      = (params.get("name") || "").trim();
+  const deadline  = params.get("deadline") || null;
+  const itemsJson = params.get("items") || "[]";
+  if (!goalId) return { ok: false, error: "goal_id required" };
+  if (!name)   return { ok: false, error: "Name required" };
+
+  let items;
+  try { items = JSON.parse(itemsJson); } catch { return { ok: false, error: "Invalid items JSON" }; }
+  if (!items.length) return { ok: false, error: "At least one item required" };
+
+  const goal = await env.DB.prepare("SELECT * FROM ami_goals WHERE id = ?").bind(goalId).first();
+  if (!goal) return { ok: false, error: "Goal not found" };
+
+  // Update goal-level fields
+  await env.DB.prepare(
+    "UPDATE ami_goals SET name = ?, deadline = ? WHERE id = ?"
+  ).bind(name, deadline, goalId).run();
+
+  // Load existing items for this goal
+  const { results: existingItems } = await env.DB.prepare(
+    "SELECT * FROM ami_goal_items WHERE goal_id = ?"
+  ).bind(goalId).all();
+
+  const payloadIds = new Set(
+    items.filter(i => i.goal_item_id).map(i => Number(i.goal_item_id))
+  );
+
+  // Update or insert items from payload
+  for (const item of items) {
+    const itemName  = (item.item_name || "").trim();
+    const qtyNeeded = Number(item.qty_needed) || 0;
+    if (!itemName || qtyNeeded <= 0) continue;
+
+    if (item.goal_item_id) {
+      const itemId = Number(item.goal_item_id);
+      await env.DB.prepare(
+        "UPDATE ami_goal_items SET item_name = ?, qty_needed = ? WHERE id = ? AND goal_id = ?"
+      ).bind(itemName, qtyNeeded, itemId, goalId).run();
+    } else {
+      await env.DB.prepare(
+        `INSERT INTO ami_goal_items (goal_id, item_name, qty_needed) VALUES (?, ?, ?)`
+      ).bind(goalId, itemName, qtyNeeded).run();
+    }
+  }
+
+  // Remove items dropped from the payload — but ONLY if they have zero logged progress
+  for (const existing of existingItems) {
+    if (payloadIds.has(existing.id)) continue; // still present, already handled above
+    if ((existing.qty_done || 0) > 0) continue; // protected — has logged progress, can't remove
+    await env.DB.prepare(
+      "DELETE FROM ami_goal_items WHERE id = ?"
+    ).bind(existing.id).run();
+  }
+
+  // Re-check completion status in case qty_needed changes flipped it
+  const { results: refreshedItems } = await env.DB.prepare(
+    "SELECT * FROM ami_goal_items WHERE goal_id = ?"
+  ).bind(goalId).all();
+  const allComplete = refreshedItems.length > 0 && refreshedItems.every(i => (i.qty_done || 0) >= i.qty_needed);
+  if (allComplete && goal.status !== "completed") {
+    await env.DB.prepare(
+      "UPDATE ami_goals SET status = 'completed', completed_at = ? WHERE id = ?"
+    ).bind(new Date().toISOString(), goalId).run();
+  } else if (!allComplete && goal.status === "completed") {
+    // Editing reopened the goal (e.g. raised qty_needed past done count)
+    await env.DB.prepare(
+      "UPDATE ami_goals SET status = 'active', completed_at = NULL WHERE id = ?"
+    ).bind(goalId).run();
+  }
+
+  return { ok: true, goal_complete: allComplete };
 }
 
 async function logAmiGoalBatch(env, params, who, ctx) {
