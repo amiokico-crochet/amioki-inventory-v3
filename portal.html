@@ -2069,6 +2069,7 @@ function goalCardHtml(g) {
     ${plannerHtml}
     ${!isDone ? `<div class="g-actions">
       <button class="g-btn log" onclick="openLogModal(${g.id})">✍️ Log Progress</button>
+      <button class="g-btn edit" onclick="openEditGoalModal(${g.id})">✏️ Edit</button>
       <button class="g-btn done" onclick="completeGoal(${g.id})">Mark Done</button>
       <button class="g-btn del" onclick="deleteGoal(${g.id})">Delete</button>
     </div>` : `<div class="g-actions"><button class="g-btn del" onclick="deleteGoal(${g.id})">Delete</button></div>`}
