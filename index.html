@@ -291,6 +291,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <button class="tab master-only" data-tab="archive" style="display:none">Archive</button>
       <button class="tab master-only" data-tab="notifications" style="display:none">Alerts</button>
       <button class="tab master-only" data-tab="contracts" style="display:none">Contracts</button>
+      <button class="tab master-only" data-tab="rates" style="display:none">💰 Rates</button>
       <button class="tab master-only" data-tab="batches" style="display:none">Batches <span class="badge" id="batchBadge" style="display:none">0</span></button>
       <button class="tab master-only" data-tab="materials" style="display:none">🧶 Supplies</button>
       <button class="tab master-only" data-tab="candy" style="display:none">🍬 Candy</button>
@@ -462,6 +463,69 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <div id="contractsList"><div class="loading">Loading contracts...</div></div>
     </div>
 
+    <!-- PIECE RATES (ami/master only) -->
+    <div class="tab-panel" id="panel-rates">
+      <div class="card">
+        <div class="card-title"><span>💰</span> Piece Rates</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="ratesCrocheterPills">
+          <button class="crocheter-pill active" data-rates-crocheter="Ashley">🧵 Ashley</button>
+          <button class="crocheter-pill" data-rates-crocheter="Liz">🪡 Liz</button>
+          <button class="crocheter-pill" data-rates-crocheter="Sydni">🌷 Sydni</button>
+        </div>
+
+        <!-- IMPORT FROM PDF / PASTE -->
+        <div id="rateImportSection" style="background:var(--lav-soft);border:2px solid var(--lavender);border-radius:16px;padding:14px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">⚡ Import Rate Sheet</div>
+          <div class="upload-zone" onclick="document.getElementById('rateFile').click()" id="rateDropZone" style="padding:16px">
+            <input type="file" id="rateFile" accept=".pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
+            <div style="font-size:1.6em">📄</div>
+            <strong style="font-size:0.9em;color:var(--pink-600)" id="rateDropTitle">Drop the new rate sheet PDF here or tap to browse</strong>
+            <p style="font-size:11px;color:var(--soft)">or paste the rates below instead</p>
+          </div>
+          <div class="form-group" style="margin-top:10px">
+            <label>Or paste rate text</label>
+            <textarea id="ratePasteText" rows="4" placeholder="Chickens  5.46  1.43  6.89  25&#10;Baby Chicks  3.71  0.78  4.49  17&#10;..." style="width:100%;padding:10px;border:2px solid var(--pink-100);border-radius:12px;font-family:monospace;font-size:12px"></textarea>
+          </div>
+          <button class="btn btn-primary" id="parseRatesBtn" style="margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px">
+            <span id="parseRatesBtnIcon">🔮</span><span id="parseRatesBtnText">Parse Rates ✿</span>
+          </button>
+          <div id="parseRatesProgress" style="display:none;margin-top:10px;font-size:12px;color:var(--mid);text-align:center">Reading...</div>
+        </div>
+
+        <!-- PARSED PREVIEW -->
+        <div id="ratesPreviewWrap" style="display:none;margin-bottom:14px">
+          <div style="background:linear-gradient(135deg,var(--pink-300),var(--pink-400));border-radius:16px;padding:14px 16px;color:white;margin-bottom:10px">
+            <div style="font-weight:700;font-size:15px">✿ Parsed <span id="ratesPreviewCount">0</span> item(s) for <span id="ratesPreviewCrocheter"></span></div>
+            <div style="font-size:11.5px;opacity:.9;margin-top:2px">Review before saving — edit any field below</div>
+          </div>
+          <div id="ratesPreviewList" style="background:white;border-radius:16px;border:2px solid var(--pink-100);overflow:hidden;margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" id="saveAllRatesBtn" style="flex:1">💾 Save All to <span id="saveAllRatesLabel"></span></button>
+            <button class="btn btn-ghost" id="cancelRatesPreviewBtn">✕ Cancel</button>
+          </div>
+        </div>
+
+        <div style="background:var(--pink-50);border:2px dashed var(--pink-200);border-radius:16px;padding:14px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">➕ Add / Update Item Manually</div>
+          <input type="hidden" id="rateEditId" value="">
+          <div class="form-group"><label>Item Name</label><input type="text" id="rateItemName" placeholder="e.g. Chickens"></div>
+          <div class="grid-2">
+            <div class="form-group"><label>Labor Rate ($)</label><input type="number" step="0.01" id="rateLabor" placeholder="0.00"></div>
+            <div class="form-group"><label>Materials ($)</label><input type="number" step="0.01" id="rateMaterials" placeholder="0.00"></div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group"><label>Total Rate ($)</label><input type="number" step="0.01" id="rateTotal" placeholder="0.00"></div>
+            <div class="form-group"><label>Time (min)</label><input type="number" id="rateTimeMin" placeholder="0"></div>
+          </div>
+          <div class="form-group"><label>Notes</label><input type="text" id="rateNotes" placeholder="e.g. Star Crocheter rate — updated July 2026"></div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-primary" id="saveRateBtn" style="flex:1">💾 Save Rate</button>
+            <button class="btn btn-ghost" id="clearRateFormBtn" style="display:none">✕ Cancel Edit</button>
+          </div>
+        </div>
+        <div id="ratesList"><div class="loading">Loading rates...</div></div>
+      </div>
+    </div>
 
     <!-- MATERIALS (ami/master only) -->
     <div class="tab-panel" id="panel-materials">
@@ -716,6 +780,7 @@ document.querySelectorAll(".tab").forEach(t => {
     if (currentTab === "archive")       loadArchive();
     if (currentTab === "notifications") loadNotifications();
     if (currentTab === "contracts")     loadContracts();
+    if (currentTab === "rates")         loadPieceRates();
     if (currentTab === "batches")       loadBatches();
     if (currentTab === "materials")     loadMaterials();
     if (currentTab === "candy")         loadCandy();
@@ -1738,6 +1803,195 @@ async function loadContracts() {
 async function saveItemNotes(itemId, field, value) {
   await api("updateContractItem", { id: itemId, [field]: value });
 }
+
+// ═══════════════════════════════════════════════
+// PIECE RATES
+// ═══════════════════════════════════════════════
+let activeRatesCrocheter = "Ashley";
+let cachedRates = [];
+
+document.querySelectorAll("#ratesCrocheterPills .crocheter-pill").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#ratesCrocheterPills .crocheter-pill").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeRatesCrocheter = btn.dataset.ratesCrocheter;
+    clearRateForm();
+    if (typeof parsedRateItems !== "undefined" && parsedRateItems) {
+      parsedRateItems = null;
+      $("ratesPreviewWrap").style.display = "none";
+      $("rateImportSection").style.display = "block";
+      $("rateFile").value = ""; $("ratePasteText").value = "";
+    }
+    loadPieceRates();
+  });
+});
+
+async function loadPieceRates() {
+  const list = $("ratesList");
+  list.innerHTML = '<div class="loading">Loading rates...</div>';
+  const r = await api("getPieceRates", { crocheter: activeRatesCrocheter });
+  if (!r.ok) { list.innerHTML = `<div class="empty">${esc(r.error || "Error loading rates")}</div>`; return; }
+  cachedRates = r.rates || [];
+  if (!cachedRates.length) {
+    list.innerHTML = '<div class="empty">No rates yet for ' + esc(activeRatesCrocheter) + ' \u2739<br><span style="font-size:11px">Add one above.</span></div>';
+    return;
+  }
+  list.innerHTML = cachedRates.map(rate => `
+    <div style="background:white;border:2px solid var(--pink-100);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div>
+        <div style="font-weight:700;font-size:14px;color:var(--ink)">${esc(rate.item_name)}</div>
+        <div style="font-size:11.5px;color:var(--soft)">$${(rate.labor_rate||0).toFixed(2)} labor + $${(rate.material_cost||0).toFixed(2)} mat. \u00b7 ${rate.time_min||0} min${rate.notes ? " \u00b7 " + esc(rate.notes) : ""}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-weight:800;color:var(--pink-600);font-size:15px">$${(rate.total_rate||0).toFixed(2)}</div>
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;margin-top:2px" onclick='editRate(${JSON.stringify(rate).replace(/'/g, "&#39;")})'>\u270f\ufe0f Edit</button>
+      </div>
+    </div>`).join("");
+}
+
+function editRate(rate) {
+  $("rateEditId").value = rate.id;
+  $("rateItemName").value = rate.item_name;
+  $("rateLabor").value = rate.labor_rate;
+  $("rateMaterials").value = rate.material_cost;
+  $("rateTotal").value = rate.total_rate;
+  $("rateTimeMin").value = rate.time_min;
+  $("rateNotes").value = rate.notes || "";
+  $("clearRateFormBtn").style.display = "inline-block";
+  $("ratesEditForm").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function clearRateForm() {
+  $("rateEditId").value = "";
+  ["rateItemName","rateLabor","rateMaterials","rateTotal","rateTimeMin","rateNotes"].forEach(id => $(id).value = "");
+  $("clearRateFormBtn").style.display = "none";
+}
+
+$("clearRateFormBtn").addEventListener("click", clearRateForm);
+
+$("saveRateBtn").addEventListener("click", async () => {
+  const itemName = $("rateItemName").value.trim();
+  if (!itemName) return toast("Enter an item name", "error");
+  const labor = parseFloat($("rateLabor").value) || 0;
+  const materials = parseFloat($("rateMaterials").value) || 0;
+  const total = parseFloat($("rateTotal").value) || (labor + materials);
+  const btn = $("saveRateBtn"); btn.disabled = true;
+  const r = await api("updatePieceRate", {
+    id: $("rateEditId").value || "",
+    crocheter: activeRatesCrocheter,
+    item_name: itemName,
+    labor_rate: labor,
+    material_cost: materials,
+    total_rate: total,
+    time_min: $("rateTimeMin").value || 0,
+    notes: $("rateNotes").value.trim()
+  });
+  btn.disabled = false;
+  if (!r.ok) return toast(r.error || "Save failed", "error");
+  toast("Rate saved \u2739", "success");
+  clearRateForm();
+  loadPieceRates();
+});
+
+// ── Rate sheet import (PDF or pasted text) ──────────────────────────────
+let parsedRateItems = null;
+
+$("rateFile").addEventListener("change", () => {
+  const file = $("rateFile").files[0];
+  if (file) {
+    $("rateDropTitle").textContent = file.name;
+    $("ratePasteText").value = "";
+  }
+});
+
+$("parseRatesBtn").addEventListener("click", async () => {
+  const file = $("rateFile").files[0];
+  const pasted = $("ratePasteText").value.trim();
+  if (!file && !pasted) return toast("Drop a PDF or paste rate text first \u2739", "error");
+  if (file && !pdfJsReady) return toast("PDF reader loading, try again in a moment", "error");
+
+  const btn = $("parseRatesBtn"); btn.disabled = true;
+  $("parseRatesBtnIcon").textContent = "\u23f3"; $("parseRatesBtnText").textContent = "Parsing...";
+  $("parseRatesProgress").style.display = "block";
+  $("parseRatesProgress").textContent = file ? "Reading PDF pages..." : "Reading pasted text...";
+  try {
+    const rateText = file ? await extractPdfText(file) : pasted;
+    $("parseRatesProgress").textContent = "Asking AI to extract items...";
+    const r = await api("parsePieceRateSheet", { rateText, crocheter: activeRatesCrocheter });
+    if (!r.ok) throw new Error(r.error);
+    parsedRateItems = (r.parsed.items || []).map(i => ({
+      item_name: i.item_name || "",
+      labor_rate: Number(i.labor_rate) || 0,
+      material_cost: Number(i.material_cost) || 0,
+      total_rate: Number(i.total_rate) || 0,
+      time_min: Number(i.time_min) || 0
+    }));
+    if (!parsedRateItems.length) throw new Error("No items found — try pasting the text instead");
+    showRatesPreview();
+  } catch (err) {
+    toast(err.message, "error");
+  } finally {
+    btn.disabled = false;
+    $("parseRatesBtnIcon").textContent = "\ud83d\udd2e"; $("parseRatesBtnText").textContent = "Parse Rates \u2739";
+    $("parseRatesProgress").style.display = "none";
+  }
+});
+
+function showRatesPreview() {
+  $("rateImportSection").style.display = "none";
+  $("ratesPreviewWrap").style.display = "block";
+  $("ratesPreviewCount").textContent = parsedRateItems.length;
+  $("ratesPreviewCrocheter").textContent = activeRatesCrocheter;
+  $("saveAllRatesLabel").textContent = activeRatesCrocheter;
+  renderRatesPreviewList();
+}
+
+function renderRatesPreviewList() {
+  $("ratesPreviewList").innerHTML = parsedRateItems.map((item, idx) => `
+    <div style="padding:10px 14px;border-bottom:1px solid var(--pink-100);display:grid;grid-template-columns:1fr 70px 70px 70px 60px;gap:6px;align-items:center">
+      <input type="text" value="${esc(item.item_name)}" style="padding:6px 8px;border:1.5px solid var(--pink-100);border-radius:8px;font-size:12px;font-weight:600"
+        onchange="parsedRateItems[${idx}].item_name=this.value">
+      <input type="number" step="0.01" value="${item.labor_rate}" title="Labor $" style="padding:6px;border:1.5px solid var(--pink-100);border-radius:8px;font-size:12px;text-align:right"
+        onchange="parsedRateItems[${idx}].labor_rate=parseFloat(this.value)||0">
+      <input type="number" step="0.01" value="${item.material_cost}" title="Materials $" style="padding:6px;border:1.5px solid var(--pink-100);border-radius:8px;font-size:12px;text-align:right"
+        onchange="parsedRateItems[${idx}].material_cost=parseFloat(this.value)||0">
+      <input type="number" step="0.01" value="${item.total_rate}" title="Total $" style="padding:6px;border:1.5px solid var(--pink-300);border-radius:8px;font-size:12px;text-align:right;font-weight:700;color:var(--pink-600)"
+        onchange="parsedRateItems[${idx}].total_rate=parseFloat(this.value)||0">
+      <input type="number" value="${item.time_min}" title="Minutes" style="padding:6px;border:1.5px solid var(--pink-100);border-radius:8px;font-size:12px;text-align:right"
+        onchange="parsedRateItems[${idx}].time_min=parseInt(this.value)||0">
+    </div>`).join("");
+}
+
+$("cancelRatesPreviewBtn").addEventListener("click", () => {
+  parsedRateItems = null;
+  $("ratesPreviewWrap").style.display = "none";
+  $("rateImportSection").style.display = "block";
+  $("rateFile").value = ""; $("ratePasteText").value = "";
+  $("rateDropTitle").textContent = "Drop the new rate sheet PDF here or tap to browse";
+});
+
+$("saveAllRatesBtn").addEventListener("click", async () => {
+  if (!parsedRateItems?.length) return;
+  const btn = $("saveAllRatesBtn"); btn.disabled = true; btn.textContent = "Saving...";
+  try {
+    const r = await api("bulkSavePieceRates", {
+      crocheter: activeRatesCrocheter,
+      items: JSON.stringify(parsedRateItems)
+    });
+    if (!r.ok) throw new Error(r.error);
+    toast(`${r.saved} rate(s) saved for ${activeRatesCrocheter} \u2739`, "success");
+    parsedRateItems = null;
+    $("ratesPreviewWrap").style.display = "none";
+    $("rateImportSection").style.display = "block";
+    $("rateFile").value = ""; $("ratePasteText").value = "";
+    $("rateDropTitle").textContent = "Drop the new rate sheet PDF here or tap to browse";
+    loadPieceRates();
+  } catch (err) {
+    toast(err.message, "error");
+  } finally {
+    btn.disabled = false; btn.innerHTML = '💾 Save All to <span id="saveAllRatesLabel">' + activeRatesCrocheter + '</span>';
+  }
+});
 
 async function logManualDelivery(itemId, contractId) {
   const qty = Number($("dq-" + itemId)?.value) || 0;
