@@ -123,6 +123,8 @@ export default {
       if (action === "adjustStock")      return json(await adjustStock(env, url.searchParams, ctx, who));
       if (action === "resolveUnmatched") return json(await resolveUnmatched(env, url.searchParams, ctx, who));
       if (action === "updatePieceRate")  return json(await updatePieceRate(env, url.searchParams));
+      if (action === "parsePieceRateSheet") return json(await parsePieceRateSheet(env, url.searchParams));
+      if (action === "bulkSavePieceRates")  return json(await bulkSavePieceRates(env, url.searchParams, ctx));
       if (action === "manualDelivery")   return json(await manualDelivery(env, url.searchParams, ctx));
       
       // ── CLASS INVENTORY writes (ami + master) ──
@@ -1223,6 +1225,84 @@ async function updatePieceRate(env, params) {
       patch.total_rate || 0, patch.time_min || 0, patch.notes || "").run();
   }
   return { ok: true };
+}
+
+async function parsePieceRateSheet(env, params) {
+  const rateText  = params.get("rateText")  || "";
+  const crocheter = params.get("crocheter") || "";
+  if (!rateText)  return { ok: false, error: "rateText required" };
+  if (!crocheter) return { ok: false, error: "crocheter required" };
+  const prompt = `You are parsing an Amioki piece rate sheet (from a PDF or pasted spreadsheet text) for a crochet contractor. Extract every item and return ONLY valid JSON, no other text, no markdown fences, no explanation.
+
+For each item extract:
+- item_name: string (clean, title-cased item name, e.g. "Baby Chicks")
+- labor_rate: labor cost as number
+- material_cost: material cost as number
+- total_rate: total piece rate as number (labor + material — use the sheet's total if given, otherwise sum labor + material)
+- time_min: time in minutes as number (0 if not given)
+
+Ignore header rows, titles, notes about "per min" rates, and blank rows. Only include rows that are actual items with a name and a rate.
+
+Rate sheet text:
+${rateText.substring(0, 6000)}
+
+Return ONLY this JSON structure, nothing else:
+{"items":[{"item_name":"","labor_rate":0,"material_cost":0,"total_rate":0,"time_min":0}]}`;
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": env.ANTHROPIC_API_KEY || "",
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 3000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const raw  = data.content?.[0]?.text || "";
+    const clean = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(clean);
+    return { ok: true, parsed, crocheter };
+  } catch (err) {
+    return { ok: false, error: "Parse failed: " + err.message };
+  }
+}
+
+async function bulkSavePieceRates(env, params, ctx) {
+  const crocheter = params.get("crocheter") || "";
+  const itemsJson = params.get("items") || "[]";
+  if (!crocheter) return { ok: false, error: "crocheter required" };
+  let items;
+  try { items = JSON.parse(itemsJson); } catch { return { ok: false, error: "Invalid items JSON" }; }
+  if (!items.length) return { ok: false, error: "No items provided" };
+  let saved = 0;
+  for (const item of items) {
+    const itemName = (item.item_name || "").trim();
+    if (!itemName) continue;
+    const labor     = Number(item.labor_rate)    || 0;
+    const materials = Number(item.material_cost) || 0;
+    const total      = Number(item.total_rate)   || (labor + materials);
+    const timeMin    = Number(item.time_min)     || 0;
+    await env.DB.prepare(
+      `INSERT INTO piece_rates (crocheter, item_name, labor_rate, material_cost, total_rate, time_min, notes, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(crocheter, item_name) DO UPDATE SET
+       labor_rate=excluded.labor_rate, material_cost=excluded.material_cost,
+       total_rate=excluded.total_rate, time_min=excluded.time_min, notes=excluded.notes, updated_at=excluded.updated_at`
+    ).bind(crocheter, itemName, labor, materials, total, timeMin,
+      item.notes || "", new Date().toISOString()).run();
+    saved++;
+  }
+  if (ctx) {
+    ctx.waitUntil(auditLog(env, {
+      action: "bulk_piece_rates_saved", item: crocheter, qty: saved,
+      note: `${saved} piece rate(s) imported/updated for ${crocheter}`
+    }));
+  }
+  return { ok: true, saved };
 }
 
 // ═══════════════════════════════════════════════════════════
