@@ -1257,12 +1257,16 @@ Return ONLY this JSON structure, nothing else:
         "anthropic-version": "2023-06-01"
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-5",
+        thinking: { type: "disabled" },
         max_tokens: 3000,
         messages: [{ role: "user", content: prompt }]
       })
     });
     const data = await resp.json();
+    if (!resp.ok || data.error) {
+      return { ok: false, error: "AI error: " + (data.error?.message || ("HTTP " + resp.status)) };
+    }
     const raw  = data.content?.[0]?.text || "";
     const clean = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(clean);
@@ -1350,12 +1354,16 @@ Return ONLY this JSON structure:
         "anthropic-version": "2023-06-01"
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-5",
+        thinking: { type: "disabled" },
         max_tokens: 2000,
         messages: [{ role: "user", content: prompt }]
       })
     });
     const data = await resp.json();
+    if (!resp.ok || data.error) {
+      return { ok: false, error: "AI error: " + (data.error?.message || ("HTTP " + resp.status)) };
+    }
     const raw  = data.content?.[0]?.text || "";
     const clean = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(clean);
