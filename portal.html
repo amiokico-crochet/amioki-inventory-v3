@@ -1059,6 +1059,15 @@ document.querySelectorAll(".tab").forEach(t => {
 });
 
 // ── CONTRACT TAB ──
+function parseDueDate(str) {
+  if (!str) return null;
+  const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+  const cleaned = str.replace(/(\d+)(st|nd|rd|th)/gi, "$1");
+  const d = new Date(cleaned);
+  return isNaN(d) ? null : d;
+}
+
 async function loadContract() {
   const container = $("contractContent");
   const r = await api("getContracts");
@@ -1068,8 +1077,9 @@ async function loadContract() {
   }
   myContract = r.contract;
   const c = myContract;
-  const daysLeft = c.due_date ? (() => { const [y,m,d] = c.due_date.split("-"); 
-  const due = new Date(y, m-1, d); const now = new Date(); now.setHours(0,0,0,0); return Math.ceil((due - now) / 86400000); })() : null;
+  const dueDateObj = parseDueDate(c.due_date);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const daysLeft = dueDateObj ? Math.ceil((dueDateObj - today) / 86400000) : null;
   const totalDelivered = c.items.reduce((s, i) => s + i.qty_delivered, 0);
   const totalNeeded = c.items.reduce((s, i) => s + i.qty_needed, 0);
 
