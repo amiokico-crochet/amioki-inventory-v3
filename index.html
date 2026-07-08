@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1840,7 +1841,7 @@ async function loadPieceRates() {
     list.innerHTML = '<div class="empty">No rates yet for ' + esc(activeRatesCrocheter) + ' \u2739<br><span style="font-size:11px">Add one above.</span></div>';
     return;
   }
-  list.innerHTML = cachedRates.map(rate => `
+  list.innerHTML = cachedRates.map((rate, idx) => `
     <div style="background:white;border:2px solid var(--pink-100);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px">
       <div>
         <div style="font-weight:700;font-size:14px;color:var(--ink)">${esc(rate.item_name)}</div>
@@ -1848,7 +1849,7 @@ async function loadPieceRates() {
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div style="font-weight:800;color:var(--pink-600);font-size:15px">$${(rate.total_rate||0).toFixed(2)}</div>
-        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;margin-top:2px" onclick='editRate(${JSON.stringify(rate).replace(/'/g, "&#39;")})'>\u270f\ufe0f Edit</button>
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;margin-top:2px" onclick="editRate(cachedRates[${idx}])">\u270f\ufe0f Edit</button>
       </div>
     </div>`).join("");
 }
@@ -2118,11 +2119,11 @@ async function loadBatches() {
               <div style="font-size:11px;color:var(--soft)">${i.is_contract?"📋 Contract":"✨ Bonus"} · $${(i.piece_rate||0).toFixed(2)}/ea${i.color_notes?` · 🎨 ${esc(i.color_notes)}`:""}</div>
               ${dec.status==="partial"?`<div style="margin-top:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <input type="number" min="0" max="${i.qty_logged}" value="${dec.qty_approved}" style="width:60px;padding:4px 8px;border:2px solid var(--pink-100);border-radius:8px;font-size:13px"
-                  onchange="batchDecisions[${b.id}][${i.id}].qty_approved=Number(this.value)">
+                  onchange="batchDecisions[${b.id}][${i.id}].qty_approved=Number(this.value);loadBatches()">
                 <select style="padding:4px 8px;border:2px solid var(--pink-100);border-radius:8px;font-size:12px"
-                  onchange="batchDecisions[${b.id}][${i.id}].adjustment_pct=Number(this.value)">
-                  <option value="100">Full pay</option><option value="90">-10% (1 issue)</option>
-                  <option value="85">-15% (2-3 issues)</option><option value="80">-20% (4+ issues)</option>
+                  onchange="batchDecisions[${b.id}][${i.id}].adjustment_pct=Number(this.value);loadBatches()">
+                  <option value="100" ${dec.adjustment_pct==100?"selected":""}>Full pay</option><option value="90" ${dec.adjustment_pct==90?"selected":""}>-10% (1 issue)</option>
+                  <option value="85" ${dec.adjustment_pct==85?"selected":""}>-15% (2-3 issues)</option><option value="80" ${dec.adjustment_pct==80?"selected":""}>-20% (4+ issues)</option>
                 </select></div>`:""}
               ${dec.status==="rejected"?`<input type="text" placeholder="Reason" style="width:100%;margin-top:4px;padding:6px 10px;border:2px solid #FFB6D9;border-radius:8px;font-size:12px"
                 onchange="batchDecisions[${b.id}][${i.id}].rejection_reason=this.value">`:""}
@@ -2157,7 +2158,7 @@ function calcBatchPay(batch) {
   return (batch.items||[]).reduce((sum, item) => {
     const d = batchDecisions[batch.id]?.[item.id];
     if (!d || d.status==="rejected") return sum;
-    return sum + (item.piece_rate||0) * (d.qty_approved||item.qty_logged) * ((d.adjustment_pct||100)/100);
+    return sum + (item.piece_rate||0) * (d.qty_approved ?? item.qty_logged) * ((d.adjustment_pct ?? 100)/100);
   }, 0);
 }
 
