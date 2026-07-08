@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1063,6 +1064,7 @@ function parseDueDate(str) {
   if (!str) return null;
   const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+  // Fallback for older free-text dates like "July 17th, 2026" — strip ordinal suffixes
   const cleaned = str.replace(/(\d+)(st|nd|rd|th)/gi, "$1");
   const d = new Date(cleaned);
   return isNaN(d) ? null : d;
@@ -1132,7 +1134,8 @@ function buildSearchItems() {
         allKnownItems.push({
           item_name: i.item_name, piece_rate: i.piece_rate || 0,
           is_contract: true, contract_item_id: i.id, remaining,
-          tag: `contract · ${remaining} left`
+          tag: `contract · ${remaining} left`,
+          master_note: i.color_notes || ""
         });
       }
     });
@@ -1175,10 +1178,11 @@ document.addEventListener("click", e => {
 
 function renderDropdown(items, query, showCustom) {
   const rows = items.map(i => `
-    <div class="item-dropdown-item" data-name="${esc(i.item_name)}" data-rate="${i.piece_rate}" data-contract="${i.is_contract}" data-cid="${i.contract_item_id||""}" data-remaining="${i.remaining||""}">
+    <div class="item-dropdown-item" data-name="${esc(i.item_name)}" data-rate="${i.piece_rate}" data-contract="${i.is_contract}" data-cid="${i.contract_item_id||""}" data-remaining="${i.remaining||""}" data-note="${esc(i.master_note||"")}">
       <div>
         <span class="iname">${esc(i.item_name)}</span>
         <span class="itag">${esc(i.tag)}</span>
+        ${i.master_note ? `<div class="color-note">🎨 ${esc(i.master_note)}</div>` : ""}
       </div>
       <span class="irate">$${(i.piece_rate||0).toFixed(2)}/ea</span>
     </div>`).join("");
@@ -1199,11 +1203,12 @@ function renderDropdown(items, query, showCustom) {
       const isContract = el.dataset.contract === "true";
       const cid = el.dataset.cid ? Number(el.dataset.cid) : null;
       const remaining = el.dataset.remaining ? Number(el.dataset.remaining) : null;
+      const masterNote = el.dataset.note || "";
 
       if (isContract && cid && batchItems.find(b => b.contract_item_id === cid)) {
         toast("Already added ✿", "error");
       } else {
-        batchItems.push({ item_name: name, qty: 1, is_contract: isContract, contract_item_id: cid, piece_rate: rate, color_notes: "", remaining });
+        batchItems.push({ item_name: name, qty: 1, is_contract: isContract, contract_item_id: cid, piece_rate: rate, color_notes: "", remaining, master_note: masterNote });
         renderBatchItems();
       }
       searchInput.value = "";
@@ -1226,6 +1231,7 @@ function renderBatchItems() {
         <div style="flex:1">
           <div class="batch-row-name">${esc(item.item_name)}</div>
           <div class="batch-row-rate">${item.piece_rate ? "$" + item.piece_rate.toFixed(2) + "/ea" : "rate TBD"}${item.remaining ? " · " + item.remaining + " remaining in contract" : ""}</div>
+          ${item.master_note ? `<div class="color-note">🎨 Ami's note: ${esc(item.master_note)}</div>` : ""}
         </div>
         <span class="batch-row-tag ${item.is_contract ? "contract" : "bonus"}">${item.is_contract ? "📋 contract" : "✨ bonus"}</span>
         <button class="batch-row-remove" onclick="removeBatchItem(${idx})">×</button>
@@ -1477,17 +1483,38 @@ async function loadHistory() {
     const totalItems = b.items?.reduce((s, i) => s + i.qty_logged, 0) || 0;
     const payDisplay = b.pay_approved > 0 ? `$${Number(b.pay_approved).toFixed(2)} approved` : `$${Number(b.pay_estimated).toFixed(2)} est.`;
     const statusKey = b.qc_submitted && b.status === "pending" ? "qc_submitted" : b.status;
-    const statusLabel = statusKey === "qc_submitted" ? "QC Submitted" : b.status;
+    const statusLabels = { pending: "Pending", approved: "Approved", partial: "Partial", rejected: "Rejected", qc_submitted: "QC Submitted" };
+    const statusLabel = statusLabels[statusKey] || b.status;
+    const approvedDate = b.approved_at ? new Date(b.approved_at).toLocaleDateString() : null;
     return `<div class="batch-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-weight:700;color:var(--ink)">Batch #${b.id}</div>
         <span class="batch-status ${statusKey}">${statusLabel}</span>
       </div>
-      <div style="font-size:12px;color:var(--mid);margin-bottom:6px">${b.batch_date} · ${totalItems} items · ${payDisplay}</div>
-      <div style="font-size:13px;flex-wrap:wrap;display:flex;gap:4px">
-        ${b.items?.map(i => `<span style="background:var(--pink-50);padding:3px 10px;border-radius:6px;font-size:12px;border:1px solid var(--pink-100)">${esc(i.item_name)} ×${i.qty_logged}</span>`).join("") || ""}
+      <div style="font-size:12px;color:var(--mid);margin-bottom:6px">
+        Logged: ${b.batch_date} · ${totalItems} items · ${payDisplay}
+        ${approvedDate ? ` · Reviewed: ${approvedDate}` : ""}
       </div>
-      ${b.notes ? `<div style="font-size:12px;color:var(--soft);margin-top:6px;font-style:italic">${esc(b.notes)}</div>` : ""}
+      <div style="display:grid;gap:6px;margin-bottom:6px">
+        ${b.items?.map(i => {
+          const adjPct = i.adjustment_pct != null && i.adjustment_pct < 100 ? i.adjustment_pct : null;
+          const qtyApp = i.qty_approved != null ? i.qty_approved : i.qty_logged;
+          const iStatus = i.status || "pending";
+          const statusColor = iStatus === "approved" ? "#2E6B47" : iStatus === "rejected" ? "#C24040" : iStatus === "partial" ? "#8B4914" : "#8B6914";
+          return `<div style="background:var(--pink-50);padding:8px 12px;border-radius:10px;border:1px solid var(--pink-100)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:600;font-size:13px;color:var(--ink)">${esc(i.item_name)}</div>
+              <span style="font-size:11px;font-weight:700;color:${statusColor};text-transform:uppercase">${iStatus}</span>
+            </div>
+            <div style="font-size:12px;color:var(--mid);margin-top:3px">
+              Logged: ${i.qty_logged} · Approved: ${qtyApp}${adjPct != null ? ` · Deduction: −${100 - adjPct}%` : ""} · $${((i.piece_rate||0) * qtyApp * ((adjPct ?? 100)/100)).toFixed(2)}
+            </div>
+            ${i.rejection_reason ? `<div style="font-size:11px;color:#C24040;margin-top:3px">Reason: ${esc(i.rejection_reason)}</div>` : ""}
+            ${i.color_notes ? `<div class="color-note">🎨 ${esc(i.color_notes)}</div>` : ""}
+          </div>`;
+        }).join("") || ""}
+      </div>
+      ${b.notes ? `<div style="font-size:12px;color:var(--soft);font-style:italic">${esc(b.notes)}</div>` : ""}
     </div>`;
   }).join("");
 }
@@ -1556,18 +1583,18 @@ async function loadPortalBatches() {
           </div>
         </div>
         <div class="pb-decision-btns" style="margin-bottom:${dec.status==="partial"||dec.status==="rejected"?"8px":"0"}">
-          <button class="pb-btn approve ${dec.status==="approved"?"active-approve":""}" onclick="setPBDecision(${b.id},${i.id},"approved")">✓ Approve</button>
-          <button class="pb-btn partial ${dec.status==="partial"?"active-partial":""}" onclick="setPBDecision(${b.id},${i.id},"partial")">~ Partial</button>
-          <button class="pb-btn reject ${dec.status==="rejected"?"active-reject":""}" onclick="setPBDecision(${b.id},${i.id},"rejected")">✗ Reject</button>
+          <button class="pb-btn approve ${dec.status==="approved"?"active-approve":""}" onclick="setPBDecision(${b.id},${i.id},'approved')">✓ Approve</button>
+          <button class="pb-btn partial ${dec.status==="partial"?"active-partial":""}" onclick="setPBDecision(${b.id},${i.id},'partial')">~ Partial</button>
+          <button class="pb-btn reject ${dec.status==="rejected"?"active-reject":""}" onclick="setPBDecision(${b.id},${i.id},'rejected')">✗ Reject</button>
         </div>
         ${dec.status==="partial"?`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
-          <input type="number" min="0" max="${i.qty_logged}" value="${dec.qty_approved}" style="width:70px;padding:6px 8px;border:2px solid var(--pink-200);border-radius:8px;font-size:13px;text-align:center" onchange="portalBatchDecisions[${b.id}][${i.id}].qty_approved=Number(this.value)">
+          <input type="number" min="0" max="${i.qty_logged}" value="${dec.qty_approved}" style="width:70px;padding:6px 8px;border:2px solid var(--pink-200);border-radius:8px;font-size:13px;text-align:center" onchange="portalBatchDecisions[${b.id}][${i.id}].qty_approved=Number(this.value);loadPortalBatches()">
           <span style="font-size:12px;color:var(--mid)">approved qty</span>
-          <select style="padding:6px 10px;border:2px solid var(--pink-200);border-radius:8px;font-size:12px" onchange="portalBatchDecisions[${b.id}][${i.id}].adjustment_pct=Number(this.value)">
-            <option value="100">Full rate</option>
-            <option value="90">−10% (1 issue)</option>
-            <option value="85">−15% (2-3 issues)</option>
-            <option value="80">−20% (4+ issues)</option>
+          <select style="padding:6px 10px;border:2px solid var(--pink-200);border-radius:8px;font-size:12px" onchange="portalBatchDecisions[${b.id}][${i.id}].adjustment_pct=Number(this.value);loadPortalBatches()">
+            <option value="100" ${dec.adjustment_pct==100?"selected":""}>Full rate</option>
+            <option value="90" ${dec.adjustment_pct==90?"selected":""}>−10% (1 issue)</option>
+            <option value="85" ${dec.adjustment_pct==85?"selected":""}>−15% (2-3 issues)</option>
+            <option value="80" ${dec.adjustment_pct==80?"selected":""}>−20% (4+ issues)</option>
           </select>
         </div>`:""}
         ${dec.status==="rejected"?`<input type="text" placeholder="Reason for rejection" style="width:100%;padding:7px 10px;border:2px solid #FFB6B6;border-radius:8px;font-size:12px;margin-bottom:6px" onchange="portalBatchDecisions[${b.id}][${i.id}].rejection_reason=this.value">`:""}
@@ -1613,7 +1640,7 @@ function calcPortalPay(batch) {
   return (batch.items || []).reduce((sum, item) => {
     const d = portalBatchDecisions[batch.id]?.[item.id];
     if (!d || d.status === "rejected") return sum;
-    return sum + (item.piece_rate || 0) * (d.qty_approved || item.qty_logged) * ((d.adjustment_pct || 100) / 100);
+    return sum + (item.piece_rate || 0) * (d.qty_approved ?? item.qty_logged) * ((d.adjustment_pct ?? 100) / 100);
   }, 0);
 }
 
@@ -2394,7 +2421,7 @@ function renderRates() {
     $("ratesList").innerHTML = `<div class="empty">No items yet!<br>Add your first item above 🌸</div>`;
     return;
   }
-  $("ratesList").innerHTML = allRates.map(rate => {
+  $("ratesList").innerHTML = allRates.map((rate, rIdx) => {
     const avgMin  = (rate.time_min_lo + rate.time_min_hi) / 2;
     const effHr   = effectiveHourly(rate.sell_price, avgMin);
     const suggPx  = suggestedPrice(avgMin);
@@ -2410,7 +2437,7 @@ function renderRates() {
         <div class="rate-name">${esc(rate.item_name)}</div>
         <div style="display:flex;gap:6px;align-items:center">
           <span class="rate-badge ${bClass}">${bText}</span>
-          <button class="g-btn" onclick="editRate(${JSON.stringify(rate).replace(/"/g,'&quot;')})"
+          <button class="g-btn" onclick="editRate(allRates[${rIdx}])"
             style="background:var(--pink-50);color:var(--mid);border:1.5px solid var(--pink-100);padding:4px 10px;font-size:11px;border-radius:8px">✏️ Edit</button>
         </div>
       </div>
