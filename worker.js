@@ -1320,7 +1320,7 @@ async function parseContractPDF(env, params) {
   if (!crocheter) return { ok: false, error: "crocheter required" };
   const prompt = `You are parsing an Amioki contractor agreement PDF. Extract the following and return ONLY valid JSON, no other text:
 
-1. due_date: the project end/due date (string, e.g. "May 31st, 2026")
+1. due_date: the project end/due date, formatted as "YYYY-MM-DD" (e.g. "2026-05-31")
 2. total_items: total number of items (integer)
 3. total_value: total dollar amount (number)
 4. hourly_rate: hourly rate mentioned (number, default 13.10)
