@@ -1624,7 +1624,7 @@ async function approveBatch(env, params, ctx) {
   const now = new Date().toISOString();
 
   for (const item of approvedItems) {
-    const qtyToAdd = item.qty_approved || item.qty_logged;
+    const qtyToAdd = item.qty_approved ?? item.qty_logged;
     const normTarget = (item.item_name || "").toLowerCase().trim();
 
     // Step 1: exact normalized match
