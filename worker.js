@@ -1594,8 +1594,14 @@ async function approveBatch(env, params, ctx) {
   const log = await env.DB.prepare("SELECT * FROM production_logs WHERE id = ?").bind(logId).first();
   if (!log) return { ok: false, error: "Batch not found" };
 
+  const now = new Date().toISOString();
+  const { results: allActive } = await env.DB.prepare(
+    "SELECT id, on_hand, name FROM items WHERE archived = 0"
+  ).all();
+
   let payApproved = 0;
   let allDone     = true;
+  let processedCount = 0;
 
   for (const d of decisions) {
     const itemId      = Number(d.item_id);
@@ -1609,45 +1615,32 @@ async function approveBatch(env, params, ctx) {
        rejection_reason = ? WHERE id = ? AND log_id = ?`
     ).bind(status, adjPct, qtyApproved, reason, itemId, logId).run();
 
+    if (status === "pending") { allDone = false; continue; }
+    if (status === "rejected") continue;
+
     const item = await env.DB.prepare("SELECT * FROM production_items WHERE id = ?").bind(itemId).first();
-    if (item && status !== "rejected") {
-      payApproved += item.piece_rate * qtyApproved * (adjPct / 100);
-    }
-    if (status === "pending") allDone = false;
-  }
+    if (!item) continue;
+    processedCount++;
 
-  // Process approved items
-  const { results: approvedItems } = await env.DB.prepare(
-    "SELECT * FROM production_items WHERE log_id = ? AND status != 'rejected'"
-  ).bind(logId).all();
+    const qtyToAdd = qtyApproved || item.qty_logged;
+    payApproved += (item.piece_rate || 0) * qtyToAdd * (adjPct / 100);
 
-  const now = new Date().toISOString();
-
-  for (const item of approvedItems) {
-    const qtyToAdd = item.qty_approved ?? item.qty_logged;
     const normTarget = (item.item_name || "").toLowerCase().trim();
+    let invItem = allActive.find(r => r.name.toLowerCase().trim() === normTarget) || null;
 
-    // Step 1: exact normalized match
-    let invItem = null;
-    const { results: allActive } = await env.DB.prepare(
-      "SELECT id, on_hand, name FROM items WHERE archived = 0"
-    ).all();
-
-    invItem = allActive.find(r => r.name.toLowerCase().trim() === normTarget) || null;
-
-    // Step 2: Jaccard fuzzy (same logic as matchItem — no first-word-only)
     if (!invItem) {
-      const sqWords = normTarget.split(/\s+/).filter(Boolean);
+      const cleanNorm = normTarget.replace(/[()]/g, "");
+      const sqWords = cleanNorm.split(/\s+/).filter(Boolean);
       let bestScore = 0;
       for (const r of allActive) {
-        const dbNorm  = r.name.toLowerCase().trim();
+        const dbNorm  = r.name.toLowerCase().trim().replace(/[()]/g, "");
         const dbWords = dbNorm.split(/\s+/).filter(Boolean);
         const sqSet   = new Set(sqWords);
         const dbSet   = new Set(dbWords);
         const intersect = [...sqSet].filter(w => dbSet.has(w)).length;
         const union     = new Set([...sqSet, ...dbSet]).size;
         const jaccard   = intersect / union;
-        const containment = (dbNorm.includes(normTarget) || normTarget.includes(dbNorm)) ? 0.2 : 0;
+        const containment = (dbNorm.includes(cleanNorm) || cleanNorm.includes(dbNorm)) ? 0.2 : 0;
         const score = jaccard + containment;
         const minWordsRequired = sqWords.length === 1 ? 1 : 2;
         if (intersect < minWordsRequired) continue;
@@ -1656,8 +1649,8 @@ async function approveBatch(env, params, ctx) {
     }
 
     if (invItem) {
-      // Inventory match found — update stock AND contract progress
       const newQty = invItem.on_hand + qtyToAdd;
+      invItem.on_hand = newQty;
       await env.DB.batch([
         env.DB.prepare("UPDATE items SET on_hand = ?, updated_at = ? WHERE id = ?")
           .bind(newQty, now, invItem.id),
@@ -1665,24 +1658,20 @@ async function approveBatch(env, params, ctx) {
           `INSERT INTO sales_log (item_id, item_name, qty, type, note) VALUES (?, ?, ?, 'adjust', ?)`
         ).bind(invItem.id, item.item_name, qtyToAdd, `Approved batch #${logId}`)
       ]);
-
-      // Fix 5: only credit contract delivery when inventory actually updated
-      if (item.contract_item_id) {
-        await env.DB.prepare(
-          "UPDATE contract_items SET qty_delivered = qty_delivered + ? WHERE id = ?"
-        ).bind(qtyToAdd, item.contract_item_id).run();
-      }
     } else {
-      // No match — audit it, do NOT update contract progress
       ctx.waitUntil(auditLog(env, {
         action: "batch_approve_no_inv_match",
-        item: item.item_name,
-        qty: qtyToAdd,
-        note: `Batch #${logId}: no inventory item matched "${item.item_name}" — stock NOT updated, contract NOT credited`
+        item: item.item_name, qty: qtyToAdd,
+        note: `Batch #${logId}: no inventory item matched "${item.item_name}" — stock NOT updated`
       }));
     }
 
-    // Fire delivery log regardless (records that crocheter produced it)
+    if (item.contract_item_id) {
+      await env.DB.prepare(
+        "UPDATE contract_items SET qty_delivered = qty_delivered + ? WHERE id = ?"
+      ).bind(qtyToAdd, item.contract_item_id).run();
+    }
+
     ctx.waitUntil(logDelivery(env, {
       timestamp: now,
       crocheter: log.crocheter_name,
@@ -1702,7 +1691,7 @@ async function approveBatch(env, params, ctx) {
   ).bind(newStatus, payApproved, now, logId).run();
 
   ctx.waitUntil(auditLog(env, {
-    action: "batch_approved", item: log.crocheter_name, qty: approvedItems.length,
+    action: "batch_approved", item: log.crocheter_name, qty: processedCount,
     note: `Batch #${logId} ${newStatus}. Pay: $${payApproved.toFixed(2)}`
   }));
 
