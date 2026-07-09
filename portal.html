@@ -1544,12 +1544,15 @@ async function loadPortalInventory() {
 
 // ── PORTAL BATCH APPROVAL (Ami only) ──
 let portalBatchDecisions = {};
+let cachedPortalBatches = [];
 
 async function loadPortalBatches() {
   const container = $("portalBatchesList");
   const r = await api("getPendingBatches");
   if (!r.ok) { container.innerHTML = `<div class="empty">${r.error || "Error loading batches"}</div>`; return; }
   if (!r.batches?.length) { container.innerHTML = '<div class="empty">No batches yet ✿<br><span style="font-size:11px">Batches appear when crocheters log their production.</span></div>'; return; }
+
+  cachedPortalBatches = r.batches;
 
   // Init decisions
   r.batches.forEach(b => {
@@ -1588,9 +1591,9 @@ async function loadPortalBatches() {
           <button class="pb-btn reject ${dec.status==="rejected"?"active-reject":""}" onclick="setPBDecision(${b.id},${i.id},'rejected')">✗ Reject</button>
         </div>
         ${dec.status==="partial"?`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
-          <input type="number" min="0" max="${i.qty_logged}" value="${dec.qty_approved}" style="width:70px;padding:6px 8px;border:2px solid var(--pink-200);border-radius:8px;font-size:13px;text-align:center" onchange="portalBatchDecisions[${b.id}][${i.id}].qty_approved=Number(this.value);loadPortalBatches()">
+          <input type="number" min="0" max="${i.qty_logged}" value="${dec.qty_approved}" style="width:70px;padding:6px 8px;border:2px solid var(--pink-200);border-radius:8px;font-size:13px;text-align:center" oninput="portalBatchDecisions[${b.id}][${i.id}].qty_approved=Number(this.value);refreshPortalBatchPay(${b.id})">
           <span style="font-size:12px;color:var(--mid)">approved qty</span>
-          <select style="padding:6px 10px;border:2px solid var(--pink-200);border-radius:8px;font-size:12px" onchange="portalBatchDecisions[${b.id}][${i.id}].adjustment_pct=Number(this.value);loadPortalBatches()">
+          <select style="padding:6px 10px;border:2px solid var(--pink-200);border-radius:8px;font-size:12px" onchange="portalBatchDecisions[${b.id}][${i.id}].adjustment_pct=Number(this.value);refreshPortalBatchPay(${b.id})">
             <option value="100" ${dec.adjustment_pct==100?"selected":""}>Full rate</option>
             <option value="90" ${dec.adjustment_pct==90?"selected":""}>−10% (1 issue)</option>
             <option value="85" ${dec.adjustment_pct==85?"selected":""}>−15% (2-3 issues)</option>
@@ -1630,8 +1633,8 @@ function setPBDecision(batchId, itemId, status) {
   const cur = portalBatchDecisions[batchId][itemId] || {};
   portalBatchDecisions[batchId][itemId] = {
     ...cur, status,
-    qty_approved: status === "rejected" ? 0 : (cur.qty_approved || cur.qty_logged || 1),
-    adjustment_pct: status === "rejected" ? 0 : (cur.adjustment_pct || 100)
+    qty_approved: status === "rejected" ? 0 : (cur.qty_approved ?? cur.qty_logged ?? 1),
+    adjustment_pct: status === "rejected" ? 0 : (cur.adjustment_pct ?? 100)
   };
   loadPortalBatches();
 }
@@ -1642,6 +1645,15 @@ function calcPortalPay(batch) {
     if (!d || d.status === "rejected") return sum;
     return sum + (item.piece_rate || 0) * (d.qty_approved ?? item.qty_logged) * ((d.adjustment_pct ?? 100) / 100);
   }, 0);
+}
+
+function refreshPortalBatchPay(batchId) {
+  const batch = cachedPortalBatches.find(b => b.id === batchId);
+  if (!batch) return;
+  const card = document.getElementById(`pb-${batchId}`);
+  if (!card) return;
+  const badge = card.querySelector('.pb-pay-amount');
+  if (badge) badge.textContent = `$${calcPortalPay(batch).toFixed(2)}`;
 }
 
 async function submitPortalBatchApproval(logId) {
