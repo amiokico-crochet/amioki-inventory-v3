@@ -4,7 +4,11 @@
 //          (per-item dedup guard, $0 line item skip),
 //          approveBatch (exact+fuzzy inv match, skip
 //          qty_delivered when no inv match found),
-//          sweepUnmatched (per-iteration try/catch)
+//          sweepUnmatched (per-iteration try/catch),
+//          logProduction (Fix 6: Jaccard rate lookup, no
+//          first-word LIKE — fixes Mini Bee variants),
+//          approveBatch (Fix 7: normalizeName() for inv
+//          matching — fixes Mama Possum/special chars)
 // ═══════════════════════════════════════════════════════════
 
 const ROLES = {
@@ -1488,17 +1492,40 @@ async function logProduction(env, params, who, ctx) {
   for (const item of items) {
     const qty = Number(item.qty) || 0;
     if (!qty) continue;
-    const rate = await env.DB.prepare(
+    // Fix 6 — Exact rate match first, then Jaccard fuzzy (no first-word LIKE)
+    let rate = await env.DB.prepare(
       "SELECT total_rate FROM piece_rates WHERE crocheter = ? AND item_name = ? COLLATE NOCASE"
-    ).bind(crochetersName, item.item_name).first() ||
-    await env.DB.prepare(
-      "SELECT total_rate FROM piece_rates WHERE crocheter = ? AND item_name LIKE ? COLLATE NOCASE"
-    ).bind(crochetersName, `%${item.item_name.split(" ")[0]}%`).first();
+    ).bind(crochetersName, item.item_name).first();
+    if (!rate) {
+      const { results: allRates } = await env.DB.prepare(
+        "SELECT item_name, total_rate FROM piece_rates WHERE crocheter = ?"
+      ).bind(crochetersName).all();
+      const normTarget = normalizeName(item.item_name);
+      const tWords = normTarget.split(/\s+/).filter(Boolean);
+      if (tWords.length) {
+        let bestScore = 0, bestRate = null;
+        for (const r of allRates) {
+          const dbNorm = normalizeName(r.item_name);
+          const dbWords = dbNorm.split(/\s+/).filter(Boolean);
+          if (!dbWords.length) continue;
+          const tSet = new Set(tWords), dSet = new Set(dbWords);
+          const intersect = [...tSet].filter(w => dSet.has(w)).length;
+          const union = new Set([...tSet, ...dSet]).size;
+          const jaccard = intersect / union;
+          const containment = (dbNorm.includes(normTarget) || normTarget.includes(dbNorm)) ? 0.2 : 0;
+          const score = jaccard + containment;
+          const minWords = tWords.length === 1 ? 1 : 2;
+          if (intersect < minWords) continue;
+          if (score > bestScore && score >= 0.5) { bestScore = score; bestRate = r; }
+        }
+        if (bestRate) rate = bestRate;
+      }
+    }
     const contractRate = contractItems.find(ci =>
-  ci.item_name.toLowerCase().includes(item.item_name.toLowerCase()) ||
-  item.item_name.toLowerCase().includes(ci.item_name.toLowerCase())
-)?.piece_rate || 0;
-const pieceRate = rate?.total_rate || contractRate || 0;
+      ci.item_name.toLowerCase().includes(item.item_name.toLowerCase()) ||
+      item.item_name.toLowerCase().includes(ci.item_name.toLowerCase())
+    )?.piece_rate || 0;
+    const pieceRate = rate?.total_rate || contractRate || 0;
     payEstimated += pieceRate * qty;
     const contractItem = contractItems.find(ci =>
       ci.item_name.toLowerCase().includes(item.item_name.toLowerCase()) ||
@@ -1625,22 +1652,22 @@ async function approveBatch(env, params, ctx) {
     const qtyToAdd = qtyApproved || item.qty_logged;
     payApproved += (item.piece_rate || 0) * qtyToAdd * (adjPct / 100);
 
-    const normTarget = (item.item_name || "").toLowerCase().trim();
-    let invItem = allActive.find(r => r.name.toLowerCase().trim() === normTarget) || null;
+    // Fix 7 — Use normalizeName() for consistent matching (same as matchItem)
+    const normTarget = normalizeName(item.item_name);
+    let invItem = allActive.find(r => normalizeName(r.name) === normTarget) || null;
 
     if (!invItem) {
-      const cleanNorm = normTarget.replace(/[()]/g, "");
-      const sqWords = cleanNorm.split(/\s+/).filter(Boolean);
+      const sqWords = normTarget.split(/\s+/).filter(Boolean);
       let bestScore = 0;
       for (const r of allActive) {
-        const dbNorm  = r.name.toLowerCase().trim().replace(/[()]/g, "");
+        const dbNorm  = normalizeName(r.name);
         const dbWords = dbNorm.split(/\s+/).filter(Boolean);
         const sqSet   = new Set(sqWords);
         const dbSet   = new Set(dbWords);
         const intersect = [...sqSet].filter(w => dbSet.has(w)).length;
         const union     = new Set([...sqSet, ...dbSet]).size;
         const jaccard   = intersect / union;
-        const containment = (dbNorm.includes(cleanNorm) || cleanNorm.includes(dbNorm)) ? 0.2 : 0;
+        const containment = (dbNorm.includes(normTarget) || normTarget.includes(dbNorm)) ? 0.2 : 0;
         const score = jaccard + containment;
         const minWordsRequired = sqWords.length === 1 ? 1 : 2;
         if (intersect < minWordsRequired) continue;
